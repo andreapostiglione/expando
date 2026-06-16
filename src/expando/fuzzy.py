@@ -1,0 +1,44 @@
+from __future__ import annotations
+
+
+def fuzzy_score(query: str, target: str) -> int:
+    """Score how well query matches target (higher is better, 0 = no match)."""
+    if not query:
+        return 1
+
+    query_folded = query.casefold()
+    target_folded = target.casefold()
+
+    if query_folded in target_folded:
+        return 1000 + (200 - target_folded.index(query_folded))
+
+    score = 0
+    query_index = 0
+    consecutive = 0
+    last_match_index = -2
+
+    for char_index, char in enumerate(target_folded):
+        if query_index < len(query_folded) and char == query_folded[query_index]:
+            query_index += 1
+            if char_index == last_match_index + 1:
+                consecutive += 1
+            else:
+                consecutive = 1
+            score += 10 + consecutive * 5
+            if char_index == 0 or target_folded[char_index - 1] in {":", "-", "_", " "}:
+                score += 8
+            last_match_index = char_index
+
+    if query_index != len(query_folded):
+        return 0
+    return score
+
+
+def fuzzy_filter(query: str, items: list[str]) -> list[str]:
+    if not query:
+        return list(items)
+
+    scored = [(fuzzy_score(query, item), item) for item in items]
+    scored = [(score, item) for score, item in scored if score > 0]
+    scored.sort(key=lambda pair: (-pair[0], pair[1]))
+    return [item for _, item in scored]

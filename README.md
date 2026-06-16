@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/version-1.0.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/version-1.1.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -38,9 +38,9 @@ Expando:      claude --dangerously-skip-permissions
 |---|---------|---------|
 | 🔒 | **100% local** | Your snippets never leave your machine |
 | 📟 | **Menu bar native** | Always-visible status, toggle, search, edit |
-| 🔎 | **Search picker** | `⌘⇧E` → visual snippet browser |
-| 📝 | **Forms** | Native macOS dialogs for dynamic snippets |
-| 🎯 | **Per-app rules** | Different behavior in Terminal vs Safari |
+| 🔎 | **Fuzzy search** | `⌘⇧E` → live filter + preview panel |
+| 📝 | **Multi-field forms** | Single-window input for dynamic snippets |
+| 🎯 | **Advanced app rules** | Filter by app name, bundle ID, or window title |
 | 📦 | **Packages** | Organize snippets in reusable bundles |
 | 🩺 | **Built-in doctor** | Permissions, processes, config health |
 | 💾 | **Backup / restore** | One-command config export |
@@ -207,7 +207,16 @@ Use `{{USER}}`, `{{HOME}}`, or `{{cwd}}` directly in any `replace` field.
       - iTerm2
       - Warp
       - Cursor
+
+  - trigger: ":readme"
+    replace: "# README"
+    if_title:
+      - README
+    if_bundle:
+      - com.todesktop
 ```
+
+Supported filters per match: `if_app`, `unless_app`, `if_bundle`, `unless_bundle`, `if_title`, `unless_title`.
 
 ### Global app blacklist
 
@@ -263,8 +272,8 @@ expando import ./my-snippets/
 ├────────────────────┴────────────────────────────┤
 │  Expansion engine                               │
 │  ├── Trigger buffer                             │
-│  ├── App context filter                         │
-│  ├── Form dialogs (osascript)                   │
+│  ├── App context filter (name / bundle / title) │
+│  ├── Native UI (fuzzy search + multi-field form)│
 │  └── Renderer (date / shell / env / clipboard)  │
 ├─────────────────────────────────────────────────┤
 │  YAML config (watchdog auto-reload)             │
@@ -309,11 +318,13 @@ expando/
 │   ├── engine.py         # Expansion engine
 │   ├── listener.py       # Keyboard service
 │   ├── menubar.py        # macOS menu bar
-│   ├── forms.py          # Native form dialogs
-│   ├── search.py         # Snippet picker
+│   ├── forms.py          # Multi-field form UI
+│   ├── search.py         # Fuzzy snippet picker
+│   ├── fuzzy.py          # Fuzzy match scoring
+│   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 25 pytest tests
+├── tests/                # 34 pytest tests
 ├── scripts/              # Install, build, launch agent
 ├── default_config/       # Default YAML templates
 └── assets/               # Logo and branding

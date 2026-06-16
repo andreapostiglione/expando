@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from expando.config import compile_matches, load_config
+from expando.config import Match, compile_matches, load_config, normalize_match
 
 
 def test_load_default_config():
@@ -11,8 +11,6 @@ def test_load_default_config():
 
 
 def test_compile_literal_and_regex():
-    from expando.config import Match
-
     matches = [
         Match(triggers=[":hello"], replace="Hello"),
         Match(triggers=[r"\d{4}"], replace="year", regex=True),
@@ -20,3 +18,16 @@ def test_compile_literal_and_regex():
     literal, regex = compile_matches(matches)
     assert ":hello" in literal
     assert len(regex) == 1
+
+
+def test_normalize_match_advanced_filters():
+    match = normalize_match(
+        {
+            "trigger": ":x",
+            "replace": "X",
+            "if_bundle": ["com.apple.Terminal"],
+            "unless_title": ["Private"],
+        }
+    )
+    assert match.if_bundle == ["com.apple.Terminal"]
+    assert match.unless_title == ["Private"]

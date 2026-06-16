@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+import json
+import sys
+
+from .ui_native import run_form_dialog, run_search_picker
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        raise SystemExit(2)
+
+    command = sys.argv[1]
+    payload = json.loads(sys.stdin.read() or "{}")
+
+    if command == "search":
+        result = run_search_picker(payload.get("items", []))
+    elif command == "form":
+        result = run_form_dialog(payload.get("fields", []))
+    else:
+        raise SystemExit(2)
+
+    print(json.dumps(result or {}))
+
+
+if __name__ == "__main__":
+    main()

@@ -42,6 +42,10 @@ class Match:
     force_break: bool = False
     if_app: list[str] = field(default_factory=list)
     unless_app: list[str] = field(default_factory=list)
+    if_bundle: list[str] = field(default_factory=list)
+    unless_bundle: list[str] = field(default_factory=list)
+    if_title: list[str] = field(default_factory=list)
+    unless_title: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -95,6 +99,10 @@ def normalize_match(raw: dict[str, Any]) -> Match:
         force_break=bool(raw.get("force_break", False)),
         if_app=[str(item) for item in raw.get("if_app", []) or []],
         unless_app=[str(item) for item in raw.get("unless_app", []) or []],
+        if_bundle=[str(item) for item in raw.get("if_bundle", []) or []],
+        unless_bundle=[str(item) for item in raw.get("unless_bundle", []) or []],
+        if_title=[str(item) for item in raw.get("if_title", []) or []],
+        unless_title=[str(item) for item in raw.get("unless_title", []) or []],
     )
 
 

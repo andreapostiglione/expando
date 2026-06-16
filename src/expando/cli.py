@@ -142,10 +142,10 @@ def search(ctx: click.Context) -> None:
     config_dir: Path = ctx.obj["config_dir"]
     bundle = load_config(config_dir)
     items = build_search_items(bundle.matches, bundle.app)
-    picked = pick_snippet(items)
+    picked = pick_snippet(items, app_config=bundle.app)
     if not picked:
         raise SystemExit(0)
-    text = resolve_snippet_text(picked.match)
+    text = resolve_snippet_text(picked.match, app_config=bundle.app)
     if text:
         click.echo(text)
 

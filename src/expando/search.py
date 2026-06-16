@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import subprocess
 from dataclasses import dataclass
 
-from .app_context import get_frontmost_app, is_app_allowed
+from .app_context import get_frontmost_context, match_allowed
 from .config import AppConfig, Match
-from .renderer import render_match_interactive
+from .renderer import render_match
+from .ui_bridge import show_search_picker
 
 
 @dataclass
@@ -14,19 +14,19 @@ class SearchItem:
     match: Match
 
 
-def _escape_applescript(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
-
-
 def build_search_items(matches: list[Match], app_config: AppConfig) -> list[SearchItem]:
-    app_name = get_frontmost_app()
+    context = get_frontmost_context()
     items: list[SearchItem] = []
     for match in matches:
-        if not is_app_allowed(
-            app_name,
+        if not match_allowed(
+            context,
             global_blacklist=app_config.app_blacklist,
             if_app=match.if_app or None,
             unless_app=match.unless_app or None,
+            if_bundle=match.if_bundle or None,
+            unless_bundle=match.unless_bundle or None,
+            if_title=match.if_title or None,
+            unless_title=match.unless_title or None,
         ):
             continue
         for trigger in match.triggers:
@@ -34,29 +34,31 @@ def build_search_items(matches: list[Match], app_config: AppConfig) -> list[Sear
     return sorted(items, key=lambda item: item.trigger)
 
 
-def pick_snippet(items: list[SearchItem]) -> SearchItem | None:
+def _preview_text(item: SearchItem, app_config: AppConfig) -> str:
+    if item.match.form:
+        return item.match.replace
+    try:
+        return render_match(item.match, app_config=app_config)
+    except Exception:
+        return item.match.replace
+
+
+def pick_snippet(items: list[SearchItem], app_config: AppConfig | None = None) -> SearchItem | None:
     if not items:
         return None
 
-    labels = [item.trigger for item in items]
-    list_literal = ", ".join(f'"{_escape_applescript(label)}"' for label in labels)
-    script = f'''
-        set choices to {{{list_literal}}}
-        set picked to choose from list choices with prompt "Expando — scegli uno snippet"
-        if picked is false then
-            return ""
-        end if
-        return item 1 of picked
-    '''
-    result = subprocess.run(
-        ["osascript", "-e", script],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
+    payload = [
+        {
+            "trigger": item.trigger,
+            "preview": _preview_text(item, app_config or AppConfig()),
+        }
+        for item in items
+    ]
+    picked = show_search_picker(payload)
+    if not picked:
         return None
-    trigger = result.stdout.strip()
+
+    trigger = picked.get("trigger", "").strip()
     if not trigger:
         return None
     for item in items:
@@ -65,5 +67,7 @@ def pick_snippet(items: list[SearchItem]) -> SearchItem | None:
     return None
 
 
-def resolve_snippet_text(item: SearchItem) -> str | None:
-    return render_match_interactive(item.match)
+def resolve_snippet_text(item: SearchItem, app_config: AppConfig | None = None) -> str | None:
+    from .renderer import render_match_interactive
+
+    return render_match_interactive(item.match, app_config=app_config)

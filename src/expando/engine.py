@@ -7,7 +7,7 @@ from typing import Callable
 
 from pynput.keyboard import Key
 
-from .app_context import get_frontmost_app, is_app_allowed
+from .app_context import get_frontmost_context, match_allowed
 from .config import ConfigBundle, Match, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
 from .renderer import render_match_interactive
@@ -112,19 +112,23 @@ class ExpansionEngine:
         return None
 
     def _expansion_allowed(self) -> bool:
-        app_name = get_frontmost_app()
-        return is_app_allowed(
-            app_name,
+        context = get_frontmost_context()
+        return match_allowed(
+            context,
             global_blacklist=self.config.app.app_blacklist,
         )
 
     def _match_allowed(self, match: Match) -> bool:
-        app_name = get_frontmost_app()
-        return is_app_allowed(
-            app_name,
+        context = get_frontmost_context()
+        return match_allowed(
+            context,
             global_blacklist=self.config.app.app_blacklist,
             if_app=match.if_app or None,
             unless_app=match.unless_app or None,
+            if_bundle=match.if_bundle or None,
+            unless_bundle=match.unless_bundle or None,
+            if_title=match.if_title or None,
+            unless_title=match.unless_title or None,
         )
 
     def _try_expand(self, require_word_break: bool) -> bool:

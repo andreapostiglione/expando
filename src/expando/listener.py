@@ -78,10 +78,10 @@ class KeyboardService:
         if not self.engine.enabled:
             return
         items = build_search_items(self.engine.config.matches, self.engine.config.app)
-        picked = pick_snippet(items)
+        picked = pick_snippet(items, app_config=self.engine.config.app)
         if not picked:
             return
-        text = resolve_snippet_text(picked.match)
+        text = resolve_snippet_text(picked.match, app_config=self.engine.config.app)
         if not text:
             return
         self._injecting = True

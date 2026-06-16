@@ -1,6 +1,22 @@
 # Expando
 
-Clone open-source di [Espanso](https://espanso.org): text expander system-wide, 100% locale, configurazione YAML compatibile.
+Text expander system-wide per macOS. 100% locale, open source, configurazione YAML.
+
+Scrivi un trigger → ottieni il testo che vuoi. Ovunque.
+
+## Perché Expando
+
+| Pro | Cosa significa per te |
+|-----|----------------------|
+| **Zero cloud** | I tuoi snippet restano sul Mac. Nessun account, nessun sync remoto, nessun tracking |
+| **Menu bar nativa** | Stato sempre visibile, attiva/disattiva, modifica e riavvio in un click |
+| **Doctor integrato** | `expando doctor` controlla permessi, processi, config e trigger duplicati |
+| **Avvio al login** | LaunchAgent incluso, parte da solo dopo il reboot |
+| **Notifiche toggle** | Doppio ALT e sai subito se è attivo o meno |
+| **Single-instance** | Un solo daemon, zero conflitti tra istanze |
+| **YAML semplice** | Config leggibile, versionabile con Git, modificabile a mano |
+| **Hackable** | Python aperto: aggiungi logiche, integrazioni e variabili custom in minuti |
+| **Leggero** | Nessun motore pesante, nessuna UI complessa da imparare |
 
 ## Funzionalità
 
@@ -8,25 +24,25 @@ Clone open-source di [Espanso](https://espanso.org): text expander system-wide, 
 - Variabili dinamiche: `date`, `shell`, `clipboard`
 - Trigger multipli e regex
 - Toggle on/off con doppio tap su `ALT` (configurabile) + notifica macOS
-- **Menu bar** con stato, attiva/disattiva, modifica snippet, riavvio
-- **Single-instance lock** — una sola istanza attiva
-- **Log rotanti** in `~/Library/Application Support/expando/expando.log`
-- **`expando doctor`** — permessi, processi, YAML, trigger duplicati
+- Menu bar con stato, attiva/disattiva, modifica snippet, riavvio
+- Log rotanti in `~/Library/Application Support/expando/expando.log`
 - Auto-reload della config quando modifichi i file YAML
-- CLI simile a Espanso: `start`, `stop`, `status`, `path`, `edit`, `doctor`
+- CLI: `start`, `stop`, `status`, `path`, `edit`, `doctor`, `match`
 - Backend `auto` / `inject` / `clipboard` per testi lunghi o multilinea
-- **`Expando.app`** — bundle macOS per permessi Privacy più puliti
+- `Expando.app` per permessi Privacy macOS puliti
 
 ## Installazione
 
 ```bash
+git clone https://github.com/andreapostiglione/expando.git
 cd expando
-pip install -e ".[dev]"
+./install.sh
 ```
 
 ## Primo avvio
 
 ```bash
+./scripts/build-macos-app.sh
 expando doctor
 expando start
 ```
@@ -34,30 +50,16 @@ expando start
 ## Avvio automatico (macOS)
 
 ```bash
-./scripts/build-macos-app.sh
 ./scripts/install-launch-agent.sh
 ```
 
-Installa un LaunchAgent che avvia Expando ad ogni login. Per rimessi Privacy, abilita **Expando.app** (non `python3.14`). Per rimuoverlo:
+Per rimuoverlo:
 
 ```bash
 ./scripts/uninstall-launch-agent.sh
 ```
 
-La configurazione viene creata in:
-
-- **macOS**: `~/Library/Application Support/expando`
-- **Linux**: `~/.config/expando`
-- **Windows**: `%AppData%\expando`
-
-## Usare la config di Espanso
-
-Puoi copiare o symlinkare le cartelle `config/` e `match/` dalla tua installazione Espanso:
-
-```bash
-cp -R "$HOME/Library/Application Support/espanso/match"/* \
-  "$HOME/Library/Application Support/expando/match/"
-```
+La configurazione vive in `~/Library/Application Support/expando/`.
 
 ## Esempio snippet
 
@@ -73,15 +75,19 @@ matches:
         type: date
         params:
           format: "%d/%m/%Y"
+
+  - trigger: ":deploy"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "git branch --show-current"
 ```
 
 ## Permessi macOS
 
-Expando richiede **Accessibilità** (obbligatoria) e opzionalmente **Monitoraggio input** in Impostazioni di sistema → Privacy e sicurezza.
-
-Dopo `./scripts/build-macos-app.sh`, concedi i permessi a **Expando.app** invece che a `python3.14`.
-
-Verifica con:
+Expando richiede **Accessibilità** in Impostazioni → Privacy e sicurezza. Dopo `build-macos-app.sh`, abilita **Expando.app**.
 
 ```bash
 expando doctor
@@ -91,22 +97,19 @@ expando doctor
 
 | Comando | Descrizione |
 |---------|-------------|
-| `expando start` | Avvia il daemon in background |
+| `expando start` | Avvia il daemon |
 | `expando stop` | Ferma il daemon |
 | `expando restart` | Riavvia |
 | `expando status` | Stato del processo |
 | `expando run` | Foreground (debug) |
 | `expando edit` | Apre `match/base.yml` |
 | `expando match :date` | Testa un trigger |
-| `expando doctor` | Valida la configurazione |
+| `expando doctor` | Health check completo |
 
-## Limitazioni rispetto a Espanso
+## Filosofia
 
-- Nessuna search bar, forms UI, package hub, o config per-app
-- Nessun supporto immagini
-- Wayland/Linux meno testato
-- Scritto in Python (più semplice da modificare, leggermente meno performante)
+Expando punta alla semplicità radicale: pochi file, codice leggibile, nessuna dipendenza da servizi esterni. Pensato per chi vuole uno strumento personale, trasparente e sotto controllo totale.
 
 ## Licenza
 
-MIT
+MIT — vedi [LICENSE](LICENSE).

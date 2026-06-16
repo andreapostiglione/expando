@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.inochisrl.expando</string>
+    <string>com.andreapostiglione.expando</string>
     <key>ProgramArguments</key>
     <array>
         <string>__EXPANDO_ROOT__/scripts/launch-expando.sh</string>

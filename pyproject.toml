@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "expando"
 version = "0.2.0"
-description = "A privacy-first, cross-platform text expander — Espanso-compatible clone"
+description = "A privacy-first, open-source text expander for macOS"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

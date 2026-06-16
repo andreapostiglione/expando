@@ -35,7 +35,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundleExecutable</key>
     <string>expando</string>
     <key>CFBundleIdentifier</key>
-    <string>com.inochisrl.expando</string>
+    <string>com.andreapostiglione.expando</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

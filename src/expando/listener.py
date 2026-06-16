@@ -183,8 +183,17 @@ class KeyboardService:
         if is_ui_active():
             return
         self._track_modifier_press(key)
-        shortcut = self.engine.config.app.search_shortcut
-        if shortcut and shortcut_pressed(shortcut, self._pressed_modifiers, key):
+        config = self.engine.config.app
+        if config.undo_shortcut and shortcut_pressed(
+            config.undo_shortcut, self._pressed_modifiers, key
+        ):
+            if self.engine.undo_last():
+                logger.info("Undid last expansion")
+            return
+
+        if config.search_shortcut and shortcut_pressed(
+            config.search_shortcut, self._pressed_modifiers, key
+        ):
             threading.Thread(target=self.open_search, daemon=True).start()
             return
 

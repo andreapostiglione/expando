@@ -1,7 +1,7 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 1.1.1 (codice) | **Release signed:** v1.1.2 pending  
+**Versione:** 1.2.0 (codice) | **Release signed:** v1.1.2 pending  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
@@ -31,5 +31,5 @@ GitHub secrets per CI auto-release: vedi `docs/RELEASE.md`
 
 - [ ] Notarizzare DMG + staple
 - [ ] Secrets GitHub Actions (cert p12 + notary)
-- [ ] C. Tier 2: import Espanso, secure input, …
+- [x] C. Tier 2: import Espanso, YAML esteso, global_vars, secure input, undo, random/unicode
 - [ ] D. Test listener/daemon/e2e

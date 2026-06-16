@@ -26,6 +26,8 @@ class AppConfig:
     app_blacklist: list[str] = field(default_factory=list)
     shell_allowlist: list[str] = field(default_factory=list)
     search_shortcut: str = "CMD+SHIFT+E"
+    respect_secure_input: bool = True
+    undo_shortcut: str = "CMD+SHIFT+Z"
 
 
 @dataclass
@@ -51,6 +53,15 @@ class Match:
     unless_bundle: list[str] = field(default_factory=list)
     if_title: list[str] = field(default_factory=list)
     unless_title: list[str] = field(default_factory=list)
+    priority: int = 0
+    postpone: bool = False
+    propagate_case: bool = False
+    uppercase_style: str = ""
+    trim: bool = False
+    label: str = ""
+    search_terms: list[str] = field(default_factory=list)
+    left_word: bool = False
+    right_word: bool = False
 
 
 @dataclass
@@ -108,6 +119,63 @@ def normalize_match(raw: dict[str, Any]) -> Match:
         unless_bundle=[str(item) for item in raw.get("unless_bundle", []) or []],
         if_title=[str(item) for item in raw.get("if_title", []) or []],
         unless_title=[str(item) for item in raw.get("unless_title", []) or []],
+        priority=int(raw.get("priority", 0)),
+        postpone=bool(raw.get("postpone", False)),
+        propagate_case=bool(raw.get("propagate_case", False)),
+        uppercase_style=str(raw.get("uppercase_style", "")),
+        trim=bool(raw.get("trim", False)),
+        label=str(raw.get("label", "")),
+        search_terms=[str(item) for item in raw.get("search_terms", []) or []],
+        left_word=bool(raw.get("left_word", False)),
+        right_word=bool(raw.get("right_word", False)),
+    )
+
+
+def _normalize_variables(raw_vars: list[dict[str, Any]] | None) -> list[Variable]:
+    variables: list[Variable] = []
+    for item in raw_vars or []:
+        variables.append(
+            Variable(
+                name=str(item["name"]),
+                type=str(item.get("type", "plain")),
+                params=dict(item.get("params", {}) or {}),
+            )
+        )
+    return variables
+
+
+def _merge_global_vars(match: Match, global_vars: list[Variable]) -> Match:
+    if not global_vars:
+        return match
+    local_names = {variable.name for variable in match.vars}
+    merged = [variable for variable in global_vars if variable.name not in local_names]
+    merged.extend(match.vars)
+    if len(merged) == len(match.vars):
+        return match
+    return Match(
+        triggers=match.triggers,
+        replace=match.replace,
+        regex=match.regex,
+        word_break=match.word_break,
+        vars=merged,
+        form=match.form,
+        force_clipboard=match.force_clipboard,
+        force_break=match.force_break,
+        if_app=match.if_app,
+        unless_app=match.unless_app,
+        if_bundle=match.if_bundle,
+        unless_bundle=match.unless_bundle,
+        if_title=match.if_title,
+        unless_title=match.unless_title,
+        priority=match.priority,
+        postpone=match.postpone,
+        propagate_case=match.propagate_case,
+        uppercase_style=match.uppercase_style,
+        trim=match.trim,
+        label=match.label,
+        search_terms=match.search_terms,
+        left_word=match.left_word,
+        right_word=match.right_word,
     )
 
 
@@ -128,6 +196,8 @@ def load_app_config(path: Path) -> AppConfig:
         app_blacklist=[str(item) for item in data.get("app_blacklist", []) or []],
         shell_allowlist=[str(item) for item in data.get("shell_allowlist", []) or []],
         search_shortcut=str(data.get("search_shortcut", "CMD+SHIFT+E")),
+        respect_secure_input=bool(data.get("respect_secure_input", True)),
+        undo_shortcut=str(data.get("undo_shortcut", "CMD+SHIFT+Z")),
     )
 
 
@@ -141,8 +211,10 @@ def load_matches(match_directory: Path) -> list[Match]:
     ):
         with path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
+        global_vars = _normalize_variables(data.get("global_vars", []) or [])
         for raw in data.get("matches", []) or []:
-            matches.append(normalize_match(raw))
+            match = normalize_match(raw)
+            matches.append(_merge_global_vars(match, global_vars))
 
     from .packages import load_package_matches
 

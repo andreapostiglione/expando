@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import random
 import re
 import shlex
 import subprocess
@@ -10,6 +11,7 @@ from typing import Any
 
 from .config import AppConfig, Match, Variable
 from .forms import collect_form_values
+from .text_transform import decode_unicode_escapes
 
 TEMPLATE_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
 SHELL_CHAIN_RE = re.compile(r"[;|&`$()<>]")
@@ -88,6 +90,19 @@ def _resolve_variable(variable: Variable, app_config: AppConfig | None = None) -
         name = str(variable.params.get("name", variable.name))
         return _resolve_env(name)
 
+    if variable.type == "random":
+        choices = variable.params.get("choices", []) or []
+        if not choices:
+            return ""
+        return str(random.choice(choices))
+
+    if variable.type == "unicode":
+        value = str(variable.params.get("value", ""))
+        return decode_unicode_escapes(value)
+
+    if variable.type in {"plain", "echo"}:
+        return str(variable.params.get("value", ""))
+
     return str(variable.params.get("value", ""))
 
 
@@ -107,7 +122,8 @@ def render_match(match: Match, app_config: AppConfig | None = None, extra_values
     values: dict[str, Any] = dict(extra_values or {})
     for variable in match.vars:
         values[variable.name] = _resolve_variable(variable, app_config=app_config)
-    return _apply_builtin_tokens(match.replace, values)
+    rendered = _apply_builtin_tokens(match.replace, values)
+    return decode_unicode_escapes(rendered)
 
 
 def render_match_interactive(match: Match, app_config: AppConfig | None = None) -> str | None:

@@ -187,7 +187,7 @@ def add(
     click.echo(f"Added {trigger} to {path}")
 
 
-@main.command()
+@main.command("import")
 @click.argument("source", type=click.Path(exists=True))
 @click.option("--force", is_flag=True, help="Overwrite existing match files")
 @click.pass_context
@@ -200,6 +200,39 @@ def import_cmd(ctx: click.Context, source: str, force: bool) -> None:
     click.echo("Imported:")
     for name in imported:
         click.echo(f"  - {name}")
+
+
+@main.command("import-espanso")
+@click.option(
+    "--source",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    default=None,
+    help="Espanso config directory (auto-detected if omitted)",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing imported files")
+@click.pass_context
+def import_espanso_cmd(ctx: click.Context, source: str | None, force: bool) -> None:
+    """Import matches and settings from an Espanso configuration."""
+    from .espanso_import import import_espanso_config
+
+    config_dir: Path = ctx.obj["config_dir"]
+    try:
+        report = import_espanso_config(
+            config_dir,
+            source=Path(source).expanduser() if source else None,
+            force=force,
+        )
+    except FileNotFoundError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    click.echo(f"Imported from {report.source}")
+    if report.config_merged:
+        click.echo("  - merged config/default.yml")
+    click.echo(f"  - {report.matches_imported} matches in {len(report.match_files)} file(s)")
+    if report.matches_skipped:
+        click.echo(f"  - skipped {report.matches_skipped} unsupported match(es)")
+    for warning in report.warnings:
+        click.echo(f"  ! {warning}")
 
 
 @main.command()

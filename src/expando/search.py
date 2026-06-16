@@ -44,6 +44,8 @@ def _preview_text(item: SearchItem, app_config: AppConfig) -> str:
 
 
 def _item_label(item: SearchItem, app_config: AppConfig, trigger_counts: dict[str, int]) -> str:
+    if item.match.label:
+        return item.match.label
     if trigger_counts.get(item.trigger, 0) <= 1:
         return item.trigger
     preview = _preview_text(item, app_config).strip().splitlines()[0]
@@ -67,6 +69,7 @@ def pick_snippet(items: list[SearchItem], app_config: AppConfig | None = None) -
             "trigger": item.trigger,
             "label": _item_label(item, app_config, trigger_counts),
             "preview": _preview_text(item, app_config),
+            "search_terms": item.match.search_terms,
         }
         for index, item in enumerate(items)
     ]

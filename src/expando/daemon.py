@@ -34,16 +34,24 @@ def is_running(config_dir: Path) -> tuple[bool, int | None]:
 def _daemon_command(config_dir: Path) -> list[str]:
     app_bundle = _app_bundle_executable()
     if app_bundle:
-        return [str(app_bundle), "run", "--config-dir", str(config_dir)]
+        return [str(app_bundle), "--config-dir", str(config_dir), "run"]
     return [sys.executable, "-m", "expando.daemon", "foreground", str(config_dir)]
 
 
 def _app_bundle_executable() -> Path | None:
+    if os.environ.get("EXPANDO_USE_APP_BUNDLE", "").lower() in {"0", "false", "no"}:
+        return None
+
     root = Path(__file__).resolve().parent.parent.parent
     candidate = root / "Expando.app" / "Contents" / "MacOS" / "expando"
-    if candidate.exists() and os.access(candidate, os.X_OK):
-        return candidate
-    return None
+    if not candidate.exists() or not os.access(candidate, os.X_OK):
+        return None
+
+    # In a git checkout, prefer the local venv unless the app bundle is explicit.
+    if (root / ".git").exists() and os.environ.get("EXPANDO_USE_APP_BUNDLE", "") != "1":
+        return None
+
+    return candidate
 
 
 def start_daemon(config_dir: Path) -> int:

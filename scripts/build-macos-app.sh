@@ -37,7 +37,7 @@ if [[ ! -x "\$VENV" ]]; then
   fi
 fi
 
-exec "\$VENV" run "\$@"
+exec "\$VENV" "\$@"
 EOF
 
 chmod +x "$MACOS/expando"

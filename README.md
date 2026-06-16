@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/version-1.1.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/version-1.1.1-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -324,7 +324,7 @@ expando/
 │   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 34 pytest tests
+├── tests/                # 43 pytest tests
 ├── scripts/              # Install, build, launch agent
 ├── default_config/       # Default YAML templates
 └── assets/               # Logo and branding

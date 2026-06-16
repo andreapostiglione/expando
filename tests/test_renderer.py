@@ -20,3 +20,9 @@ def test_render_shell_variable():
         vars=[Variable(name="output", type="shell", params={"cmd": "echo ok"})],
     )
     assert render_match(match) == "ok"
+
+
+def test_render_builtin_env_token():
+    match = Match(triggers=[":user"], replace="{{USER}}")
+    rendered = render_match(match)
+    assert rendered

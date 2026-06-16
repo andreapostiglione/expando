@@ -6,3 +6,8 @@ auto_restart: true
 clipboard_threshold: 100
 max_regex_buffer_size: 30
 enabled: true
+
+# Disable Expando completely in these apps (password managers, games, etc.)
+# app_blacklist:
+#   - 1Password
+#   - Bitwarden

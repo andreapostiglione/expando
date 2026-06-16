@@ -10,6 +10,7 @@ from . import __version__
 from .daemon import is_running, start_daemon, stop_daemon
 from .paths import config_file, default_config_dir, ensure_default_config, match_dir, package_root
 from .doctor_checks import format_doctor_report, run_doctor
+from .match_store import append_match, format_match_list, import_matches
 from .renderer import render_match
 from .config import load_config, load_matches
 
@@ -126,6 +127,57 @@ def match_cmd(ctx: click.Context, trigger: str) -> None:
             click.echo(render_match(item))
             return
     raise click.ClickException(f"Trigger not found: {trigger}")
+
+
+@main.command("list")
+@click.pass_context
+def list_cmd(ctx: click.Context) -> None:
+    """List configured snippets."""
+    click.echo(format_match_list(ctx.obj["config_dir"]))
+
+
+@main.command()
+@click.argument("trigger")
+@click.argument("replace")
+@click.option("--file", "target_file", default="dev.yml", show_default=True, help="Match file to update")
+@click.option("--if-app", multiple=True, help="Restrict snippet to app names")
+@click.option("--unless-app", multiple=True, help="Disable snippet in app names")
+@click.pass_context
+def add(
+    ctx: click.Context,
+    trigger: str,
+    replace: str,
+    target_file: str,
+    if_app: tuple[str, ...],
+    unless_app: tuple[str, ...],
+) -> None:
+    """Add a snippet from the command line."""
+    try:
+        path = append_match(
+            ctx.obj["config_dir"],
+            trigger,
+            replace,
+            target_file=target_file,
+            if_app=list(if_app) or None,
+            unless_app=list(unless_app) or None,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Added {trigger} to {path}")
+
+
+@main.command()
+@click.argument("source", type=click.Path(exists=True))
+@click.pass_context
+def import_cmd(ctx: click.Context, source: str) -> None:
+    """Import YAML snippet files from a file or directory."""
+    try:
+        imported = import_matches(ctx.obj["config_dir"], Path(source).expanduser())
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo("Imported:")
+    for name in imported:
+        click.echo(f"  - {name}")
 
 
 @main.command()

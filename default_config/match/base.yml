@@ -1,5 +1,5 @@
 matches:
-  - trigger: ":expando"
+  - trigger: ":hello"
     replace: "Hi there!"
 
   - trigger: ":date"

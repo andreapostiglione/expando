@@ -68,6 +68,13 @@ matches:
   - trigger: ":email"
     replace: "nome@esempio.it"
 
+  - trigger: ":claude"
+    replace: "claude --dangerously-skip-permissions"
+    if_app:
+      - Terminal
+      - iTerm2
+      - Cursor
+
   - trigger: ":date"
     replace: "{{mydate}}"
     vars:
@@ -75,6 +82,9 @@ matches:
         type: date
         params:
           format: "%d/%m/%Y"
+
+  - trigger: ":whoami"
+    replace: "{{USER}} @ {{cwd}}"
 
   - trigger: ":deploy"
     replace: "{{output}}"
@@ -84,6 +94,12 @@ matches:
         params:
           cmd: "git branch --show-current"
 ```
+
+### Regole per app
+
+- `if_app` — snippet attivo solo in quelle app
+- `unless_app` — snippet disattivato in quelle app
+- `app_blacklist` in `config/default.yml` — disattiva Expando del tutto in certe app
 
 ## Permessi macOS
 
@@ -105,6 +121,9 @@ expando doctor
 | `expando edit` | Apre `match/base.yml` |
 | `expando match :date` | Testa un trigger |
 | `expando doctor` | Health check completo |
+| `expando list` | Elenco snippet configurati |
+| `expando add :trigger "testo"` | Aggiunge uno snippet da CLI |
+| `expando import ./cartella` | Importa file YAML di snippet |
 
 ## Filosofia
 

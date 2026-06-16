@@ -1,0 +1,30 @@
+matches:
+  - trigger: ":claude"
+    replace: "claude --dangerously-skip-permissions"
+    if_app:
+      - Terminal
+      - iTerm2
+      - Warp
+      - Cursor
+
+  - trigger: ":grok"
+    replace: "grok --permission-mode bypassPermissions"
+    if_app:
+      - Terminal
+      - iTerm2
+      - Warp
+      - Cursor
+
+  - trigger: ":ultraclaude"
+    replace: |
+      export CLAUDE_CODE_EFFORT_LEVEL=max
+      export CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1
+      claude --dangerously-skip-permissions
+    if_app:
+      - Terminal
+      - iTerm2
+      - Warp
+      - Cursor
+
+  - trigger: ":whoami"
+    replace: "{{USER}} @ {{cwd}}"

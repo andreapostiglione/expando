@@ -16,6 +16,7 @@ class AppConfig:
     clipboard_threshold: int = 100
     max_regex_buffer_size: int = 30
     enabled: bool = True
+    app_blacklist: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -34,6 +35,8 @@ class Match:
     vars: list[Variable] = field(default_factory=list)
     force_clipboard: bool = False
     force_break: bool = False
+    if_app: list[str] = field(default_factory=list)
+    unless_app: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -74,6 +77,8 @@ def _normalize_match(raw: dict[str, Any]) -> Match:
         vars=variables,
         force_clipboard=bool(raw.get("force_clipboard", False)),
         force_break=bool(raw.get("force_break", False)),
+        if_app=[str(item) for item in raw.get("if_app", []) or []],
+        unless_app=[str(item) for item in raw.get("unless_app", []) or []],
     )
 
 
@@ -91,6 +96,7 @@ def load_app_config(path: Path) -> AppConfig:
         clipboard_threshold=int(data.get("clipboard_threshold", 100)),
         max_regex_buffer_size=int(data.get("max_regex_buffer_size", 30)),
         enabled=bool(data.get("enabled", True)),
+        app_blacklist=[str(item) for item in data.get("app_blacklist", []) or []],
     )
 
 

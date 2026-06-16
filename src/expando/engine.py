@@ -7,6 +7,7 @@ from typing import Callable
 
 from pynput.keyboard import Key
 
+from .app_context import get_frontmost_app, is_app_allowed
 from .config import ConfigBundle, Match, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
 from .renderer import render_match
@@ -56,7 +57,7 @@ class ExpansionEngine:
         return max(literal_max, regex_max)
 
     def handle_char(self, char: str) -> bool:
-        if not self.enabled:
+        if not self.enabled or not self._expansion_allowed():
             return False
 
         with self._lock:
@@ -66,7 +67,7 @@ class ExpansionEngine:
             return self._try_expand(require_word_break=False)
 
     def handle_key(self, key: Key) -> bool:
-        if not self.enabled:
+        if not self.enabled or not self._expansion_allowed():
             return False
 
         if key in WORD_BREAK_KEYS:
@@ -110,6 +111,22 @@ class ExpansionEngine:
             return "\n"
         return None
 
+    def _expansion_allowed(self) -> bool:
+        app_name = get_frontmost_app()
+        return is_app_allowed(
+            app_name,
+            global_blacklist=self.config.app.app_blacklist,
+        )
+
+    def _match_allowed(self, match: Match) -> bool:
+        app_name = get_frontmost_app()
+        return is_app_allowed(
+            app_name,
+            global_blacklist=self.config.app.app_blacklist,
+            if_app=match.if_app or None,
+            unless_app=match.unless_app or None,
+        )
+
     def _try_expand(self, require_word_break: bool) -> bool:
         match_info = self._find_match(require_word_break=require_word_break)
         if not match_info:
@@ -130,6 +147,8 @@ class ExpansionEngine:
             if self._buffer.endswith(trigger):
                 if match.word_break and not require_word_break:
                     continue
+                if not self._match_allowed(match):
+                    continue
                 return trigger, match
 
         if self._regex and len(self._buffer) <= self.config.app.max_regex_buffer_size:
@@ -137,6 +156,8 @@ class ExpansionEngine:
                 found = pattern.search(self._buffer)
                 if found and found.end() == len(self._buffer):
                     if match.word_break and not require_word_break:
+                        continue
+                    if not self._match_allowed(match):
                         continue
                     return found.group(0), match
         return None

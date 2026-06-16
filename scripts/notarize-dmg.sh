@@ -15,7 +15,12 @@ notary_args=(submit "$DMG" --wait)
 
 if [[ -n "${NOTARY_API_KEY:-}" && -n "${NOTARY_API_KEY_ID:-}" && -n "${NOTARY_API_ISSUER:-}" ]]; then
   notary_args+=(--key "$NOTARY_API_KEY" --key-id "$NOTARY_API_KEY_ID" --issuer "$NOTARY_API_ISSUER")
-elif [[ -n "${NOTARY_APPLE_ID:-}" && -n "${NOTARY_PASSWORD:-}" ]]; then
+elif [[ -n "${NOTARY_APPLE_ID:-}" ]]; then
+  if [[ -z "${NOTARY_PASSWORD:-}" ]]; then
+    echo "NOTARY_APPLE_ID is set but NOTARY_PASSWORD is empty." >&2
+    echo "Run: gh secret set NOTARY_PASSWORD" >&2
+    exit 1
+  fi
   notary_args+=(--apple-id "$NOTARY_APPLE_ID" --password "$NOTARY_PASSWORD" --team-id "$TEAM_ID")
 else
   notary_args+=(--keychain-profile "$PROFILE")

@@ -45,6 +45,10 @@ fi
 
 read -r -s -p "Apple app-specific password (for notarization): " NOTARY_PASSWORD
 echo
+if [[ -z "$NOTARY_PASSWORD" ]]; then
+  echo "App-specific password is required for notarization." >&2
+  exit 1
+fi
 
 CERT_B64="$(base64 < "$P12_PATH" | tr -d '\n')"
 

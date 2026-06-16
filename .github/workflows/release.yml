@@ -55,10 +55,13 @@ jobs:
           else
             export EXPANDO_SIGN=0
           fi
-          if [[ -n "$NOTARY_APPLE_ID" || -n "$NOTARY_API_KEY" ]]; then
+          if [[ -n "$NOTARY_APPLE_ID" && -n "$NOTARY_PASSWORD" ]] || [[ -n "$NOTARY_API_KEY" ]]; then
             export EXPANDO_NOTARIZE=1
           else
             export EXPANDO_NOTARIZE=0
+            if [[ -n "$NOTARY_APPLE_ID" && -z "$NOTARY_PASSWORD" ]]; then
+              echo "NOTARY_APPLE_ID is set but NOTARY_PASSWORD is empty — building signed DMG only." >&2
+            fi
           fi
           ./scripts/build-dmg.sh
 

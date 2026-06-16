@@ -43,27 +43,43 @@ def _preview_text(item: SearchItem, app_config: AppConfig) -> str:
         return item.match.replace
 
 
+def _item_label(item: SearchItem, app_config: AppConfig, trigger_counts: dict[str, int]) -> str:
+    if trigger_counts.get(item.trigger, 0) <= 1:
+        return item.trigger
+    preview = _preview_text(item, app_config).strip().splitlines()[0]
+    if len(preview) > 48:
+        preview = preview[:47] + "…"
+    return f"{item.trigger} — {preview}" if preview else item.trigger
+
+
 def pick_snippet(items: list[SearchItem], app_config: AppConfig | None = None) -> SearchItem | None:
     if not items:
         return None
 
+    app_config = app_config or AppConfig()
+    trigger_counts: dict[str, int] = {}
+    for item in items:
+        trigger_counts[item.trigger] = trigger_counts.get(item.trigger, 0) + 1
+
     payload = [
         {
+            "id": str(index),
             "trigger": item.trigger,
-            "preview": _preview_text(item, app_config or AppConfig()),
+            "label": _item_label(item, app_config, trigger_counts),
+            "preview": _preview_text(item, app_config),
         }
-        for item in items
+        for index, item in enumerate(items)
     ]
     picked = show_search_picker(payload)
     if not picked:
         return None
 
-    trigger = picked.get("trigger", "").strip()
-    if not trigger:
+    try:
+        index = int(picked.get("id", ""))
+    except ValueError:
         return None
-    for item in items:
-        if item.trigger == trigger:
-            return item
+    if 0 <= index < len(items):
+        return items[index]
     return None
 
 

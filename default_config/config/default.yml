@@ -13,7 +13,7 @@ search_shortcut: CMD+SHIFT+E
 #   - 1Password
 #   - Bitwarden
 
-# Restrict shell vars to safe command prefixes (empty = allow all)
-# shell_allowlist:
-#   - echo
-#   - git
+# Restrict shell vars to allowed executables (empty = deny all shell commands)
+shell_allowlist:
+  - echo
+  - git

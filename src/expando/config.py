@@ -8,6 +8,11 @@ from typing import Any
 import yaml
 
 from .forms import FormField
+from .match_utils import find_duplicate_literal_triggers
+
+
+class ConfigCompileError(ValueError):
+    pass
 
 
 @dataclass
@@ -146,22 +151,40 @@ def load_matches(match_directory: Path) -> list[Match]:
 
 
 def load_config(config_dir: Path) -> ConfigBundle:
+    base = load_app_config(config_dir / "config" / "default.yml")
+    matches = load_matches(config_dir / "match")
+    return ConfigBundle(app=base, matches=matches)
+
+
+def active_bundle(config_dir: Path, bundle: ConfigBundle) -> ConfigBundle:
     from .profiles import resolve_app_config
 
-    base = load_app_config(config_dir / "config" / "default.yml")
-    app = resolve_app_config(config_dir, base)
-    matches = load_matches(config_dir / "match")
-    return ConfigBundle(app=app, matches=matches)
+    return ConfigBundle(
+        app=resolve_app_config(config_dir, bundle.app),
+        matches=bundle.matches,
+    )
 
 
 def compile_matches(matches: list[Match]) -> tuple[dict[str, Match], list[tuple[re.Pattern[str], Match]]]:
+    duplicates = find_duplicate_literal_triggers(matches)
+    if duplicates:
+        raise ConfigCompileError(
+            "Duplicate literal triggers: " + ", ".join(duplicates)
+        )
+
     literal: dict[str, Match] = {}
     regex_matches: list[tuple[re.Pattern[str], Match]] = []
 
     for match in matches:
         for trigger in match.triggers:
             if match.regex:
-                regex_matches.append((re.compile(trigger), match))
+                try:
+                    pattern = re.compile(trigger)
+                except re.error as exc:
+                    raise ConfigCompileError(
+                        f"Invalid regex trigger {trigger!r}: {exc}"
+                    ) from exc
+                regex_matches.append((pattern, match))
             else:
                 literal[trigger] = match
 

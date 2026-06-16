@@ -7,6 +7,20 @@ from datetime import datetime
 from pathlib import Path
 
 
+def _safe_extract(archive: tarfile.TarFile, destination: Path) -> None:
+    for member in archive.getmembers():
+        target = (destination / member.name).resolve()
+        if not str(target).startswith(str(destination.resolve())):
+            raise ValueError(f"Unsafe path in archive: {member.name}")
+    if hasattr(archive, "extractall"):
+        try:
+            archive.extractall(destination, filter="data")
+            return
+        except TypeError:
+            pass
+    archive.extractall(destination)
+
+
 def backup_config(config_dir: Path, destination: Path | None = None) -> Path:
     config_dir.mkdir(parents=True, exist_ok=True)
     if destination is None:
@@ -28,7 +42,7 @@ def restore_config(config_dir: Path, archive_path: Path) -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         with tarfile.open(archive_path, "r:gz") as archive:
-            archive.extractall(temp_path)
+            _safe_extract(archive, temp_path)
             members = archive.getnames()
         top_level = {name.split("/")[0] for name in members}
         if not top_level:
@@ -41,4 +55,4 @@ def restore_config(config_dir: Path, archive_path: Path) -> None:
             backup_config(config_dir, config_dir.parent / "expando-pre-restore-backup.tar.gz")
             shutil.rmtree(config_dir)
 
-        shutil.move(str(extracted), str(config_dir))
+        shutil.copytree(extracted, config_dir)

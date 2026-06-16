@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import re
 import threading
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
 
 from pynput.keyboard import Key
 
-from .app_context import get_frontmost_context, match_allowed
-from .config import ConfigBundle, Match, compile_matches, load_config
+from .app_context import AppContext, get_frontmost_context, match_allowed
+from .config import ConfigBundle, Match, active_bundle, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
 from .renderer import render_match_interactive
 
@@ -33,8 +33,11 @@ class ExpansionEngine:
         config: ConfigBundle,
         injector: TextInjector,
         on_expand: Callable[[ExpansionResult], None] | None = None,
+        *,
+        config_dir: Path | None = None,
     ) -> None:
-        self.config = config
+        self._config_dir = config_dir
+        self._base_bundle = config
         self.injector = injector
         self.on_expand = on_expand
         self.enabled = config.app.enabled
@@ -43,36 +46,59 @@ class ExpansionEngine:
         self._literal, self._regex = compile_matches(config.matches)
         self._max_trigger_len = self._compute_max_trigger_len()
 
+    @property
+    def config(self) -> ConfigBundle:
+        if self._config_dir is not None:
+            return active_bundle(self._config_dir, self._base_bundle)
+        return self._base_bundle
+
     def reload(self, config: ConfigBundle) -> None:
+        literal, regex = compile_matches(config.matches)
         with self._lock:
-            self.config = config
+            self._base_bundle = config
             self.enabled = config.app.enabled
-            self._literal, self._regex = compile_matches(config.matches)
+            self._literal = literal
+            self._regex = regex
             self._max_trigger_len = self._compute_max_trigger_len()
             self._buffer = ""
 
     def _compute_max_trigger_len(self) -> int:
         literal_max = max((len(trigger) for trigger in self._literal), default=0)
-        regex_max = self.config.app.max_regex_buffer_size
+        regex_max = self._base_bundle.app.max_regex_buffer_size
         return max(literal_max, regex_max)
 
     def handle_char(self, char: str) -> bool:
-        if not self.enabled or not self._expansion_allowed():
-            return False
-
         with self._lock:
+            if not self.enabled:
+                return False
+            context = get_frontmost_context()
+            config = self.config
+            if not self._expansion_allowed(context, config):
+                return False
             self._buffer += char
             if len(self._buffer) > self._max_trigger_len:
                 self._buffer = self._buffer[-self._max_trigger_len :]
-            return self._try_expand(require_word_break=False)
+            return self._try_expand(
+                require_word_break=False,
+                context=context,
+                config=config,
+            )
 
     def handle_key(self, key: Key) -> bool:
-        if not self.enabled or not self._expansion_allowed():
-            return False
+        with self._lock:
+            if not self.enabled:
+                return False
+            context = get_frontmost_context()
+            config = self.config
+            if not self._expansion_allowed(context, config):
+                return False
 
-        if key in WORD_BREAK_KEYS:
-            with self._lock:
-                expanded = self._try_expand(require_word_break=True)
+            if key in WORD_BREAK_KEYS:
+                expanded = self._try_expand(
+                    require_word_break=True,
+                    context=context,
+                    config=config,
+                )
                 self._append_key_to_buffer(key)
                 return expanded
 
@@ -111,18 +137,16 @@ class ExpansionEngine:
             return "\n"
         return None
 
-    def _expansion_allowed(self) -> bool:
-        context = get_frontmost_context()
+    def _expansion_allowed(self, context: AppContext, config: ConfigBundle) -> bool:
         return match_allowed(
             context,
-            global_blacklist=self.config.app.app_blacklist,
+            global_blacklist=config.app.app_blacklist,
         )
 
-    def _match_allowed(self, match: Match) -> bool:
-        context = get_frontmost_context()
+    def _match_allowed(self, match: Match, context: AppContext, config: ConfigBundle) -> bool:
         return match_allowed(
             context,
-            global_blacklist=self.config.app.app_blacklist,
+            global_blacklist=config.app.app_blacklist,
             if_app=match.if_app or None,
             unless_app=match.unless_app or None,
             if_bundle=match.if_bundle or None,
@@ -131,13 +155,23 @@ class ExpansionEngine:
             unless_title=match.unless_title or None,
         )
 
-    def _try_expand(self, require_word_break: bool) -> bool:
-        match_info = self._find_match(require_word_break=require_word_break)
+    def _try_expand(
+        self,
+        *,
+        require_word_break: bool,
+        context: AppContext,
+        config: ConfigBundle,
+    ) -> bool:
+        match_info = self._find_match(
+            require_word_break=require_word_break,
+            context=context,
+            config=config,
+        )
         if not match_info:
             return False
 
         trigger, match = match_info
-        replacement = render_match_interactive(match, app_config=self.config.app)
+        replacement = render_match_interactive(match, app_config=config.app)
         if replacement is None:
             return False
         self.injector.delete_chars(len(trigger))
@@ -145,31 +179,42 @@ class ExpansionEngine:
         self._buffer = self._buffer[: -len(trigger)]
 
         if self.on_expand:
-            self.on_expand(ExpansionResult(trigger=trigger, replacement=replacement, match=match))
+            self.on_expand(
+                ExpansionResult(trigger=trigger, replacement=replacement, match=match)
+            )
         return True
 
-    def _find_match(self, require_word_break: bool) -> tuple[str, Match] | None:
+    def _find_match(
+        self,
+        *,
+        require_word_break: bool,
+        context: AppContext,
+        config: ConfigBundle,
+    ) -> tuple[str, Match] | None:
         for trigger, match in sorted(self._literal.items(), key=lambda item: len(item[0]), reverse=True):
             if self._buffer.endswith(trigger):
-                if match.word_break and not require_word_break:
+                if match.word_break and not require_word_break and not match.force_break:
                     continue
-                if not self._match_allowed(match):
+                if not self._match_allowed(match, context, config):
                     continue
                 return trigger, match
 
-        if self._regex and len(self._buffer) <= self.config.app.max_regex_buffer_size:
+        if self._regex and len(self._buffer) <= config.app.max_regex_buffer_size:
             for pattern, match in self._regex:
                 found = pattern.search(self._buffer)
                 if found and found.end() == len(self._buffer):
-                    if match.word_break and not require_word_break:
+                    if match.word_break and not require_word_break and not match.force_break:
                         continue
-                    if not self._match_allowed(match):
+                    if not self._match_allowed(match, context, config):
                         continue
                     return found.group(0), match
         return None
 
 
-def build_engine(config_dir, on_expand=None) -> ExpansionEngine:
+def build_engine(
+    config_dir: Path,
+    on_expand: Callable[[ExpansionResult], None] | None = None,
+) -> ExpansionEngine:
     config = load_config(config_dir)
     injector = TextInjector(
         InjectorSettings(
@@ -177,4 +222,9 @@ def build_engine(config_dir, on_expand=None) -> ExpansionEngine:
             clipboard_threshold=config.app.clipboard_threshold,
         )
     )
-    return ExpansionEngine(config=config, injector=injector, on_expand=on_expand)
+    return ExpansionEngine(
+        config=config,
+        injector=injector,
+        on_expand=on_expand,
+        config_dir=config_dir,
+    )

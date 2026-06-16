@@ -23,3 +23,25 @@ def test_shell_allowlist_allows_command():
     )
     app = AppConfig(shell_allowlist=["echo"])
     assert render_match(match, app_config=app) == "ok"
+
+
+def test_shell_allowlist_blocks_chained_command():
+    match = Match(
+        triggers=[":bad"],
+        replace="{{output}}",
+        vars=[Variable(name="output", type="shell", params={"cmd": "echo ok; rm -rf /"})],
+    )
+    app = AppConfig(shell_allowlist=["echo"])
+    with pytest.raises(RuntimeError, match="not allowed"):
+        render_match(match, app_config=app)
+
+
+def test_shell_allowlist_denies_when_empty():
+    match = Match(
+        triggers=[":bad"],
+        replace="{{output}}",
+        vars=[Variable(name="output", type="shell", params={"cmd": "echo ok"})],
+    )
+    app = AppConfig(shell_allowlist=[])
+    with pytest.raises(RuntimeError, match="not allowed"):
+        render_match(match, app_config=app)

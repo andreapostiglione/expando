@@ -47,25 +47,45 @@ def _app_bundle_executable() -> Path | None:
 
 
 def start_daemon(config_dir: Path) -> int:
-    running, pid = is_running(config_dir)
-    if running:
-        logger.info("Expando already running with pid %s", pid)
-        return pid or 0
-
     config_dir.mkdir(parents=True, exist_ok=True)
-    setup_logging(config_dir)
-    log_path = log_file(config_dir)
-    log_handle = open(log_path, "a", encoding="utf-8")
+    starter_lock = SingleInstanceLock(lock_file(config_dir).with_name("expando.starter.lock"))
+    if not starter_lock.acquire(blocking=False):
+        running, pid = is_running(config_dir)
+        if running and pid is not None:
+            return pid
+        raise RuntimeError("Another start operation is in progress")
 
-    process = subprocess.Popen(
-        _daemon_command(config_dir),
-        stdout=log_handle,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-    )
-    pid_file(config_dir).write_text(str(process.pid), encoding="utf-8")
-    logger.info("Expando started with pid %s", process.pid)
-    return process.pid
+    try:
+        running, pid = is_running(config_dir)
+        if running and pid is not None:
+            logger.info("Expando already running with pid %s", pid)
+            return pid
+
+        setup_logging(config_dir)
+        log_path = log_file(config_dir)
+        log_handle = open(log_path, "a", encoding="utf-8")
+        process = subprocess.Popen(
+            _daemon_command(config_dir),
+            stdout=log_handle,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        log_handle.close()
+
+        for _ in range(30):
+            time.sleep(0.1)
+            if is_running(config_dir)[0]:
+                running, pid = is_running(config_dir)
+                logger.info("Expando started with pid %s", pid or process.pid)
+                return pid or process.pid
+            if process.poll() is not None:
+                raise RuntimeError(f"Expando process exited immediately with code {process.returncode}")
+
+        pid_file(config_dir).write_text(str(process.pid), encoding="utf-8")
+        logger.info("Expando started with pid %s", process.pid)
+        return process.pid
+    finally:
+        starter_lock.release()
 
 
 def stop_daemon(config_dir: Path) -> bool:

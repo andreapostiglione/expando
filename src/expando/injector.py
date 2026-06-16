@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import platform
 import subprocess
+import threading
 import time
 from dataclasses import dataclass
 
@@ -19,19 +20,22 @@ class TextInjector:
         self.settings = settings
         self.keyboard = Controller()
         self._system = platform.system()
+        self._lock = threading.Lock()
 
     def delete_chars(self, count: int) -> None:
-        for _ in range(count):
-            self.keyboard.press(Key.backspace)
-            self.keyboard.release(Key.backspace)
-            time.sleep(0.005)
+        with self._lock:
+            for _ in range(count):
+                self.keyboard.press(Key.backspace)
+                self.keyboard.release(Key.backspace)
+                time.sleep(0.005)
 
     def inject(self, text: str, force_clipboard: bool = False) -> None:
-        use_clipboard = force_clipboard or self._should_use_clipboard(text)
-        if use_clipboard:
-            self._inject_via_clipboard(text)
-        else:
-            self._inject_via_typing(text)
+        with self._lock:
+            use_clipboard = force_clipboard or self._should_use_clipboard(text)
+            if use_clipboard:
+                self._inject_via_clipboard(text)
+            else:
+                self._inject_via_typing(text)
 
     def _should_use_clipboard(self, text: str) -> bool:
         backend = self.settings.backend

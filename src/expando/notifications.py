@@ -7,7 +7,10 @@ import subprocess
 def notify(title: str, message: str) -> None:
     if platform.system() != "Darwin":
         return
-    script = f'display notification "{_escape(message)}" with title "{_escape(title)}"'
+    script = (
+        f'display notification {_applescript_string(message)} '
+        f"with title {_applescript_string(title)}"
+    )
     subprocess.run(
         ["osascript", "-e", script],
         capture_output=True,
@@ -17,9 +20,11 @@ def notify(title: str, message: str) -> None:
 
 
 def notify_toggle(enabled: bool) -> None:
-    state = "attivo" if enabled else "disattivato"
-    notify("Expando", f"Espansione testi {state}")
+    state = "enabled" if enabled else "disabled"
+    notify("Expando", f"Text expansion {state}")
 
 
-def _escape(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
+def _applescript_string(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    escaped = escaped.replace("\n", "\\n").replace("\r", "\\r")
+    return f'"{escaped}"'

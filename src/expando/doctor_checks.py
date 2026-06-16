@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -8,8 +7,9 @@ from pathlib import Path
 
 import yaml
 
-from .config import load_config
+from .config import ConfigCompileError, compile_matches, load_config
 from .daemon import is_running
+from .match_utils import find_duplicate_literal_triggers
 from .permissions import PermissionStatus, check_permissions
 
 
@@ -64,24 +64,11 @@ def find_expando_processes() -> list[int]:
 
 
 def find_duplicate_triggers(config_dir: Path) -> list[str]:
-    trigger_map: dict[str, int] = {}
-    match_dir = config_dir / "match"
-    if not match_dir.exists():
+    try:
+        bundle = load_config(config_dir)
+    except Exception:
         return []
-
-    for path in sorted(match_dir.glob("*.yml")) + sorted(match_dir.glob("*.yaml")):
-        with path.open("r", encoding="utf-8") as handle:
-            data = yaml.safe_load(handle) or {}
-        for item in data.get("matches", []) or []:
-            triggers: list[str] = []
-            if "trigger" in item:
-                triggers.append(str(item["trigger"]))
-            if "triggers" in item:
-                triggers.extend(str(value) for value in item["triggers"])
-            for trigger in triggers:
-                trigger_map[trigger] = trigger_map.get(trigger, 0) + 1
-
-    return sorted(trigger for trigger, count in trigger_map.items() if count > 1)
+    return find_duplicate_literal_triggers(bundle.matches)
 
 
 def validate_config_files(config_dir: Path) -> list[str]:
@@ -114,6 +101,12 @@ def validate_config_files(config_dir: Path) -> list[str]:
         except Exception as exc:
             errors.append(f"Error in {path.name}: {exc}")
 
+    try:
+        bundle = load_config(config_dir)
+        compile_matches(bundle.matches)
+    except ConfigCompileError as exc:
+        errors.append(str(exc))
+
     return errors
 
 
@@ -128,11 +121,11 @@ def run_doctor(config_dir: Path) -> DoctorReport:
     warnings: list[str] = []
     if process_count > 1:
         warnings.append(
-            f"Trovati {process_count} processi Expando: esegui `expando stop` e riavvia"
+            f"Found {process_count} Expando processes: run `expando stop` and restart"
         )
     if duplicate_triggers:
         warnings.append(
-            "Trigger duplicati: " + ", ".join(duplicate_triggers)
+            "Duplicate triggers: " + ", ".join(duplicate_triggers)
         )
     if permissions:
         warnings.extend(permissions.notes)

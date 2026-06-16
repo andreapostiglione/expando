@@ -138,24 +138,4 @@ def is_app_allowed(
     )
 
 
-def match_allowed(
-    context: AppContext,
-    *,
-    global_blacklist: list[str],
-    if_app: list[str] | None = None,
-    unless_app: list[str] | None = None,
-    if_bundle: list[str] | None = None,
-    unless_bundle: list[str] | None = None,
-    if_title: list[str] | None = None,
-    unless_title: list[str] | None = None,
-) -> bool:
-    return is_context_allowed(
-        context,
-        global_blacklist=global_blacklist,
-        if_app=if_app,
-        unless_app=unless_app,
-        if_bundle=if_bundle,
-        unless_bundle=unless_bundle,
-        if_title=if_title,
-        unless_title=unless_title,
-    )
+match_allowed = is_context_allowed

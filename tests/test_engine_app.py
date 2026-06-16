@@ -54,3 +54,18 @@ def test_engine_respects_bundle_filter():
     ):
         for char in ":hi":
             assert engine.handle_char(char) is False
+
+
+def test_engine_force_break_expands_without_word_break():
+    engine = _engine(
+        [Match(triggers=[":hi"], replace="Hello", word_break=True, force_break=True)]
+    )
+    engine.injector.inject = lambda *args, **kwargs: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    with patch(
+        "expando.engine.get_frontmost_context",
+        return_value=AppContext(name="Terminal"),
+    ):
+        assert engine.handle_char(":") is False
+        assert engine.handle_char("h") is False
+        assert engine.handle_char("i") is True

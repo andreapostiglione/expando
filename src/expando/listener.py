@@ -11,13 +11,13 @@ from pynput.keyboard import Key, Listener
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .config import load_config
-from .engine import ExpansionEngine
+from .config import ConfigBundle, load_config
+from .engine import ExpansionEngine, build_engine
 from .hotkeys import shortcut_pressed
-from .injector import InjectorSettings, TextInjector
 from .logging_setup import setup_logging
 from .notifications import notify_toggle
 from .search import build_search_items, pick_snippet, resolve_snippet_text
+from .ui_state import is_ui_active
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +38,8 @@ TOGGLE_KEY_MAP = {
 
 
 class ConfigReloader(FileSystemEventHandler):
-    def __init__(self, config_dir: Path, engine: ExpansionEngine) -> None:
-        self.config_dir = config_dir
-        self.engine = engine
+    def __init__(self, on_reload: Callable[[], None]) -> None:
+        self._on_reload = on_reload
         self._debounce = 0.3
         self._last_reload = 0.0
 
@@ -54,9 +53,7 @@ class ConfigReloader(FileSystemEventHandler):
             return
         self._last_reload = now
         try:
-            config = load_config(self.config_dir)
-            self.engine.reload(config)
-            logger.info("Configuration reloaded")
+            self._on_reload()
         except Exception:
             logger.exception("Failed to reload configuration")
 
@@ -68,31 +65,53 @@ class KeyboardService:
         self.on_toggle: Callable[[], None] | None = None
         self._listener: Listener | None = None
         self._observer: Observer | None = None
-        self._toggle_key = self._resolve_toggle_key(engine.config.app.toggle_key)
+        self._toggle_key = self._resolve_toggle_key(engine._base_bundle.app.toggle_key)
         self._last_toggle_press = 0.0
         self._toggle_window = 0.45
+        self._state_lock = threading.Lock()
         self._injecting = False
         self._pressed_modifiers: set = set()
 
     def open_search(self) -> None:
         if not self.engine.enabled:
             return
-        items = build_search_items(self.engine.config.matches, self.engine.config.app)
-        picked = pick_snippet(items, app_config=self.engine.config.app)
+        config = self.engine.config
+        items = build_search_items(config.matches, config.app)
+        picked = pick_snippet(items, app_config=config.app)
         if not picked:
             return
-        text = resolve_snippet_text(picked.match, app_config=self.engine.config.app)
+        text = resolve_snippet_text(picked.match, app_config=config.app)
         if not text:
             return
-        self._injecting = True
+        self._set_injecting(True)
         try:
             self.engine.injector.inject(
                 text,
-                force_clipboard=picked.match.force_clipboard or len(text) >= self.engine.config.app.clipboard_threshold,
+                force_clipboard=picked.match.force_clipboard
+                or len(text) >= config.app.clipboard_threshold,
             )
             logger.info("Inserted snippet from search: %s", picked.trigger)
         finally:
-            threading.Timer(0.15, self._clear_injecting).start()
+            threading.Timer(0.15, lambda: self._set_injecting(False)).start()
+
+    def apply_config_reload(self) -> None:
+        config = load_config(self.config_dir)
+        self.engine.reload(config)
+        self._toggle_key = self._resolve_toggle_key(self.engine._base_bundle.app.toggle_key)
+        self._sync_file_watcher()
+        logger.info("Configuration reloaded")
+
+    def _sync_file_watcher(self) -> None:
+        wants_observer = self.engine._base_bundle.app.auto_restart
+        if wants_observer and self._observer is None:
+            handler = ConfigReloader(self.apply_config_reload)
+            self._observer = Observer()
+            self._observer.schedule(handler, str(self.config_dir), recursive=True)
+            self._observer.start()
+        elif not wants_observer and self._observer is not None:
+            self._observer.stop()
+            self._observer.join(timeout=2)
+            self._observer = None
 
     def _resolve_toggle_key(self, toggle_key: str) -> Key | None:
         if toggle_key.upper() == "OFF":
@@ -105,12 +124,7 @@ class KeyboardService:
             self.on_toggle()
 
     def start(self) -> None:
-        if self.engine.config.app.auto_restart:
-            handler = ConfigReloader(self.config_dir, self.engine)
-            self._observer = Observer()
-            self._observer.schedule(handler, str(self.config_dir), recursive=True)
-            self._observer.start()
-
+        self._sync_file_watcher()
         self._listener = Listener(
             on_press=self._on_press,
             on_release=self._on_release,
@@ -132,9 +146,20 @@ class KeyboardService:
         if self._listener:
             self._listener.join()
 
+    def _set_injecting(self, value: bool) -> None:
+        with self._state_lock:
+            self._injecting = value
+
+    def _is_injecting(self) -> bool:
+        with self._state_lock:
+            return self._injecting
+
     def _track_modifier_press(self, key) -> None:
-        if key in {Key.cmd, Key.alt, Key.ctrl, Key.shift, Key.cmd_l, Key.cmd_r, Key.alt_l, Key.alt_r, Key.ctrl_l, Key.ctrl_r, Key.shift_l, Key.shift_r}:
-            normalized = Key.cmd if key in {Key.cmd, Key.cmd_l, Key.cmd_r} else key
+        if key in {
+            Key.cmd, Key.alt, Key.ctrl, Key.shift,
+            Key.cmd_l, Key.cmd_r, Key.alt_l, Key.alt_r,
+            Key.ctrl_l, Key.ctrl_r, Key.shift_l, Key.shift_r,
+        }:
             if key in {Key.cmd, Key.cmd_l, Key.cmd_r}:
                 self._pressed_modifiers.add(Key.cmd)
             elif key in {Key.shift, Key.shift_l, Key.shift_r}:
@@ -155,6 +180,8 @@ class KeyboardService:
             self._pressed_modifiers.discard(Key.ctrl)
 
     def _on_press(self, key) -> None:
+        if is_ui_active():
+            return
         self._track_modifier_press(key)
         shortcut = self.engine.config.app.search_shortcut
         if shortcut and shortcut_pressed(shortcut, self._pressed_modifiers, key):
@@ -172,9 +199,9 @@ class KeyboardService:
                 self._last_toggle_press = now
 
     def _on_release(self, key) -> None:
-        self._track_modifier_release(key)
-        if self._injecting:
+        if is_ui_active() or self._is_injecting():
             return
+        self._track_modifier_release(key)
 
         try:
             if key == Key.backspace:
@@ -192,24 +219,13 @@ class KeyboardService:
 
     def _maybe_expand(self, expanded: bool) -> None:
         if expanded:
-            self._injecting = True
-            threading.Timer(0.15, self._clear_injecting).start()
-
-    def _clear_injecting(self) -> None:
-        self._injecting = False
+            self._set_injecting(True)
+            threading.Timer(0.15, lambda: self._set_injecting(False)).start()
 
 
 def build_service(config_dir: Path) -> KeyboardService:
-    config = load_config(config_dir)
-    injector = TextInjector(
-        InjectorSettings(
-            backend=config.app.backend,
-            clipboard_threshold=config.app.clipboard_threshold,
-        )
-    )
-    engine = ExpansionEngine(
-        config=config,
-        injector=injector,
+    engine = build_engine(
+        config_dir,
         on_expand=lambda result: logger.info(
             "Expanded %r -> %r", result.trigger, result.replacement
         ),

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -11,12 +12,7 @@ from .config import AppConfig, Match, Variable
 from .forms import collect_form_values
 
 TEMPLATE_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
-
-BUILTIN_ENV = {
-    "USER": lambda: os.environ.get("USER", os.environ.get("USERNAME", "")),
-    "HOME": lambda: str(Path.home()),
-    "cwd": lambda: os.getcwd(),
-}
+SHELL_CHAIN_RE = re.compile(r"[;|&`$()<>]")
 
 
 def _resolve_env(name: str) -> str:
@@ -25,11 +21,37 @@ def _resolve_env(name: str) -> str:
     return os.environ.get(name, "")
 
 
+BUILTIN_ENV = {
+    "USER": lambda: os.environ.get("USER", os.environ.get("USERNAME", "")),
+    "HOME": lambda: str(Path.home()),
+    "cwd": lambda: os.getcwd(),
+}
+
+
+def _shell_executable(cmd: str) -> str:
+    stripped = cmd.strip()
+    if not stripped:
+        return ""
+    try:
+        parts = shlex.split(stripped)
+    except ValueError:
+        return ""
+    return parts[0] if parts else ""
+
+
 def _shell_allowed(cmd: str, allowlist: list[str]) -> bool:
     if not allowlist:
-        return True
-    stripped = cmd.strip()
-    return any(stripped.startswith(prefix) for prefix in allowlist)
+        return False
+    if SHELL_CHAIN_RE.search(cmd):
+        return False
+    executable = _shell_executable(cmd)
+    if not executable:
+        return False
+    executable_name = Path(executable).name.casefold()
+    return any(
+        executable_name == prefix.casefold() or executable.casefold() == prefix.casefold()
+        for prefix in allowlist
+    )
 
 
 def _resolve_variable(variable: Variable, app_config: AppConfig | None = None) -> str:

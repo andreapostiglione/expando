@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Any
 
 from .fuzzy import fuzzy_filter
 
@@ -69,16 +68,22 @@ class SearchPicker:
 
     def _filtered_items(self) -> list[dict[str, str]]:
         query = self.query_var.get().strip()
-        triggers = [item["trigger"] for item in self.items]
-        ordered = fuzzy_filter(query, triggers)
-        lookup = {item["trigger"]: item for item in self.items}
-        return [lookup[trigger] for trigger in ordered]
+        labels = [item.get("label", item["trigger"]) for item in self.items]
+        ordered_labels = fuzzy_filter(query, labels)
+        label_to_items: dict[str, list[dict[str, str]]] = {}
+        for item in self.items:
+            label = item.get("label", item["trigger"])
+            label_to_items.setdefault(label, []).append(item)
+        visible: list[dict[str, str]] = []
+        for label in ordered_labels:
+            visible.extend(label_to_items.get(label, []))
+        return visible
 
     def _refresh_list(self) -> None:
         self.listbox.delete(0, tk.END)
         self._visible = self._filtered_items()
         for item in self._visible:
-            self.listbox.insert(tk.END, item["trigger"])
+            self.listbox.insert(tk.END, item.get("label", item["trigger"]))
         if self._visible:
             self.listbox.selection_set(0)
             self.listbox.activate(0)
@@ -104,7 +109,7 @@ class SearchPicker:
         item = self._selected_item()
         if not item:
             return
-        self.result = {"trigger": item["trigger"]}
+        self.result = {"id": item["id"], "trigger": item["trigger"]}
         self.root.destroy()
 
     def _cancel(self) -> None:

@@ -1,4 +1,4 @@
-from expando.config import Match, Variable
+from expando.config import AppConfig, Match, Variable
 from expando.renderer import render_match
 
 
@@ -19,7 +19,8 @@ def test_render_shell_variable():
         replace="{{output}}",
         vars=[Variable(name="output", type="shell", params={"cmd": "echo ok"})],
     )
-    assert render_match(match) == "ok"
+    app = AppConfig(shell_allowlist=["echo"])
+    assert render_match(match, app_config=app) == "ok"
 
 
 def test_render_builtin_env_token():

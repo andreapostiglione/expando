@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from expando.config import Match, compile_matches, load_config, normalize_match
+import pytest
+
+from expando.config import ConfigCompileError, Match, compile_matches, load_config, normalize_match
 
 
 def test_load_default_config():
@@ -31,3 +33,20 @@ def test_normalize_match_advanced_filters():
     )
     assert match.if_bundle == ["com.apple.Terminal"]
     assert match.unless_title == ["Private"]
+
+
+def test_compile_matches_rejects_duplicates():
+    matches = [
+        Match(triggers=[":dup"], replace="one"),
+        Match(triggers=[":dup"], replace="two"),
+    ]
+    with pytest.raises(ConfigCompileError, match="Duplicate"):
+        compile_matches(matches)
+
+
+def test_compile_matches_rejects_invalid_regex():
+    matches = [
+        Match(triggers=["[invalid"], replace="x", regex=True),
+    ]
+    with pytest.raises(ConfigCompileError, match="Invalid regex"):
+        compile_matches(matches)

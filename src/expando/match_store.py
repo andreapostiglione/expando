@@ -5,7 +5,8 @@ from pathlib import Path
 
 import yaml
 
-from .config import Match, load_matches
+from .config import Match, normalize_match
+from .match_utils import extract_triggers
 
 
 def list_matches(config_dir: Path) -> list[tuple[Match, str]]:
@@ -18,31 +19,48 @@ def list_matches(config_dir: Path) -> list[tuple[Match, str]]:
         with path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
         for raw in data.get("matches", []) or []:
-            triggers = []
-            if "trigger" in raw:
-                triggers.append(str(raw["trigger"]))
-            if "triggers" in raw:
-                triggers.extend(str(item) for item in raw["triggers"])
-            for trigger in triggers:
-                results.append((_match_from_raw(raw, trigger), path.name))
+            match = normalize_match(raw)
+            for trigger in match.triggers:
+                single = Match(
+                    triggers=[trigger],
+                    replace=match.replace,
+                    regex=match.regex,
+                    word_break=match.word_break,
+                    vars=match.vars,
+                    form=match.form,
+                    force_clipboard=match.force_clipboard,
+                    force_break=match.force_break,
+                    if_app=match.if_app,
+                    unless_app=match.unless_app,
+                    if_bundle=match.if_bundle,
+                    unless_bundle=match.unless_bundle,
+                    if_title=match.if_title,
+                    unless_title=match.unless_title,
+                )
+                results.append((single, path.name))
 
     from .packages import load_package_matches
 
     for match in load_package_matches(directory):
         for trigger in match.triggers:
-            results.append((match, "packages"))
+            single = Match(
+                triggers=[trigger],
+                replace=match.replace,
+                regex=match.regex,
+                word_break=match.word_break,
+                vars=match.vars,
+                form=match.form,
+                force_clipboard=match.force_clipboard,
+                force_break=match.force_break,
+                if_app=match.if_app,
+                unless_app=match.unless_app,
+                if_bundle=match.if_bundle,
+                unless_bundle=match.unless_bundle,
+                if_title=match.if_title,
+                unless_title=match.unless_title,
+            )
+            results.append((single, "packages"))
     return results
-
-
-def _match_from_raw(raw: dict, trigger: str) -> Match:
-    return Match(
-        triggers=[trigger],
-        replace=str(raw.get("replace", "")),
-        regex=bool(raw.get("regex", False)),
-        word_break=bool(raw.get("word_break", False)),
-        if_app=[str(item) for item in raw.get("if_app", []) or []],
-        unless_app=[str(item) for item in raw.get("unless_app", []) or []],
-    )
 
 
 def _preview(text: str, limit: int = 60) -> str:
@@ -66,6 +84,10 @@ def format_match_list(config_dir: Path) -> str:
             scope = f" [{', '.join(match.if_app)} only]"
         elif match.unless_app:
             scope = f" [except {', '.join(match.unless_app)}]"
+        if match.if_bundle:
+            scope += f" [bundle: {', '.join(match.if_bundle)}]"
+        if match.if_title:
+            scope += f" [title: {', '.join(match.if_title)}]"
         lines.append(f"{trigger:20} {preview:40} ({source}){scope}")
     return "\n".join(lines)
 
@@ -93,12 +115,7 @@ def append_match(
             data = yaml.safe_load(handle) or {}
         matches = list(data.get("matches", []) or [])
         for item in matches:
-            existing = []
-            if "trigger" in item:
-                existing.append(str(item["trigger"]))
-            if "triggers" in item:
-                existing.extend(str(value) for value in item["triggers"])
-            if trigger in existing:
+            if trigger in extract_triggers(item):
                 raise ValueError(f"Trigger already exists in {path.name}: {trigger}")
         matches.append(entry)
         data["matches"] = matches
@@ -110,26 +127,29 @@ def append_match(
     return path
 
 
-def import_matches(config_dir: Path, source: Path) -> list[str]:
+def import_matches(config_dir: Path, source: Path, *, force: bool = False) -> list[str]:
     destination_dir = config_dir / "match"
     destination_dir.mkdir(parents=True, exist_ok=True)
     imported: list[str] = []
 
+    def _copy(path: Path) -> None:
+        target = destination_dir / path.name
+        if target.exists() and not force:
+            raise ValueError(f"File already exists: {target.name} (use --force to overwrite)")
+        shutil.copy2(path, target)
+        imported.append(target.name)
+
     if source.is_file():
         if source.suffix not in {".yml", ".yaml"}:
             raise ValueError("Import source must be a .yml or .yaml file")
-        target = destination_dir / source.name
-        shutil.copy2(source, target)
-        imported.append(target.name)
+        _copy(source)
         return imported
 
     if not source.is_dir():
         raise ValueError(f"Import source not found: {source}")
 
     for path in sorted(source.glob("*.yml")) + sorted(source.glob("*.yaml")):
-        target = destination_dir / path.name
-        shutil.copy2(path, target)
-        imported.append(target.name)
+        _copy(path)
 
     if not imported:
         raise ValueError(f"No YAML match files found in {source}")

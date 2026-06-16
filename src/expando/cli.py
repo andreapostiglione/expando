@@ -8,14 +8,14 @@ import click
 
 from . import __version__
 from .daemon import is_running, start_daemon, stop_daemon
-from .paths import config_file, default_config_dir, ensure_default_config, match_dir, package_root
+from .paths import default_config_dir, ensure_default_config, match_dir, package_root
 from .doctor_checks import format_doctor_report, run_doctor
 from .backup import backup_config, restore_config
 from .match_store import append_match, format_match_list, import_matches
 from .packages import list_installed_packages
 from .renderer import render_match_interactive
 from .search import build_search_items, pick_snippet, resolve_snippet_text
-from .config import load_config, load_matches
+from .config import active_bundle, load_config, load_matches
 
 
 def _resolve_config_dir(config_dir: str | None) -> Path:
@@ -124,10 +124,10 @@ def run(ctx: click.Context) -> None:
 def match_cmd(ctx: click.Context, trigger: str) -> None:
     """Test-render a trigger without typing."""
     config_dir: Path = ctx.obj["config_dir"]
-    matches = load_matches(match_dir(config_dir))
-    for item in matches:
+    bundle = active_bundle(config_dir, load_config(config_dir))
+    for item in bundle.matches:
         if trigger in item.triggers:
-            rendered = render_match_interactive(item, app_config=load_config(config_dir).app)
+            rendered = render_match_interactive(item, app_config=bundle.app)
             if rendered is None:
                 raise click.ClickException("Snippet rendering cancelled")
             click.echo(rendered)
@@ -140,7 +140,7 @@ def match_cmd(ctx: click.Context, trigger: str) -> None:
 def search(ctx: click.Context) -> None:
     """Open the snippet search picker."""
     config_dir: Path = ctx.obj["config_dir"]
-    bundle = load_config(config_dir)
+    bundle = active_bundle(config_dir, load_config(config_dir))
     items = build_search_items(bundle.matches, bundle.app)
     picked = pick_snippet(items, app_config=bundle.app)
     if not picked:
@@ -189,11 +189,12 @@ def add(
 
 @main.command()
 @click.argument("source", type=click.Path(exists=True))
+@click.option("--force", is_flag=True, help="Overwrite existing match files")
 @click.pass_context
-def import_cmd(ctx: click.Context, source: str) -> None:
+def import_cmd(ctx: click.Context, source: str, force: bool) -> None:
     """Import YAML snippet files from a file or directory."""
     try:
-        imported = import_matches(ctx.obj["config_dir"], Path(source).expanduser())
+        imported = import_matches(ctx.obj["config_dir"], Path(source).expanduser(), force=force)
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo("Imported:")

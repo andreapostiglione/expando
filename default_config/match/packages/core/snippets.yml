@@ -1,0 +1,14 @@
+matches:
+  - trigger: ":thanks"
+    replace: "Grazie mille!"
+
+  - trigger: ":sig"
+    form:
+      - name: name
+        label: "Il tuo nome"
+      - name: role
+        label: "Ruolo"
+    replace: |
+      Cordiali saluti,
+      {{name}}
+      {{role}}

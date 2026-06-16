@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,6 +31,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self.enabled_item = rumps.MenuItem("Disattiva", callback=self.toggle_enabled)
             self.menu = [
                 self.enabled_item,
+                rumps.MenuItem("Cerca snippet", callback=self.search_snippets),
                 rumps.MenuItem("Modifica snippet", callback=self.edit_snippets),
                 rumps.MenuItem("Riavvia", callback=self.restart_service),
                 None,
@@ -48,6 +50,9 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self.service.engine.toggle_enabled()
             self.service.notify_toggle()
             self._sync_enabled_label()
+
+        def search_snippets(self, _sender) -> None:
+            threading.Thread(target=self.service.open_search, daemon=True).start()
 
         def edit_snippets(self, _sender) -> None:
             target = self.config_dir / "match" / "base.yml"

@@ -10,8 +10,11 @@ from . import __version__
 from .daemon import is_running, start_daemon, stop_daemon
 from .paths import config_file, default_config_dir, ensure_default_config, match_dir, package_root
 from .doctor_checks import format_doctor_report, run_doctor
+from .backup import backup_config, restore_config
 from .match_store import append_match, format_match_list, import_matches
-from .renderer import render_match
+from .packages import list_installed_packages
+from .renderer import render_match_interactive
+from .search import build_search_items, pick_snippet, resolve_snippet_text
 from .config import load_config, load_matches
 
 
@@ -124,9 +127,27 @@ def match_cmd(ctx: click.Context, trigger: str) -> None:
     matches = load_matches(match_dir(config_dir))
     for item in matches:
         if trigger in item.triggers:
-            click.echo(render_match(item))
+            rendered = render_match_interactive(item, app_config=load_config(config_dir).app)
+            if rendered is None:
+                raise click.ClickException("Snippet rendering cancelled")
+            click.echo(rendered)
             return
     raise click.ClickException(f"Trigger not found: {trigger}")
+
+
+@main.command()
+@click.pass_context
+def search(ctx: click.Context) -> None:
+    """Open the snippet search picker."""
+    config_dir: Path = ctx.obj["config_dir"]
+    bundle = load_config(config_dir)
+    items = build_search_items(bundle.matches, bundle.app)
+    picked = pick_snippet(items)
+    if not picked:
+        raise SystemExit(0)
+    text = resolve_snippet_text(picked.match)
+    if text:
+        click.echo(text)
 
 
 @main.command("list")
@@ -178,6 +199,36 @@ def import_cmd(ctx: click.Context, source: str) -> None:
     click.echo("Imported:")
     for name in imported:
         click.echo(f"  - {name}")
+
+
+@main.command()
+@click.pass_context
+def packages(ctx: click.Context) -> None:
+    """List installed snippet packages."""
+    names = list_installed_packages(match_dir(ctx.obj["config_dir"]))
+    if not names:
+        click.echo("No packages installed.")
+        return
+    for name in names:
+        click.echo(name)
+
+
+@main.command()
+@click.option("--output", type=click.Path(), default=None, help="Destination .tar.gz path")
+@click.pass_context
+def backup(ctx: click.Context, output: str | None) -> None:
+    """Backup the configuration directory."""
+    destination = backup_config(ctx.obj["config_dir"], Path(output) if output else None)
+    click.echo(f"Backup created: {destination}")
+
+
+@main.command()
+@click.argument("archive", type=click.Path(exists=True))
+@click.pass_context
+def restore(ctx: click.Context, archive: str) -> None:
+    """Restore configuration from a backup archive."""
+    restore_config(ctx.obj["config_dir"], Path(archive))
+    click.echo("Configuration restored.")
 
 
 @main.command()

@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+from .forms import FormField
+
 
 @dataclass
 class AppConfig:
@@ -17,6 +19,8 @@ class AppConfig:
     max_regex_buffer_size: int = 30
     enabled: bool = True
     app_blacklist: list[str] = field(default_factory=list)
+    shell_allowlist: list[str] = field(default_factory=list)
+    search_shortcut: str = "CMD+SHIFT+E"
 
 
 @dataclass
@@ -33,6 +37,7 @@ class Match:
     regex: bool = False
     word_break: bool = False
     vars: list[Variable] = field(default_factory=list)
+    form: list[FormField] = field(default_factory=list)
     force_clipboard: bool = False
     force_break: bool = False
     if_app: list[str] = field(default_factory=list)
@@ -45,7 +50,7 @@ class ConfigBundle:
     matches: list[Match]
 
 
-def _normalize_match(raw: dict[str, Any]) -> Match:
+def normalize_match(raw: dict[str, Any]) -> Match:
     triggers: list[str] = []
     if "trigger" in raw:
         triggers.append(str(raw["trigger"]))
@@ -69,12 +74,23 @@ def _normalize_match(raw: dict[str, Any]) -> Match:
             )
         )
 
+    form_fields: list[FormField] = []
+    for item in raw.get("form", []) or []:
+        form_fields.append(
+            FormField(
+                name=str(item["name"]),
+                label=str(item.get("label", item["name"])),
+                default=str(item.get("default", "")),
+            )
+        )
+
     return Match(
         triggers=triggers,
         replace=replace,
         regex=bool(raw.get("regex", False)),
         word_break=bool(raw.get("word_break", False)),
         vars=variables,
+        form=form_fields,
         force_clipboard=bool(raw.get("force_clipboard", False)),
         force_break=bool(raw.get("force_break", False)),
         if_app=[str(item) for item in raw.get("if_app", []) or []],
@@ -97,6 +113,8 @@ def load_app_config(path: Path) -> AppConfig:
         max_regex_buffer_size=int(data.get("max_regex_buffer_size", 30)),
         enabled=bool(data.get("enabled", True)),
         app_blacklist=[str(item) for item in data.get("app_blacklist", []) or []],
+        shell_allowlist=[str(item) for item in data.get("shell_allowlist", []) or []],
+        search_shortcut=str(data.get("search_shortcut", "CMD+SHIFT+E")),
     )
 
 
@@ -111,12 +129,19 @@ def load_matches(match_directory: Path) -> list[Match]:
         with path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
         for raw in data.get("matches", []) or []:
-            matches.append(_normalize_match(raw))
+            matches.append(normalize_match(raw))
+
+    from .packages import load_package_matches
+
+    matches.extend(load_package_matches(match_directory))
     return matches
 
 
 def load_config(config_dir: Path) -> ConfigBundle:
-    app = load_app_config(config_dir / "config" / "default.yml")
+    from .profiles import resolve_app_config
+
+    base = load_app_config(config_dir / "config" / "default.yml")
+    app = resolve_app_config(config_dir, base)
     matches = load_matches(config_dir / "match")
     return ConfigBundle(app=app, matches=matches)
 

@@ -10,7 +10,7 @@ from pynput.keyboard import Key
 from .app_context import get_frontmost_app, is_app_allowed
 from .config import ConfigBundle, Match, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
-from .renderer import render_match
+from .renderer import render_match_interactive
 
 
 WORD_BREAK_KEYS = {
@@ -133,7 +133,9 @@ class ExpansionEngine:
             return False
 
         trigger, match = match_info
-        replacement = render_match(match)
+        replacement = render_match_interactive(match, app_config=self.config.app)
+        if replacement is None:
+            return False
         self.injector.delete_chars(len(trigger))
         self.injector.inject(replacement, force_clipboard=match.force_clipboard)
         self._buffer = self._buffer[: -len(trigger)]

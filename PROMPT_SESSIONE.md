@@ -1,32 +1,12 @@
-# Prompt per nuova sessione — Miglioramento Expando
+# Expando — stato progetto
 
-Copia tutto il blocco qui sotto in una sessione nuova.
+- Repo: https://github.com/andreapostiglione/expando
+- Versione: 1.0.0
+- Fasi 1–4 completate
 
----
+## Feature complete
 
-## PROMPT (copia da qui)
-
-Sto lavorando su **Expando**, un text expander open-source per macOS.
-
-### Contesto progetto
-
-- **Repo GitHub:** https://github.com/andreapostiglione/expando
-- **Path locale:** `~/expando` (`/Users/andreapostiglione/expando`)
-- **Config utente:** `~/Library/Application Support/expando/`
-- **Stack:** Python 3.14, pynput, PyYAML, watchdog, click, rumps
-- **Avvio automatico:** LaunchAgent `com.andreapostiglione.expando`
-- **Snippet attivi:** `:claude`, `:ultraclaude`, `:grok`, `:date`, `:shell`
-
-### Stato attuale
-
-- Fase 1 completata: menu bar, doctor, single-instance, log, notifiche, Expando.app
-- Prossima fase: `expando list`, `expando add`, regole per-app, snippet pack
-
-### Istruzioni
-
-1. Leggi il codice in `~/expando/src/expando/` prima di modificare
-2. Non menzionare altri text expander nel codice o nella documentazione
-3. Mantieni Expando come prodotto autonomo con focus su semplicità, privacy, menu bar macOS
-4. Esegui i comandi tu stesso
-
-## FINE PROMPT
+- Menu bar, doctor, single-instance, log, notifiche, Expando.app
+- CLI: list, add, import, search, backup, restore, packages
+- Regole per-app, profili config, packages, forms, search bar
+- Shell sandbox, CI GitHub Actions, Formula Homebrew, build DMG

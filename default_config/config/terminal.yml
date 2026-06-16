@@ -1,0 +1,13 @@
+filter:
+  app_names:
+    - Terminal
+    - iTerm2
+    - Warp
+    - Cursor
+
+search_shortcut: CMD+SHIFT+E
+shell_allowlist:
+  - echo
+  - git
+  - pwd
+  - whoami

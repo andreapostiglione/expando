@@ -7,7 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .config import Match, Variable
+from .config import AppConfig, Match, Variable
+from .forms import collect_form_values
 
 TEMPLATE_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
 
@@ -24,7 +25,14 @@ def _resolve_env(name: str) -> str:
     return os.environ.get(name, "")
 
 
-def _resolve_variable(variable: Variable) -> str:
+def _shell_allowed(cmd: str, allowlist: list[str]) -> bool:
+    if not allowlist:
+        return True
+    stripped = cmd.strip()
+    return any(stripped.startswith(prefix) for prefix in allowlist)
+
+
+def _resolve_variable(variable: Variable, app_config: AppConfig | None = None) -> str:
     if variable.type == "date":
         fmt = variable.params.get("format", "%Y-%m-%d")
         return datetime.now().strftime(fmt)
@@ -33,6 +41,9 @@ def _resolve_variable(variable: Variable) -> str:
         cmd = variable.params.get("cmd", "")
         if not cmd:
             return ""
+        allowlist = app_config.shell_allowlist if app_config else []
+        if not _shell_allowed(cmd, allowlist):
+            raise RuntimeError(f"Shell command not allowed: {cmd}")
         result = subprocess.run(
             cmd,
             shell=True,
@@ -70,9 +81,18 @@ def _apply_builtin_tokens(text: str, values: dict[str, Any]) -> str:
     return TEMPLATE_RE.sub(replace_token, text)
 
 
-def render_match(match: Match) -> str:
-    values: dict[str, Any] = {}
+def render_match(match: Match, app_config: AppConfig | None = None, extra_values: dict[str, str] | None = None) -> str:
+    values: dict[str, Any] = dict(extra_values or {})
     for variable in match.vars:
-        values[variable.name] = _resolve_variable(variable)
-
+        values[variable.name] = _resolve_variable(variable, app_config=app_config)
     return _apply_builtin_tokens(match.replace, values)
+
+
+def render_match_interactive(match: Match, app_config: AppConfig | None = None) -> str | None:
+    extra_values: dict[str, str] = {}
+    if match.form:
+        collected = collect_form_values(match.form)
+        if collected is None:
+            return None
+        extra_values.update(collected)
+    return render_match(match, app_config=app_config, extra_values=extra_values)

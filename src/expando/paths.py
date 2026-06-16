@@ -47,7 +47,14 @@ def app_bundle_path(package_root: Path) -> Path:
 
 def ensure_default_config(config_dir: Path, package_root: Path) -> None:
     default_root = package_root / "default_config"
-    for relative in ("config/default.yml", "match/base.yml", "match/dev.yml"):
+    files = (
+        "config/default.yml",
+        "config/terminal.yml",
+        "match/base.yml",
+        "match/dev.yml",
+        "match/packages/core/snippets.yml",
+    )
+    for relative in files:
         source = default_root / relative
         target = config_dir / relative
         target.parent.mkdir(parents=True, exist_ok=True)

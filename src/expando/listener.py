@@ -13,9 +13,11 @@ from watchdog.observers import Observer
 
 from .config import load_config
 from .engine import ExpansionEngine
+from .hotkeys import shortcut_pressed
 from .injector import InjectorSettings, TextInjector
 from .logging_setup import setup_logging
 from .notifications import notify_toggle
+from .search import build_search_items, pick_snippet, resolve_snippet_text
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,27 @@ class KeyboardService:
         self._last_toggle_press = 0.0
         self._toggle_window = 0.45
         self._injecting = False
+        self._pressed_modifiers: set = set()
+
+    def open_search(self) -> None:
+        if not self.engine.enabled:
+            return
+        items = build_search_items(self.engine.config.matches, self.engine.config.app)
+        picked = pick_snippet(items)
+        if not picked:
+            return
+        text = resolve_snippet_text(picked.match)
+        if not text:
+            return
+        self._injecting = True
+        try:
+            self.engine.injector.inject(
+                text,
+                force_clipboard=picked.match.force_clipboard or len(text) >= self.engine.config.app.clipboard_threshold,
+            )
+            logger.info("Inserted snippet from search: %s", picked.trigger)
+        finally:
+            threading.Timer(0.15, self._clear_injecting).start()
 
     def _resolve_toggle_key(self, toggle_key: str) -> Key | None:
         if toggle_key.upper() == "OFF":
@@ -109,7 +132,35 @@ class KeyboardService:
         if self._listener:
             self._listener.join()
 
+    def _track_modifier_press(self, key) -> None:
+        if key in {Key.cmd, Key.alt, Key.ctrl, Key.shift, Key.cmd_l, Key.cmd_r, Key.alt_l, Key.alt_r, Key.ctrl_l, Key.ctrl_r, Key.shift_l, Key.shift_r}:
+            normalized = Key.cmd if key in {Key.cmd, Key.cmd_l, Key.cmd_r} else key
+            if key in {Key.cmd, Key.cmd_l, Key.cmd_r}:
+                self._pressed_modifiers.add(Key.cmd)
+            elif key in {Key.shift, Key.shift_l, Key.shift_r}:
+                self._pressed_modifiers.add(Key.shift)
+            elif key in {Key.alt, Key.alt_l, Key.alt_r}:
+                self._pressed_modifiers.add(Key.alt)
+            elif key in {Key.ctrl, Key.ctrl_l, Key.ctrl_r}:
+                self._pressed_modifiers.add(Key.ctrl)
+
+    def _track_modifier_release(self, key) -> None:
+        if key in {Key.cmd, Key.cmd_l, Key.cmd_r}:
+            self._pressed_modifiers.discard(Key.cmd)
+        elif key in {Key.shift, Key.shift_l, Key.shift_r}:
+            self._pressed_modifiers.discard(Key.shift)
+        elif key in {Key.alt, Key.alt_l, Key.alt_r}:
+            self._pressed_modifiers.discard(Key.alt)
+        elif key in {Key.ctrl, Key.ctrl_l, Key.ctrl_r}:
+            self._pressed_modifiers.discard(Key.ctrl)
+
     def _on_press(self, key) -> None:
+        self._track_modifier_press(key)
+        shortcut = self.engine.config.app.search_shortcut
+        if shortcut and shortcut_pressed(shortcut, self._pressed_modifiers, key):
+            threading.Thread(target=self.open_search, daemon=True).start()
+            return
+
         if self._toggle_key and key == self._toggle_key:
             now = time.time()
             if now - self._last_toggle_press <= self._toggle_window:
@@ -121,6 +172,7 @@ class KeyboardService:
                 self._last_toggle_press = now
 
     def _on_release(self, key) -> None:
+        self._track_modifier_release(key)
         if self._injecting:
             return
 

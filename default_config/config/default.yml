@@ -6,8 +6,14 @@ auto_restart: true
 clipboard_threshold: 100
 max_regex_buffer_size: 30
 enabled: true
+search_shortcut: CMD+SHIFT+E
 
 # Disable Expando completely in these apps (password managers, games, etc.)
 # app_blacklist:
 #   - 1Password
 #   - Bitwarden
+
+# Restrict shell vars to safe command prefixes (empty = allow all)
+# shell_allowlist:
+#   - echo
+#   - git

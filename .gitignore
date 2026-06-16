@@ -1,5 +1,7 @@
 .venv/
 Expando.app/
+Expando.dmg
+.dmg-stage/
 __pycache__/
 *.py[cod]
 *.egg-info/

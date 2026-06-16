@@ -24,20 +24,25 @@ def list_matches(config_dir: Path) -> list[tuple[Match, str]]:
             if "triggers" in raw:
                 triggers.extend(str(item) for item in raw["triggers"])
             for trigger in triggers:
-                results.append(
-                    (
-                        Match(
-                            triggers=[trigger],
-                            replace=str(raw.get("replace", "")),
-                            regex=bool(raw.get("regex", False)),
-                            word_break=bool(raw.get("word_break", False)),
-                            if_app=[str(item) for item in raw.get("if_app", []) or []],
-                            unless_app=[str(item) for item in raw.get("unless_app", []) or []],
-                        ),
-                        path.name,
-                    )
-                )
+                results.append((_match_from_raw(raw, trigger), path.name))
+
+    from .packages import load_package_matches
+
+    for match in load_package_matches(directory):
+        for trigger in match.triggers:
+            results.append((match, "packages"))
     return results
+
+
+def _match_from_raw(raw: dict, trigger: str) -> Match:
+    return Match(
+        triggers=[trigger],
+        replace=str(raw.get("replace", "")),
+        regex=bool(raw.get("regex", False)),
+        word_break=bool(raw.get("word_break", False)),
+        if_app=[str(item) for item in raw.get("if_app", []) or []],
+        unless_app=[str(item) for item in raw.get("unless_app", []) or []],
+    )
 
 
 def _preview(text: str, limit: int = 60) -> str:

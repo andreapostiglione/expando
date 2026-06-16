@@ -32,4 +32,4 @@ GitHub secrets per CI auto-release: vedi `docs/RELEASE.md`
 - [ ] Notarizzare DMG + staple
 - [ ] Secrets GitHub Actions (cert p12 + notary)
 - [x] C. Tier 2: import Espanso, YAML esteso, global_vars, secure input, undo, random/unicode
-- [ ] D. Test listener/daemon/e2e
+- [x] D. Test listener/daemon/e2e (78 test, fake daemon fixture)

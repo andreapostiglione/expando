@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+from expando.daemon import foreground, is_running, start_daemon, stop_daemon
+from expando.lock import SingleInstanceLock
+from expando.paths import lock_file, pid_file
+
+
+def test_is_running_false_when_pid_missing(tmp_path: Path):
+    running, pid = is_running(tmp_path)
+    assert running is False
+    assert pid is None
+
+
+def test_is_running_cleans_stale_pid(tmp_path: Path):
+    pid_path = pid_file(tmp_path)
+    pid_path.write_text("999999999", encoding="utf-8")
+    running, pid = is_running(tmp_path)
+    assert running is False
+    assert pid is None
+    assert not pid_path.exists()
+
+
+def test_start_and_stop_daemon(tmp_path: Path, fake_daemon_command: None):
+    config_dir = tmp_path / "expando"
+    pid = start_daemon(config_dir)
+    assert pid > 0
+    running, live_pid = is_running(config_dir)
+    assert running is True
+    assert live_pid == pid
+
+    assert stop_daemon(config_dir) is True
+    assert is_running(config_dir)[0] is False
+
+
+def test_start_daemon_returns_existing_pid(tmp_path: Path, fake_daemon_command: None):
+    config_dir = tmp_path / "expando"
+    first = start_daemon(config_dir)
+    second = start_daemon(config_dir)
+    assert second == first
+    stop_daemon(config_dir)
+
+
+def test_foreground_writes_pid_and_cleans_up(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    config_dir = tmp_path / "expando"
+    (config_dir / "config").mkdir(parents=True)
+    (config_dir / "match").mkdir(parents=True)
+    (config_dir / "config" / "default.yml").write_text("toggle_key: OFF\n", encoding="utf-8")
+    (config_dir / "match" / "base.yml").write_text(
+        "matches:\n  - trigger: ':x'\n    replace: 'X'\n",
+        encoding="utf-8",
+    )
+
+    seen_pid: list[int] = []
+
+    def fake_run_service(_config_dir: Path) -> None:
+        seen_pid.append(os.getpid())
+        assert pid_file(_config_dir).read_text(encoding="utf-8") == str(os.getpid())
+
+    monkeypatch.setattr("expando.listener.run_service", fake_run_service)
+    foreground(config_dir)
+
+    assert seen_pid
+    assert not pid_file(config_dir).exists()
+    assert not lock_file(config_dir).exists()
+
+
+def test_foreground_exits_when_already_running(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    config_dir = tmp_path / "expando"
+    config_dir.mkdir(parents=True)
+
+    monkeypatch.setattr("expando.daemon.is_running", lambda _d: (True, os.getpid()))
+
+    def cannot_acquire(self, *, blocking: bool = True) -> bool:
+        return False
+
+    monkeypatch.setattr(SingleInstanceLock, "acquire", cannot_acquire)
+    monkeypatch.setattr("expando.listener.run_service", lambda _d: None)
+
+    with pytest.raises(SystemExit) as exc:
+        foreground(config_dir)
+    assert exc.value.code == 0

@@ -1,0 +1,8 @@
+# Expando configuration (Espanso-compatible)
+
+toggle_key: ALT
+backend: auto
+auto_restart: true
+clipboard_threshold: 100
+max_regex_buffer_size: 30
+enabled: true

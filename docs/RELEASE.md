@@ -38,7 +38,7 @@ Push a tag `v*` to trigger `.github/workflows/release.yml`.
 | `APPLE_CERTIFICATE_PASSWORD` | Password for the .p12 export |
 | `APPLE_SIGNING_IDENTITY` | e.g. `Developer ID Application: Inochi Srl (68Q8CQBQQV)` |
 | `NOTARY_APPLE_ID` | Apple ID email |
-| `NOTARY_APPLE_PASSWORD` | App-specific password |
+| `NOTARY_PASSWORD` | App-specific password |
 | `NOTARY_TEAM_ID` | `68Q8CQBQQV` |
 
 Optional API key alternative: `NOTARY_API_KEY`, `NOTARY_API_KEY_ID`, `NOTARY_API_ISSUER`.

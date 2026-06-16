@@ -5,22 +5,39 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$ROOT/Expando.app"
 MACOS="$APP/Contents/MacOS"
 RESOURCES="$APP/Contents/Resources"
+VERSION="$(grep '^version' "$ROOT/pyproject.toml" | head -1 | sed 's/.*"\(.*\)".*/\1/')"
 
 mkdir -p "$MACOS" "$RESOURCES"
 
-cat > "$MACOS/expando" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-ROOT="$(dirname "$APP_DIR")"
-VENV="$ROOT/.venv"
-
-if [[ ! -x "$VENV/bin/expando" ]]; then
-  python3 -m venv "$VENV"
+if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
+  VENV="$RESOURCES/venv"
+  rm -rf "$VENV"
+  python3 -m venv --copies "$VENV"
+  "$VENV/bin/pip" install -q --upgrade pip
   "$VENV/bin/pip" install -q -e "$ROOT"
+  LAUNCHER_VENV='$APP_DIR/Contents/Resources/venv/bin/expando'
+else
+  LAUNCHER_VENV='$ROOT/.venv/bin/expando'
 fi
 
-exec "$VENV/bin/expando" run "$@"
+cat > "$MACOS/expando" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+APP_DIR="\$(cd "\$(dirname "\$0")/../.." && pwd)"
+ROOT="\$(dirname "\$APP_DIR")"
+VENV="$LAUNCHER_VENV"
+
+if [[ ! -x "\$VENV" ]]; then
+  if [[ -x "\$ROOT/.venv/bin/expando" ]]; then
+    VENV="\$ROOT/.venv/bin/expando"
+  else
+    python3 -m venv "\$ROOT/.venv"
+    "\$ROOT/.venv/bin/pip" install -q -e "\$ROOT"
+    VENV="\$ROOT/.venv/bin/expando"
+  fi
+fi
+
+exec "\$VENV" run "\$@"
 EOF
 
 chmod +x "$MACOS/expando"
@@ -31,7 +48,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>it</string>
+    <string>en</string>
     <key>CFBundleExecutable</key>
     <string>expando</string>
     <key>CFBundleIdentifier</key>
@@ -43,9 +60,11 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>${VERSION}</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>${VERSION}</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSHighResolutionCapable</key>
@@ -54,5 +73,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
 </plist>
 EOF
 
-echo "Built $APP"
-echo "Concedi i permessi Privacy a Expando.app (non python3.14)"
+echo "Built $APP (v${VERSION}, distribution=${EXPANDO_DISTRIBUTION:-0})"
+if [[ "${EXPANDO_DISTRIBUTION:-0}" != "1" ]]; then
+  echo "Grant Accessibility permission to Expando.app (not python3.14)"
+fi

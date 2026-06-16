@@ -286,9 +286,14 @@ expando import ./my-snippets/
 ## Build & distribute
 
 ```bash
-./scripts/build-macos-app.sh   # Build Expando.app
-./scripts/build-dmg.sh         # Create Expando.dmg
+./scripts/build-macos-app.sh                        # Dev build (uses repo .venv)
+EXPANDO_DISTRIBUTION=1 EXPANDO_SIGN=1 ./scripts/build-dmg.sh   # Signed release DMG
+EXPANDO_NOTARIZE=1 ./scripts/build-dmg.sh           # + Apple notarization (after setup)
 ```
+
+Signing uses your **Developer ID Application** certificate. Notarization and CI secrets: see [docs/RELEASE.md](docs/RELEASE.md).
+
+Pushing a `v*` tag triggers GitHub Actions to build the DMG and attach it to the release.
 
 ### Homebrew
 

@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Import signing certificate
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [[ -z "$APPLE_CERTIFICATE_BASE64" ]]; then
+            echo "APPLE_CERTIFICATE_BASE64 not set — skipping cert import"
+            exit 0
+          fi
+          KEYCHAIN=$RUNNER_TEMP/app-signing.keychain-db
+          PASSWORD=$(openssl rand -base64 32)
+          security create-keychain -p "$PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$PASSWORD" "$KEYCHAIN"
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain-db
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$PASSWORD" "$KEYCHAIN"
+
+      - name: Build signed DMG
+        env:
+          EXPANDO_DISTRIBUTION: "1"
+          EXPANDO_SIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_APPLE_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
+          NOTARY_API_KEY: ${{ secrets.NOTARY_API_KEY }}
+          NOTARY_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_API_ISSUER: ${{ secrets.NOTARY_API_ISSUER }}
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+        run: |
+          chmod +x scripts/*.sh
+          if [[ -n "$APPLE_CERTIFICATE_BASE64" ]]; then
+            export EXPANDO_SIGN=1
+          else
+            export EXPANDO_SIGN=0
+          fi
+          if [[ -n "$NOTARY_APPLE_ID" || -n "$NOTARY_API_KEY" ]]; then
+            export EXPANDO_NOTARIZE=1
+          else
+            export EXPANDO_NOTARIZE=0
+          fi
+          ./scripts/build-dmg.sh
+
+      - name: Attach DMG to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Expando.dmg
+          generate_release_notes: true

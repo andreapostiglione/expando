@@ -1,12 +1,35 @@
-# Expando — stato progetto
+# Expando — sessione compatta
 
-- Repo: https://github.com/andreapostiglione/expando
-- Versione: 1.0.0
-- Fasi 1–4 completate
+**Repo:** https://github.com/andreapostiglione/expando  
+**Versione:** 1.1.1 (codice) | **Release signed:** v1.1.2 pending  
+**Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
-## Feature complete
+## Fatto
 
-- Menu bar, doctor, single-instance, log, notifiche, Expando.app
-- CLI: list, add, import, search, backup, restore, packages
-- Regole per-app, profili config, packages, forms, search bar
-- Shell sandbox, CI GitHub Actions, Formula Homebrew, build DMG
+- Fasi 1–5 + review + housekeeping A
+- **B. Distrib (parziale)** ✓
+  - App distribution bundle (`Contents/Resources/venv`, `--copies`)
+  - `codesign-app.sh` Developer ID + hardened runtime
+  - `notarize-dmg.sh` + `docs/RELEASE.md`
+  - CI `.github/workflows/release.yml` on tag `v*`
+  - DMG firmato localmente (non ancora notarizzato)
+
+## B — ultimo step (serve credenziali Apple)
+
+```bash
+xcrun notarytool store-credentials "expando-notary" \
+  --apple-id "andreapostiglione@live.it" \
+  --team-id "68Q8CQBQQV" \
+  --password "<app-specific-password>"
+
+EXPANDO_NOTARIZE=1 ./scripts/build-dmg.sh
+```
+
+GitHub secrets per CI auto-release: vedi `docs/RELEASE.md`
+
+## GOAL — prossimi
+
+- [ ] Notarizzare DMG + staple
+- [ ] Secrets GitHub Actions (cert p12 + notary)
+- [ ] C. Tier 2: import Espanso, secure input, …
+- [ ] D. Test listener/daemon/e2e

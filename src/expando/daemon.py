@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import signal
 import subprocess
@@ -7,7 +8,11 @@ import sys
 import time
 from pathlib import Path
 
-from .paths import log_file, pid_file
+from .lock import SingleInstanceLock
+from .logging_setup import setup_logging
+from .paths import lock_file, log_file, pid_file
+
+logger = logging.getLogger(__name__)
 
 
 def is_running(config_dir: Path) -> tuple[bool, int | None]:
@@ -26,22 +31,40 @@ def is_running(config_dir: Path) -> tuple[bool, int | None]:
     return True, pid
 
 
+def _daemon_command(config_dir: Path) -> list[str]:
+    app_bundle = _app_bundle_executable()
+    if app_bundle:
+        return [str(app_bundle), "run", "--config-dir", str(config_dir)]
+    return [sys.executable, "-m", "expando.daemon", "foreground", str(config_dir)]
+
+
+def _app_bundle_executable() -> Path | None:
+    root = Path(__file__).resolve().parent.parent.parent
+    candidate = root / "Expando.app" / "Contents" / "MacOS" / "expando"
+    if candidate.exists() and os.access(candidate, os.X_OK):
+        return candidate
+    return None
+
+
 def start_daemon(config_dir: Path) -> int:
     running, pid = is_running(config_dir)
     if running:
+        logger.info("Expando already running with pid %s", pid)
         return pid or 0
 
     config_dir.mkdir(parents=True, exist_ok=True)
+    setup_logging(config_dir)
     log_path = log_file(config_dir)
     log_handle = open(log_path, "a", encoding="utf-8")
 
     process = subprocess.Popen(
-        [sys.executable, "-m", "expando.daemon", "foreground", str(config_dir)],
+        _daemon_command(config_dir),
         stdout=log_handle,
         stderr=subprocess.STDOUT,
         start_new_session=True,
     )
     pid_file(config_dir).write_text(str(process.pid), encoding="utf-8")
+    logger.info("Expando started with pid %s", process.pid)
     return process.pid
 
 
@@ -64,14 +87,28 @@ def stop_daemon(config_dir: Path) -> bool:
 def foreground(config_dir: Path) -> None:
     from .listener import run_service
 
+    setup_logging(config_dir)
+    lock = SingleInstanceLock(lock_file(config_dir))
+    if not lock.acquire():
+        running, pid = is_running(config_dir)
+        if running:
+            logger.error("Another Expando instance is already running (pid %s)", pid)
+            raise SystemExit(0)
+        logger.error("Could not acquire single-instance lock")
+        raise SystemExit(1)
+
     pid_file(config_dir).write_text(str(os.getpid()), encoding="utf-8")
 
     def cleanup(*_args) -> None:
         pid_file(config_dir).unlink(missing_ok=True)
+        lock.release()
 
     signal.signal(signal.SIGTERM, cleanup)
     signal.signal(signal.SIGINT, cleanup)
-    run_service(config_dir)
+    try:
+        run_service(config_dir)
+    finally:
+        cleanup()
 
 
 if __name__ == "__main__":

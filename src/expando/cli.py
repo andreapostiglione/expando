@@ -9,6 +9,7 @@ import click
 from . import __version__
 from .daemon import is_running, start_daemon, stop_daemon
 from .paths import config_file, default_config_dir, ensure_default_config, match_dir, package_root
+from .doctor_checks import format_doctor_report, run_doctor
 from .renderer import render_match
 from .config import load_config, load_matches
 
@@ -130,16 +131,11 @@ def match_cmd(ctx: click.Context, trigger: str) -> None:
 @main.command()
 @click.pass_context
 def doctor(ctx: click.Context) -> None:
-    """Validate configuration and show match count."""
-    config_dir: Path = ctx.obj["config_dir"]
-    bundle = load_config(config_dir)
-    click.echo(f"Config dir: {config_dir}")
-    click.echo(f"Matches loaded: {len(bundle.matches)}")
-    click.echo(f"Toggle key: {bundle.app.toggle_key}")
-    click.echo(f"Backend: {bundle.app.backend}")
-    click.echo(f"Auto restart: {bundle.app.auto_restart}")
-    for item in bundle.matches:
-        click.echo(f"  - {', '.join(item.triggers)}")
+    """Validate configuration, permissions, and daemon health."""
+    report = run_doctor(ctx.obj["config_dir"])
+    click.echo(format_doctor_report(report))
+    if not report.ok:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

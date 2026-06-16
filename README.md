@@ -7,10 +7,15 @@ Clone open-source di [Espanso](https://espanso.org): text expander system-wide, 
 - Espansione snippet con trigger (`:hello` → testo)
 - Variabili dinamiche: `date`, `shell`, `clipboard`
 - Trigger multipli e regex
-- Toggle on/off con doppio tap su `ALT` (configurabile)
+- Toggle on/off con doppio tap su `ALT` (configurabile) + notifica macOS
+- **Menu bar** con stato, attiva/disattiva, modifica snippet, riavvio
+- **Single-instance lock** — una sola istanza attiva
+- **Log rotanti** in `~/Library/Application Support/expando/expando.log`
+- **`expando doctor`** — permessi, processi, YAML, trigger duplicati
 - Auto-reload della config quando modifichi i file YAML
 - CLI simile a Espanso: `start`, `stop`, `status`, `path`, `edit`, `doctor`
 - Backend `auto` / `inject` / `clipboard` per testi lunghi o multilinea
+- **`Expando.app`** — bundle macOS per permessi Privacy più puliti
 
 ## Installazione
 
@@ -29,10 +34,11 @@ expando start
 ## Avvio automatico (macOS)
 
 ```bash
+./scripts/build-macos-app.sh
 ./scripts/install-launch-agent.sh
 ```
 
-Installa un LaunchAgent che avvia Expando ad ogni login. Per rimuoverlo:
+Installa un LaunchAgent che avvia Expando ad ogni login. Per rimessi Privacy, abilita **Expando.app** (non `python3.14`). Per rimuoverlo:
 
 ```bash
 ./scripts/uninstall-launch-agent.sh
@@ -71,7 +77,15 @@ matches:
 
 ## Permessi macOS
 
-Expando richiede **Accessibilità** e **Input Monitoring** in Impostazioni di sistema → Privacy e sicurezza, per intercettare e iniettare testo come fa Espanso.
+Expando richiede **Accessibilità** (obbligatoria) e opzionalmente **Monitoraggio input** in Impostazioni di sistema → Privacy e sicurezza.
+
+Dopo `./scripts/build-macos-app.sh`, concedi i permessi a **Expando.app** invece che a `python3.14`.
+
+Verifica con:
+
+```bash
+expando doctor
+```
 
 ## Comandi
 

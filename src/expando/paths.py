@@ -33,8 +33,16 @@ def pid_file(config_dir: Path) -> Path:
     return config_dir / "expando.pid"
 
 
+def lock_file(config_dir: Path) -> Path:
+    return config_dir / "expando.lock"
+
+
 def log_file(config_dir: Path) -> Path:
     return config_dir / "expando.log"
+
+
+def app_bundle_path(package_root: Path) -> Path:
+    return package_root / "Expando.app"
 
 
 def ensure_default_config(config_dir: Path, package_root: Path) -> None:

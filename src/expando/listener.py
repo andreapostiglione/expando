@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+import platform
 import threading
 import time
 from pathlib import Path
+from typing import Callable
 
 from pynput.keyboard import Key, Listener
 from watchdog.events import FileSystemEventHandler
@@ -12,6 +14,8 @@ from watchdog.observers import Observer
 from .config import load_config
 from .engine import ExpansionEngine
 from .injector import InjectorSettings, TextInjector
+from .logging_setup import setup_logging
+from .notifications import notify_toggle
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +63,7 @@ class KeyboardService:
     def __init__(self, config_dir: Path, engine: ExpansionEngine) -> None:
         self.config_dir = config_dir
         self.engine = engine
+        self.on_toggle: Callable[[], None] | None = None
         self._listener: Listener | None = None
         self._observer: Observer | None = None
         self._toggle_key = self._resolve_toggle_key(engine.config.app.toggle_key)
@@ -70,6 +75,11 @@ class KeyboardService:
         if toggle_key.upper() == "OFF":
             return None
         return TOGGLE_KEY_MAP.get(toggle_key.upper(), Key.alt)
+
+    def notify_toggle(self) -> None:
+        notify_toggle(self.engine.enabled)
+        if self.on_toggle:
+            self.on_toggle()
 
     def start(self) -> None:
         if self.engine.config.app.auto_restart:
@@ -103,9 +113,9 @@ class KeyboardService:
         if self._toggle_key and key == self._toggle_key:
             now = time.time()
             if now - self._last_toggle_press <= self._toggle_window:
-                enabled = self.engine.toggle_enabled()
-                state = "enabled" if enabled else "disabled"
-                logger.info("Expando %s", state)
+                self.engine.toggle_enabled()
+                self.notify_toggle()
+                logger.info("Expando %s", "enabled" if self.engine.enabled else "disabled")
                 self._last_toggle_press = 0.0
             else:
                 self._last_toggle_press = now
@@ -137,7 +147,7 @@ class KeyboardService:
         self._injecting = False
 
 
-def run_service(config_dir: Path) -> None:
+def build_service(config_dir: Path) -> KeyboardService:
     config = load_config(config_dir)
     injector = TextInjector(
         InjectorSettings(
@@ -148,9 +158,25 @@ def run_service(config_dir: Path) -> None:
     engine = ExpansionEngine(
         config=config,
         injector=injector,
-        on_expand=lambda result: logger.info("Expanded %r -> %r", result.trigger, result.replacement),
+        on_expand=lambda result: logger.info(
+            "Expanded %r -> %r", result.trigger, result.replacement
+        ),
     )
-    service = KeyboardService(config_dir=config_dir, engine=engine)
+    return KeyboardService(config_dir=config_dir, engine=engine)
+
+
+def run_service(config_dir: Path) -> None:
+    setup_logging(config_dir)
+    service = build_service(config_dir)
+
+    if platform.system() == "Darwin":
+        from .menubar import menubar_available, run_with_menubar
+
+        if menubar_available():
+            logger.info("Starting Expando with menu bar")
+            run_with_menubar(config_dir, service)
+            return
+
     service.start()
     try:
         while True:

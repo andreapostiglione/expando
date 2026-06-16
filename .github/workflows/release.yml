@@ -42,7 +42,7 @@ jobs:
           EXPANDO_DISTRIBUTION: "1"
           EXPANDO_SIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
-          NOTARY_PASSWORD: ${{ secrets.NOTARY_APPLE_PASSWORD }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
           NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
           NOTARY_API_KEY: ${{ secrets.NOTARY_API_KEY }}
           NOTARY_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}

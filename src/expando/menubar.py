@@ -32,6 +32,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self.menu = [
                 self.enabled_item,
                 rumps.MenuItem("Search snippets", callback=self.search_snippets),
+                rumps.MenuItem("Package hub", callback=self.browse_packages),
                 rumps.MenuItem("Edit snippets", callback=self.edit_snippets),
                 rumps.MenuItem("Restart", callback=self.restart_service),
                 None,
@@ -53,6 +54,25 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
         def search_snippets(self, _sender) -> None:
             threading.Thread(target=self.service.open_search, daemon=True).start()
+
+        def browse_packages(self, _sender) -> None:
+            threading.Thread(target=self._browse_packages, daemon=True).start()
+
+        def _browse_packages(self) -> None:
+            from .hub import hub_packages_for_picker, install_hub_package
+            from .ui_bridge import show_search_picker
+
+            picked = show_search_picker(hub_packages_for_picker(self.config_dir))
+            if not picked or picked.get("installed") == "1":
+                return
+            package_id = picked.get("package_id") or picked.get("trigger")
+            if not package_id:
+                return
+            try:
+                install_hub_package(self.config_dir, str(package_id))
+                rumps.notification("Expando", "", f"Installed package {package_id}")
+            except Exception as exc:
+                rumps.notification("Expando", "", f"Package install failed: {exc}")
 
         def edit_snippets(self, _sender) -> None:
             target = self.config_dir / "match" / "base.yml"

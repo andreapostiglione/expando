@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .text_convert import html_to_plain, markdown_to_plain
+
 
 def espanso_config_candidates() -> list[Path]:
     home = Path.home()
@@ -23,9 +25,6 @@ def find_espanso_config(explicit: Path | None = None) -> Path | None:
 
 
 def convert_espanso_match(raw: dict[str, Any], config_dir: Path | None = None) -> dict[str, Any] | None:
-    if raw.get("image_path") or raw.get("markdown") or raw.get("html"):
-        return None
-
     converted: dict[str, Any] = {}
 
     if "trigger" in raw:
@@ -34,6 +33,18 @@ def convert_espanso_match(raw: dict[str, Any], config_dir: Path | None = None) -
         converted["triggers"] = [str(item) for item in raw["triggers"]]
 
     replace = raw.get("replace", "")
+    if raw.get("markdown"):
+        replace = markdown_to_plain(str(raw["markdown"]))
+    elif raw.get("html"):
+        replace = html_to_plain(str(raw["html"]))
+    elif raw.get("image_path"):
+        image_path = str(raw["image_path"])
+        if config_dir is not None:
+            image_path = image_path.replace("$CONFIG", str(config_dir))
+        replace = image_path
+        converted["force_clipboard"] = True
+        converted["label"] = str(raw.get("label", "Image snippet"))
+
     if not isinstance(replace, str):
         replace = str(replace)
     if config_dir is not None:

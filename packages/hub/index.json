@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "id": "core",
+      "name": "Core Snippets",
+      "description": "Grazie, firma email con form multi-campo",
+      "author": "Expando",
+      "tags": ["italian", "email", "signature"]
+    }
+  ]
+}

@@ -235,6 +235,90 @@ def import_espanso_cmd(ctx: click.Context, source: str | None, force: bool) -> N
         click.echo(f"  ! {warning}")
 
 
+@main.group()
+def hub() -> None:
+    """Browse and install snippet packages from the hub."""
+
+
+@hub.command("list")
+@click.pass_context
+def hub_list(ctx: click.Context) -> None:
+    """List packages available in the hub."""
+    from .hub import fetch_registry
+    from .packages import list_installed_packages
+
+    config_dir: Path = ctx.obj["config_dir"]
+    installed = set(list_installed_packages(match_dir(config_dir)))
+    for package in fetch_registry():
+        marker = " [installed]" if package.id in installed else ""
+        click.echo(f"{package.id}: {package.name}{marker}")
+        if package.description:
+            click.echo(f"  {package.description}")
+
+
+@hub.command()
+@click.argument("query", required=False, default="")
+@click.pass_context
+def search(ctx: click.Context, query: str) -> None:
+    """Search the package hub."""
+    from .hub import search_hub_packages
+
+    for package in search_hub_packages(query):
+        click.echo(f"{package.id}: {package.name} — {package.description}")
+
+
+@hub.command()
+@click.argument("package_id")
+@click.option("--force", is_flag=True, help="Overwrite an installed package")
+@click.pass_context
+def install(ctx: click.Context, package_id: str, force: bool) -> None:
+    """Install a package from the hub."""
+    from .hub import install_hub_package
+
+    try:
+        path = install_hub_package(ctx.obj["config_dir"], package_id, force=force)
+    except (ValueError, FileExistsError, FileNotFoundError, RuntimeError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Installed {package_id} to {path}")
+
+
+@hub.command()
+@click.argument("package_id")
+@click.pass_context
+def uninstall(ctx: click.Context, package_id: str) -> None:
+    """Remove an installed hub package."""
+    from .hub import uninstall_hub_package
+
+    if uninstall_hub_package(ctx.obj["config_dir"], package_id):
+        click.echo(f"Removed package {package_id}")
+    else:
+        raise click.ClickException(f"Package not installed: {package_id}")
+
+
+@hub.command()
+@click.pass_context
+def browse(ctx: click.Context) -> None:
+    """Open a visual picker to install hub packages."""
+    from .hub import hub_packages_for_picker, install_hub_package
+    from .ui_bridge import show_search_picker
+
+    config_dir: Path = ctx.obj["config_dir"]
+    picked = show_search_picker(hub_packages_for_picker(config_dir))
+    if not picked:
+        raise SystemExit(0)
+    if picked.get("installed") == "1":
+        click.echo("Package already installed.")
+        raise SystemExit(0)
+    package_id = picked.get("package_id") or picked.get("trigger")
+    if not package_id:
+        raise click.ClickException("No package selected")
+    try:
+        path = install_hub_package(config_dir, str(package_id))
+    except (ValueError, FileExistsError, FileNotFoundError, RuntimeError) as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Installed {package_id} to {path}")
+
+
 @main.command()
 @click.pass_context
 def packages(ctx: click.Context) -> None:

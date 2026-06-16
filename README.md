@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.1.1"><img src="https://img.shields.io/badge/version-1.1.1-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.3.0"><img src="https://img.shields.io/badge/version-1.3.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -256,9 +256,15 @@ shell_allowlist:
 Drop snippet bundles into `match/packages/<name>/`. Expando loads them automatically.
 
 ```bash
-expando packages    # list installed packages
+expando packages           # list installed packages
+expando hub list           # browse the online package hub
+expando hub search email   # search hub packages
+expando hub install core   # install a hub package
+expando hub browse         # visual package picker (AppKit on macOS)
 expando import ./my-snippets/
 ```
+
+The hub index lives in `packages/hub/index.json`. Override with `EXPANDO_HUB_INDEX_URL` if needed.
 
 ---
 

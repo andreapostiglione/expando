@@ -42,3 +42,28 @@ def fuzzy_filter(query: str, items: list[str]) -> list[str]:
     scored = [(score, item) for score, item in scored if score > 0]
     scored.sort(key=lambda pair: (-pair[0], pair[1]))
     return [item for _, item in scored]
+
+
+def item_search_text(item: dict[str, object]) -> str:
+    parts = [
+        str(item.get("label", "")),
+        str(item.get("trigger", "")),
+        str(item.get("preview", "")),
+    ]
+    terms = item.get("search_terms", []) or []
+    parts.extend(str(term) for term in terms)
+    return " ".join(part for part in parts if part)
+
+
+def fuzzy_filter_search_items(query: str, items: list[dict[str, object]]) -> list[dict[str, object]]:
+    if not query:
+        return list(items)
+
+    scored: list[tuple[int, dict[str, object]]] = []
+    for item in items:
+        score = fuzzy_score(query, item_search_text(item))
+        if score > 0:
+            scored.append((score, item))
+
+    scored.sort(key=lambda pair: (-pair[0], str(pair[1].get("label", pair[1].get("trigger", "")))))
+    return [item for _, item in scored]

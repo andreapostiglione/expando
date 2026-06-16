@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import platform
 import tkinter as tk
 from tkinter import ttk
 
-from .fuzzy import fuzzy_filter
+from .fuzzy import fuzzy_filter_search_items
 
 
 def _configure_style(root: tk.Tk) -> None:
@@ -68,16 +69,7 @@ class SearchPicker:
 
     def _filtered_items(self) -> list[dict[str, str]]:
         query = self.query_var.get().strip()
-        labels = [item.get("label", item["trigger"]) for item in self.items]
-        ordered_labels = fuzzy_filter(query, labels)
-        label_to_items: dict[str, list[dict[str, str]]] = {}
-        for item in self.items:
-            label = item.get("label", item["trigger"])
-            label_to_items.setdefault(label, []).append(item)
-        visible: list[dict[str, str]] = []
-        for label in ordered_labels:
-            visible.extend(label_to_items.get(label, []))
-        return visible
+        return fuzzy_filter_search_items(query, self.items)
 
     def _refresh_list(self) -> None:
         self.listbox.delete(0, tk.END)
@@ -178,9 +170,35 @@ class FormDialog:
         return self.result
 
 
+def _use_appkit() -> bool:
+    if platform.system() != "Darwin":
+        return False
+    if platform.system() == "Darwin" and __import__("os").environ.get("EXPANDO_UI", "").lower() == "tk":
+        return False
+    try:
+        import AppKit  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
 def run_search_picker(items: list[dict[str, str]]) -> dict[str, str] | None:
+    if _use_appkit():
+        try:
+            from .ui_appkit import run_search_picker as appkit_search
+
+            return appkit_search(items)
+        except Exception:
+            pass
     return SearchPicker(items).run()
 
 
 def run_form_dialog(fields: list[dict[str, str]]) -> dict[str, str] | None:
+    if _use_appkit():
+        try:
+            from .ui_appkit import run_form_dialog as appkit_form
+
+            return appkit_form(fields)
+        except Exception:
+            pass
     return FormDialog(fields).run()

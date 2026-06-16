@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from .config import Match, normalize_match
+from .config import Match, _merge_global_vars, _normalize_variables, normalize_match
 
 
 def load_package_matches(match_directory: Path) -> list[Match]:
@@ -16,8 +16,10 @@ def load_package_matches(match_directory: Path) -> list[Match]:
     for path in sorted(packages_dir.rglob("*.yml")) + sorted(packages_dir.rglob("*.yaml")):
         with path.open("r", encoding="utf-8") as handle:
             data = yaml.safe_load(handle) or {}
+        global_vars = _normalize_variables(data.get("global_vars", []) or [])
         for raw in data.get("matches", []) or []:
-            matches.append(normalize_match(raw))
+            match = normalize_match(raw)
+            matches.append(_merge_global_vars(match, global_vars))
     return matches
 
 

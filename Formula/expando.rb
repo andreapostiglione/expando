@@ -3,9 +3,9 @@ class Expando < Formula
 
   desc "Privacy-first open-source text expander for macOS"
   homepage "https://github.com/andreapostiglione/expando"
-  url "https://github.com/andreapostiglione/expando/archive/refs/tags/v1.3.2.tar.gz"
-  version "1.3.2"
-  sha256 "0fa57e1bcf695cdf2ffe6f5dfaa75ef9527b5102b050ec32fde8fe4f618bbd6e"
+  url "https://github.com/andreapostiglione/expando/archive/refs/tags/v1.4.0.tar.gz"
+  version "1.4.0"
+  sha256 "4d5230fad438d2f14fa92af13637730d7a7ddcad8690b96910627b95293ef9d8"
   license "MIT"
 
   depends_on "python@3.12"
@@ -23,6 +23,9 @@ class Expando < Formula
     <<~EOS
       Grant Accessibility permission to:
         #{prefix}/Expando.app
+
+      Run the onboarding wizard with:
+        expando setup
 
       Install the launch agent with:
         expando run

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.5.0
+**Versione attuale:** v2.6.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.5.0)
+## Stato attuale (baseline v2.6.0)
 
 | Area | Stato |
 |------|--------|
@@ -23,6 +23,8 @@
 | Notifiche blocco espansione + `expando logs` | ✓ |
 | Snippet editor grafico (trigger/replace/form/vars) | ✓ |
 | Hub packages (8 curati) + `expando hub publish` | ✓ |
+| Export/duplica snippet + statistiche locali opt-in | ✓ |
+| `expando registry` (hub + plugin catalog) | ✓ |
 | Sparkle appcast + update check + Homebrew cask | ✓ |
 | Sito GitHub Pages | ✓ |
 | Plugin API + script vars + `when:` | ✓ |
@@ -37,8 +39,8 @@
 ### Gap noti oggi
 
 - **Updater:** appcast Sparkle via Python (no Sparkle.framework nativo in `.app`)
-- **Plugin:** API documentata (`docs/PLUGINS.md`); nessun marketplace/registry snippet (T4-09)
-- **Test:** failure noti su E2E clipboard, daemon CLI, `test_when_engine` mock ora
+- **Plugin:** API documentata (`docs/PLUGINS.md`); registry locale via `expando registry` (no marketplace remoto)
+- **Test:** E2E clipboard flaky in CI headless (skip su runner senza TCC)
 - **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC sul servizio launchd
 
 ---
@@ -85,7 +87,7 @@ flowchart LR
 | T3-02 | **Doctor v2** | Check esplicito Input Monitoring; test injection di prova; suggerimenti per Expando.app vs python | ✓ |
 | T3-03 | **Notifiche contestuali** | Toast quando espansione bloccata (secure input, `if_app`, shell deny) | ✓ |
 | T3-04 | **Log strutturato** | `expando logs --tail` + rotazione; livelli debug per supporto | ✓ |
-| T3-05 | **Statistiche locali** | Conteggio espansioni per trigger (file JSON locale, opt-in) | Da fare |
+| T3-05 | **Statistiche locali** | Conteggio espansioni per trigger (file JSON locale, opt-in) | ✓ v2.6.0 |
 
 **Release target:** Q3 2026  
 **Criterio di done:** nuovo utente da DMG → snippet funzionante in < 5 min senza leggere il README.
@@ -101,7 +103,7 @@ flowchart LR
 | T3-07 | **Migrazione Espanso** | `expando migrate-espanso` con report (importati/saltati/errori) e backup automatico | ✓ |
 | T3-08 | **Hub ampliato** | 5–10 package curati (dev, email IT, legal, social); `index.json` versionato | ✓ v2.5.0 (8) |
 | T3-09 | **Hub submit** | `expando hub publish` da cartella locale + validazione schema | ✓ v2.5.0 |
-| T3-10 | **Duplica / export snippet** | Esporta singolo match o package come YAML | Da fare |
+| T3-10 | **Duplica / export snippet** | `expando export`, `expando duplicate` | ✓ v2.6.0 |
 
 **Release target:** Q4 2026  
 **Criterio di done:** creare `:email` con form dalla UI senza toccare YAML.
@@ -138,7 +140,7 @@ flowchart LR
 | T4-06 | **Snippet templates** | `expando new`, `templates list` (email, legal-it, dev, …) | ✓ v2.3.0 |
 | T4-07 | **Espansione immagini** | Campo `image:` + paste clipboard macOS, fallback `replace` | ✓ v2.4.0 |
 | T4-08 | **Editor form/vars UI** | Form multi-campo e variabili nell'editor AppKit | ✓ v2.5.0 |
-| T4-09 | **Plugin/snippet registry** | Marketplace o index pubblico per plugin e package hub | Media |
+| T4-09 | **Plugin/snippet registry** | `expando registry` catalogo locale hub + plugin | ✓ v2.6.0 |
 | T4-10 | **Sync assistito** | `expando sync` check + guida symlink iCloud/git | Bassa |
 
 **Release target:** H1 2027  
@@ -193,15 +195,18 @@ flowchart LR
 3. T3-09 `expando hub publish` + validazione schema
 4. T5-03 i18n benchmark + hub list markers
 
-### Sprint 5 → v2.6.0 (prossimo)
-1. T3-10 export/duplica snippet YAML
-2. T3-05 statistiche espansioni locali (opt-in)
-3. T4-09 registry plugin/snippet
-4. Fix test flaky (when_engine, E2E clipboard)
+### Sprint 5 → v2.6.0 ✓
+1. T3-10 `expando export` / `expando duplicate`
+2. T3-05 statistiche locali (`track_expansions` + `expando stats`)
+3. T4-09 `expando registry`
+4. Fix test i18n daemon + `test_when_engine`
+
+### Sprint 6 → v2.7.0 (prossimo)
+1. T4-10 sync assistito CLI
+2. Sparkle.framework nativo
+3. Hub publish remoto / marketplace
 
 ### Backlog
-- T3-05 statistiche locali
-- T3-10 export/duplica snippet
 - T3-15 notarization audit periodico
 - T4-09 registry plugin/snippet
 - T4-10 sync assistito CLI

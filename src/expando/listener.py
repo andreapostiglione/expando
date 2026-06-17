@@ -233,12 +233,16 @@ class KeyboardService:
 
 
 def build_service(config_dir: Path) -> KeyboardService:
-    engine = build_engine(
-        config_dir,
-        on_expand=lambda result: logger.info(
-            "Expanded %r -> %r", result.trigger, result.replacement
-        ),
-    )
+    def _on_expand(result) -> None:
+        logger.info("Expanded %r -> %r", result.trigger, result.replacement)
+        try:
+            from .expansion_stats import record_expansion
+
+            record_expansion(config_dir, result.trigger)
+        except Exception:
+            logger.exception("Failed to record expansion stats")
+
+    engine = build_engine(config_dir, on_expand=_on_expand)
     return KeyboardService(config_dir=config_dir, engine=engine)
 
 

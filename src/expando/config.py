@@ -33,6 +33,7 @@ class AppConfig:
     log_level: str = "INFO"
     check_updates: bool = True
     update_feed_url: str = ""
+    track_expansions: bool = False
 
 
 @dataclass
@@ -217,6 +218,7 @@ def load_app_config(path: Path) -> AppConfig:
         log_level=str(data.get("log_level", "INFO")).upper(),
         check_updates=bool(data.get("check_updates", True)),
         update_feed_url=str(data.get("update_feed_url", "") or ""),
+        track_expansions=bool(data.get("track_expansions", False)),
     )
 
 

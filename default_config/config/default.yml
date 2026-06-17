@@ -25,6 +25,9 @@ notify_cooldown_seconds: 30
 # Log verbosity: DEBUG, INFO, WARNING, ERROR (or EXPANDO_LOG_LEVEL env)
 log_level: INFO
 
+# Local expansion counters (opt-in; enable recording with `expando stats --enable`)
+# track_expansions: false
+
 # Sparkle-compatible update feed (checked once per day from menu bar)
 check_updates: true
 # update_feed_url: https://raw.githubusercontent.com/andreapostiglione/expando/main/appcast.xml

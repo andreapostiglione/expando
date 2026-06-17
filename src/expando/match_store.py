@@ -140,6 +140,68 @@ def append_match(
     return append_match_entry(config_dir, entry, target_file=target_file)
 
 
+def find_raw_match(
+    config_dir: Path,
+    trigger: str,
+    *,
+    editable_only: bool = True,
+) -> tuple[Path, int, dict] | None:
+    directory = config_dir / "match"
+    if not directory.exists():
+        return None
+
+    paths = sorted(directory.glob("*.yml")) + sorted(directory.glob("*.yaml"))
+    package_root = directory / "packages"
+    if package_root.exists():
+        for pkg_dir in sorted(package_root.iterdir()):
+            if not pkg_dir.is_dir():
+                continue
+            for path in sorted(pkg_dir.glob("*.yml")) + sorted(pkg_dir.glob("*.yaml")):
+                with path.open("r", encoding="utf-8") as handle:
+                    data = yaml.safe_load(handle) or {}
+                for index, raw in enumerate(data.get("matches", []) or []):
+                    if trigger in extract_triggers(raw):
+                        if editable_only:
+                            continue
+                        return path, index, dict(raw)
+
+    for path in paths:
+        with path.open("r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        for index, raw in enumerate(data.get("matches", []) or []):
+            if trigger in extract_triggers(raw):
+                return path, index, dict(raw)
+    return None
+
+
+def export_snippet_yaml(config_dir: Path, trigger: str) -> str:
+    found = find_raw_match(config_dir, trigger, editable_only=False)
+    if found is None:
+        raise ValueError(f"Trigger not found: {trigger}")
+    _path, _index, raw = found
+    payload = {"matches": [raw]}
+    return yaml.safe_dump(payload, allow_unicode=True, sort_keys=False).strip() + "\n"
+
+
+def duplicate_snippet(
+    config_dir: Path,
+    trigger: str,
+    new_trigger: str,
+    *,
+    target_file: str = "dev.yml",
+) -> Path:
+    found = find_raw_match(config_dir, trigger, editable_only=True)
+    if found is None:
+        raise ValueError(f"Trigger not found in editable match files: {trigger}")
+    _path, _index, raw = found
+    entry = dict(raw)
+    if "trigger" in entry:
+        entry["trigger"] = new_trigger
+    else:
+        entry["triggers"] = [new_trigger]
+    return append_match_entry(config_dir, entry, target_file=target_file)
+
+
 def import_matches(config_dir: Path, source: Path, *, force: bool = False) -> list[str]:
     destination_dir = config_dir / "match"
     destination_dir.mkdir(parents=True, exist_ok=True)

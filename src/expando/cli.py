@@ -13,7 +13,13 @@ from .log_viewer import print_log_tail
 from .doctor_checks import format_doctor_report, run_doctor
 from .onboarding import run_onboarding
 from .backup import backup_config, restore_config
-from .match_store import append_match, format_match_list, import_matches
+from .match_store import (
+    append_match,
+    duplicate_snippet,
+    export_snippet_yaml,
+    format_match_list,
+    import_matches,
+)
 from .packages import list_installed_packages
 from .renderer import render_match_interactive
 from .search import build_search_items, pick_snippet, resolve_snippet_text
@@ -299,6 +305,92 @@ def editor_cmd(ctx: click.Context) -> None:
     from .snippet_editor import open_snippet_editor
 
     open_snippet_editor(ctx.obj["config_dir"])
+
+
+@main.command("export")
+@click.argument("trigger")
+@click.option("-o", "--output", type=click.Path(path_type=Path), help="Write YAML to file")
+@click.pass_context
+def export_cmd(ctx: click.Context, trigger: str, output: Path | None) -> None:
+    """Export a snippet as YAML."""
+    try:
+        payload = export_snippet_yaml(ctx.obj["config_dir"], trigger)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    if output is None:
+        click.echo(payload, nl=False)
+        return
+    output.write_text(payload, encoding="utf-8")
+    click.echo(tf("cli.export.written", path=output))
+
+
+@main.command("duplicate")
+@click.argument("trigger")
+@click.argument("new_trigger")
+@click.option("--file", "target_file", default="dev.yml", show_default=True)
+@click.pass_context
+def duplicate_cmd(ctx: click.Context, trigger: str, new_trigger: str, target_file: str) -> None:
+    """Duplicate an editable snippet with a new trigger."""
+    try:
+        path = duplicate_snippet(
+            ctx.obj["config_dir"],
+            trigger,
+            new_trigger,
+            target_file=target_file,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(
+        tf(
+            "cli.duplicate.done",
+            source=trigger,
+            target=new_trigger,
+            path=path,
+        )
+    )
+
+
+@main.command("stats")
+@click.option("--enable", "enable", is_flag=True, help="Start recording local expansion counts")
+@click.option("--disable", "disable", is_flag=True, help="Stop recording local expansion counts")
+@click.pass_context
+def stats_cmd(ctx: click.Context, enable: bool, disable: bool) -> None:
+    """Show or toggle opt-in local expansion statistics."""
+    from .config import load_app_config
+    from .expansion_stats import format_stats_report, set_tracking_enabled
+    from .paths import config_file
+
+    config_dir: Path = ctx.obj["config_dir"]
+    app = load_app_config(config_file(config_dir))
+    if enable and disable:
+        raise click.ClickException("Use only one of --enable or --disable")
+    if enable:
+        if not app.track_expansions:
+            raise click.ClickException(t("stats.need_config"))
+        set_tracking_enabled(config_dir, True)
+        click.echo(t("stats.enabled"))
+    if disable:
+        set_tracking_enabled(config_dir, False)
+        click.echo(t("stats.disabled"))
+    click.echo(format_stats_report(config_dir))
+
+
+@main.command("registry")
+@click.option("--json", "as_json", is_flag=True, help="Output JSON catalog")
+@click.pass_context
+def registry_cmd(ctx: click.Context, as_json: bool) -> None:
+    """List hub packages, installed packages, and local plugins."""
+    from .registry_catalog import (
+        build_registry_catalog,
+        format_registry_json,
+        format_registry_report,
+    )
+
+    catalog = build_registry_catalog(ctx.obj["config_dir"])
+    if as_json:
+        click.echo(format_registry_json(catalog), nl=False)
+    else:
+        click.echo(format_registry_report(catalog, config_dir=ctx.obj["config_dir"]))
 
 
 @main.command("migrate-espanso")

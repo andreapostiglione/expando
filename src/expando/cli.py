@@ -478,6 +478,26 @@ def logs(ctx: click.Context, tail: bool, lines: int) -> None:
         raise SystemExit(0) from None
 
 
+@main.group()
+def plugins() -> None:
+    """Manage local Python plugins."""
+
+
+@plugins.command("list")
+@click.pass_context
+def plugins_list(ctx: click.Context) -> None:
+    """List loaded plugin files."""
+    from .plugins import PluginManager
+
+    manager = PluginManager(ctx.obj["config_dir"])
+    names = manager.list_plugins()
+    if not names:
+        click.echo("No plugins loaded.")
+        return
+    for name in names:
+        click.echo(name)
+
+
 @main.command("check-updates")
 @click.pass_context
 def check_updates_cmd(ctx: click.Context) -> None:

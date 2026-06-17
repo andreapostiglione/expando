@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.6.0"><img src="https://img.shields.io/badge/version-1.6.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v2.0.0"><img src="https://img.shields.io/badge/version-2.0.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -128,6 +128,7 @@ Or install auto-start at login:
 | `expando setup` | Permission onboarding wizard (macOS) |
 | `expando editor` | Graphical snippet editor (AppKit on macOS) |
 | `expando check-updates` | Check Sparkle appcast for new releases |
+| `expando plugins list` | List loaded Python plugins |
 | `expando migrate-espanso` | Import Espanso config with auto backup |
 | `expando logs` | Show recent log lines |
 | `expando logs --tail` | Follow log file (debug) |
@@ -266,6 +267,46 @@ expando logs --tail   # follow (Ctrl+C to stop)
 ```
 
 Logs are written to `~/Library/Application Support/expando/expando.log` with automatic rotation.
+
+### Plugins & script variables (v2.0)
+
+Drop Python hooks in `~/Library/Application Support/expando/plugins/`:
+
+```python
+def before_expand(context): ...
+def transform_replacement(text, context): return text
+def run(context): return "dynamic value"  # for script vars
+```
+
+Script variable in YAML:
+
+```yaml
+vars:
+  - name: tag
+    type: script
+    params:
+      path: example.py
+```
+
+See [docs/PLUGINS.md](docs/PLUGINS.md).
+
+### Conditional matches (`when:`)
+
+```yaml
+matches:
+  - trigger: ":hi"
+    replace: "Good morning"
+    when:
+      hour: "5-12"
+  - trigger: ":hi"
+    replace: "Good evening"
+    when:
+      hour: "17-24"
+```
+
+Supported keys: `app`, `bundle`, `hour`, `weekday`, `env`, `form`.
+
+Optional config sync: [docs/SYNC.md](docs/SYNC.md).
 
 ### App profile
 

@@ -9,8 +9,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from pathlib import Path
+
 from .config import AppConfig, Match, Variable
 from .forms import collect_form_values
+from .render_context import RenderContext
 from .text_transform import decode_unicode_escapes
 
 TEMPLATE_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
@@ -56,7 +59,12 @@ def _shell_allowed(cmd: str, allowlist: list[str]) -> bool:
     )
 
 
-def _resolve_variable(variable: Variable, app_config: AppConfig | None = None) -> str:
+def _resolve_variable(
+    variable: Variable,
+    app_config: AppConfig | None = None,
+    *,
+    render_context: RenderContext | None = None,
+) -> str:
     if variable.type == "date":
         fmt = variable.params.get("format", "%Y-%m-%d")
         return datetime.now().strftime(fmt)
@@ -100,6 +108,17 @@ def _resolve_variable(variable: Variable, app_config: AppConfig | None = None) -
         value = str(variable.params.get("value", ""))
         return decode_unicode_escapes(value)
 
+    if variable.type == "script":
+        script_path = str(variable.params.get("path", "")).strip()
+        if not script_path:
+            raise RuntimeError("Script variable requires params.path")
+        if render_context is None or not render_context.config_dir:
+            raise RuntimeError("Script variable requires an active config directory")
+        from .plugins import resolve_plugin_script, run_plugin_script
+
+        resolved = resolve_plugin_script(Path(render_context.config_dir), script_path)
+        return run_plugin_script(resolved, render_context)
+
     if variable.type in {"plain", "echo"}:
         return str(variable.params.get("value", ""))
 
@@ -118,19 +137,39 @@ def _apply_builtin_tokens(text: str, values: dict[str, Any]) -> str:
     return TEMPLATE_RE.sub(replace_token, text)
 
 
-def render_match(match: Match, app_config: AppConfig | None = None, extra_values: dict[str, str] | None = None) -> str:
+def render_match(
+    match: Match,
+    app_config: AppConfig | None = None,
+    extra_values: dict[str, str] | None = None,
+    *,
+    render_context: RenderContext | None = None,
+) -> str:
     values: dict[str, Any] = dict(extra_values or {})
     for variable in match.vars:
-        values[variable.name] = _resolve_variable(variable, app_config=app_config)
+        values[variable.name] = _resolve_variable(
+            variable,
+            app_config=app_config,
+            render_context=render_context,
+        )
     rendered = _apply_builtin_tokens(match.replace, values)
     return decode_unicode_escapes(rendered)
 
 
-def render_match_interactive(match: Match, app_config: AppConfig | None = None) -> str | None:
-    extra_values: dict[str, str] = {}
+def render_match_interactive(
+    match: Match,
+    app_config: AppConfig | None = None,
+    *,
+    render_context: RenderContext | None = None,
+) -> str | None:
+    context = render_context or RenderContext()
     if match.form:
         collected = collect_form_values(match.form)
         if collected is None:
             return None
-        extra_values.update(collected)
-    return render_match(match, app_config=app_config, extra_values=extra_values)
+        context.form_values.update(collected)
+    return render_match(
+        match,
+        app_config=app_config,
+        extra_values=context.form_values,
+        render_context=context,
+    )

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v1.6.0
+**Versione attuale:** v2.0.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v1.6.0)
+## Stato attuale (baseline v2.0.0)
 
 | Area | Stato |
 |------|--------|
@@ -25,7 +25,8 @@
 | Hub packages (`core`, `dev`, `email-it`, `legal-it`) | ✓ |
 | Sparkle appcast + update check + Homebrew cask | ✓ |
 | Sito GitHub Pages | ✓ |
-| Test (115) + E2E Accessibility | ✓ |
+| Plugin API + script vars + `when:` | ✓ |
+| Test (123) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 

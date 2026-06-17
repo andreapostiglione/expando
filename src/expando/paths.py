@@ -41,6 +41,10 @@ def log_file(config_dir: Path) -> Path:
     return config_dir / "expando.log"
 
 
+def plugins_dir(config_dir: Path) -> Path:
+    return config_dir / "plugins"
+
+
 def app_bundle_path(package_root: Path) -> Path:
     return package_root / "Expando.app"
 
@@ -53,6 +57,8 @@ def ensure_default_config(config_dir: Path, package_root: Path) -> None:
         "match/base.yml",
         "match/dev.yml",
         "match/packages/core/snippets.yml",
+        "plugins/example.py",
+        "plugins/README.md",
     )
     for relative in files:
         source = default_root / relative

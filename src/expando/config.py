@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 
 from .forms import FormField
-from .match_utils import find_duplicate_literal_triggers
+from .match_utils import find_conflicting_literal_triggers
 
 
 class ConfigCompileError(ValueError):
@@ -68,6 +68,7 @@ class Match:
     left_word: bool = False
     right_word: bool = False
     ignore_case: bool = False
+    when: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -135,6 +136,7 @@ def normalize_match(raw: dict[str, Any]) -> Match:
         left_word=bool(raw.get("left_word", False)),
         right_word=bool(raw.get("right_word", False)),
         ignore_case=bool(raw.get("ignore_case", False)),
+        when=dict(raw.get("when", {}) or {}),
     )
 
 
@@ -183,6 +185,8 @@ def _merge_global_vars(match: Match, global_vars: list[Variable]) -> Match:
         search_terms=match.search_terms,
         left_word=match.left_word,
         right_word=match.right_word,
+        ignore_case=match.ignore_case,
+        when=dict(match.when),
     )
 
 
@@ -254,14 +258,17 @@ def active_bundle(
     )
 
 
-def compile_matches(matches: list[Match]) -> tuple[dict[str, Match], list[tuple[re.Pattern[str], Match]]]:
-    duplicates = find_duplicate_literal_triggers(matches)
-    if duplicates:
+def compile_matches(
+    matches: list[Match],
+) -> tuple[dict[str, list[Match]], list[tuple[re.Pattern[str], Match]]]:
+    conflicts = find_conflicting_literal_triggers(matches)
+    if conflicts:
         raise ConfigCompileError(
-            "Duplicate literal triggers: " + ", ".join(duplicates)
+            "Conflicting literal triggers (duplicate without when:): "
+            + ", ".join(conflicts)
         )
 
-    literal: dict[str, Match] = {}
+    literal: dict[str, list[Match]] = {}
     regex_matches: list[tuple[re.Pattern[str], Match]] = []
 
     for match in matches:
@@ -275,7 +282,7 @@ def compile_matches(matches: list[Match]) -> tuple[dict[str, Match], list[tuple[
                     ) from exc
                 regex_matches.append((pattern, match))
             else:
-                literal[trigger] = match
+                literal.setdefault(trigger, []).append(match)
 
     regex_matches.sort(key=lambda item: len(item[0].pattern), reverse=True)
     return literal, regex_matches

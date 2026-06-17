@@ -18,10 +18,23 @@ def extract_triggers(raw: dict[str, Any]) -> list[str]:
 
 
 def find_duplicate_literal_triggers(matches: list[_HasTriggers]) -> list[str]:
-    counts: dict[str, int] = {}
+    return find_conflicting_literal_triggers(matches)
+
+
+def find_conflicting_literal_triggers(matches: list[_HasTriggers]) -> list[str]:
+    grouped: dict[str, list[Any]] = {}
     for match in matches:
         if match.regex:
             continue
+        when = getattr(match, "when", None) or {}
         for trigger in match.triggers:
-            counts[trigger] = counts.get(trigger, 0) + 1
-    return sorted(trigger for trigger, count in counts.items() if count > 1)
+            grouped.setdefault(trigger, []).append(when)
+
+    conflicts: list[str] = []
+    for trigger, conditions in grouped.items():
+        if len(conditions) < 2:
+            continue
+        unconditional = sum(1 for when in conditions if not when)
+        if unconditional > 1:
+            conflicts.append(trigger)
+    return sorted(conflicts)

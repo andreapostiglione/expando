@@ -19,7 +19,17 @@ def test_compile_literal_and_regex():
     ]
     literal, regex = compile_matches(matches)
     assert ":hello" in literal
+    assert literal[":hello"][0].replace == "Hello"
     assert len(regex) == 1
+
+
+def test_compile_allows_duplicate_triggers_with_when():
+    matches = [
+        Match(triggers=[":hi"], replace="am", when={"hour": "0-12"}),
+        Match(triggers=[":hi"], replace="pm", when={"hour": "12-24"}),
+    ]
+    literal, _ = compile_matches(matches)
+    assert len(literal[":hi"]) == 2
 
 
 def test_normalize_match_advanced_filters():
@@ -40,7 +50,7 @@ def test_compile_matches_rejects_duplicates():
         Match(triggers=[":dup"], replace="one"),
         Match(triggers=[":dup"], replace="two"),
     ]
-    with pytest.raises(ConfigCompileError, match="Duplicate"):
+    with pytest.raises(ConfigCompileError, match="Conflicting"):
         compile_matches(matches)
 
 

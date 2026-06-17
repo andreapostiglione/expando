@@ -18,7 +18,10 @@ from .app_context import (
 from .block_notifications import BlockNotifier
 from .config import ConfigBundle, Match, active_bundle, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
+from .plugins import PluginManager
+from .render_context import RenderContext
 from .renderer import render_match_interactive
+from .when_conditions import evaluate_when, when_needs_form
 from .secure_input import is_secure_input_active
 from .text_transform import (
     apply_propagate_case,
@@ -73,6 +76,9 @@ class ExpansionEngine:
         self._postponed: tuple[str, Match] | None = None
         self._last_expansion: _LastExpansion | None = None
         self._needs_window_title = self._compute_needs_window_title(config.matches)
+        self._plugin_manager = (
+            PluginManager(config_dir) if config_dir is not None else None
+        )
 
     @property
     def config(self) -> ConfigBundle:
@@ -97,6 +103,8 @@ class ExpansionEngine:
             self._buffer = ""
             self._postponed = None
             self._last_expansion = None
+            if self._plugin_manager is not None:
+                self._plugin_manager.reload()
 
     def undo_last(self) -> bool:
         with self._lock:
@@ -217,7 +225,7 @@ class ExpansionEngine:
         return config.app.respect_secure_input and is_secure_input_active()
 
     def _match_allowed(self, match: Match, context: AppContext, config: ConfigBundle) -> bool:
-        return match_allowed(
+        if not match_allowed(
             context,
             global_blacklist=config.app.app_blacklist,
             if_app=match.if_app or None,
@@ -226,7 +234,13 @@ class ExpansionEngine:
             unless_bundle=match.unless_bundle or None,
             if_title=match.if_title or None,
             unless_title=match.unless_title or None,
-        )
+        ):
+            return False
+        if match.when and when_needs_form(match.when):
+            return True
+        if match.when and not evaluate_when(match.when, context):
+            return False
+        return True
 
     def _has_left_word_boundary(self, trigger: str) -> bool:
         index = len(self._buffer) - len(trigger)
@@ -319,8 +333,21 @@ class ExpansionEngine:
             if self._block_notifier is not None:
                 self._block_notifier.notify_secure_input(trigger=trigger)
             return False
+        render_ctx = RenderContext(
+            config_dir=str(self._config_dir) if self._config_dir else None,
+            trigger=trigger,
+            app_name=context.name or "",
+            bundle_id=context.bundle_id or "",
+            window_title=context.window_title or "",
+        )
+        if self._plugin_manager is not None:
+            self._plugin_manager.run_before_expand(render_ctx)
         try:
-            replacement = render_match_interactive(match, app_config=config.app)
+            replacement = render_match_interactive(
+                match,
+                app_config=config.app,
+                render_context=render_ctx,
+            )
         except RuntimeError as exc:
             message = str(exc)
             if "not allowed" in message.lower():
@@ -336,6 +363,19 @@ class ExpansionEngine:
             return False
         if replacement is None:
             return False
+        if match.when and when_needs_form(match.when):
+            if not evaluate_when(
+                match.when,
+                context,
+                form_values=render_ctx.form_values,
+                require_form=True,
+            ):
+                return False
+        if self._plugin_manager is not None:
+            replacement = self._plugin_manager.transform_replacement(
+                replacement,
+                render_ctx,
+            )
 
         typed_trigger = self._buffer[-len(trigger) :]
         if match.propagate_case:
@@ -362,6 +402,8 @@ class ExpansionEngine:
             suffix=suffix,
         )
 
+        if self._plugin_manager is not None:
+            self._plugin_manager.run_after_expand(render_ctx, replacement)
         if self.on_expand:
             self.on_expand(
                 ExpansionResult(trigger=trigger, replacement=replacement, match=match)
@@ -377,29 +419,30 @@ class ExpansionEngine:
     ) -> tuple[str, Match] | None:
         candidates: list[tuple[str, Match]] = []
 
-        for trigger, match in self._literal.items():
-            if not self._buffer.endswith(trigger):
-                if not (
-                    match.ignore_case
-                    and self._buffer.casefold().endswith(trigger.casefold())
-                ):
+        for trigger, match_group in self._literal.items():
+            for match in match_group:
+                if not self._buffer.endswith(trigger):
+                    if not (
+                        match.ignore_case
+                        and self._buffer.casefold().endswith(trigger.casefold())
+                    ):
+                        continue
+                if match.word_break and not require_word_break and not match.force_break:
                     continue
-            if match.word_break and not require_word_break and not match.force_break:
-                continue
-            if match.right_word and not require_word_break and not match.force_break:
-                continue
-            if match.left_word and not self._has_left_word_boundary(trigger):
-                continue
-            if not self._match_allowed(match, context, config):
-                if self._buffer.casefold().endswith(trigger.casefold()):
-                    logger.debug(
-                        "Trigger %r matched buffer but blocked in app %r (%s)",
-                        trigger,
-                        context.name,
-                        context.bundle_id,
-                    )
-                continue
-            candidates.append((trigger, match))
+                if match.right_word and not require_word_break and not match.force_break:
+                    continue
+                if match.left_word and not self._has_left_word_boundary(trigger):
+                    continue
+                if not self._match_allowed(match, context, config):
+                    if self._buffer.casefold().endswith(trigger.casefold()):
+                        logger.debug(
+                            "Trigger %r matched buffer but blocked in app %r (%s)",
+                            trigger,
+                            context.name,
+                            context.bundle_id,
+                        )
+                    continue
+                candidates.append((trigger, match))
 
         if self._regex and len(self._buffer) <= config.app.max_regex_buffer_size:
             for pattern, match in self._regex:
@@ -429,23 +472,26 @@ class ExpansionEngine:
     ) -> tuple[str, Match, str] | None:
         blocked: list[tuple[str, Match, str]] = []
 
-        for trigger, match in self._literal.items():
-            if not self._buffer.endswith(trigger):
-                if not (
-                    match.ignore_case
-                    and self._buffer.casefold().endswith(trigger.casefold())
-                ):
+        for trigger, match_group in self._literal.items():
+            for match in match_group:
+                if not self._buffer.endswith(trigger):
+                    if not (
+                        match.ignore_case
+                        and self._buffer.casefold().endswith(trigger.casefold())
+                    ):
+                        continue
+                if match.word_break and not require_word_break and not match.force_break:
                     continue
-            if match.word_break and not require_word_break and not match.force_break:
-                continue
-            if match.right_word and not require_word_break and not match.force_break:
-                continue
-            if match.left_word and not self._has_left_word_boundary(trigger):
-                continue
-            if self._match_allowed(match, context, config):
-                continue
-            detail = self._app_rule_detail(match, context, config)
-            blocked.append((trigger, match, detail))
+                if match.right_word and not require_word_break and not match.force_break:
+                    continue
+                if match.left_word and not self._has_left_word_boundary(trigger):
+                    continue
+                if self._match_allowed(match, context, config):
+                    continue
+                detail = self._app_rule_detail(match, context, config)
+                if match.when:
+                    detail = "when"
+                blocked.append((trigger, match, detail))
 
         if self._regex and len(self._buffer) <= config.app.max_regex_buffer_size:
             for pattern, match in self._regex:

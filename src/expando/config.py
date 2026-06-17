@@ -69,6 +69,7 @@ class Match:
     right_word: bool = False
     ignore_case: bool = False
     when: dict[str, Any] = field(default_factory=dict)
+    image: str = ""
 
 
 @dataclass
@@ -137,6 +138,7 @@ def normalize_match(raw: dict[str, Any]) -> Match:
         right_word=bool(raw.get("right_word", False)),
         ignore_case=bool(raw.get("ignore_case", False)),
         when=dict(raw.get("when", {}) or {}),
+        image=str(raw.get("image") or raw.get("image_path") or ""),
     )
 
 
@@ -187,6 +189,7 @@ def _merge_global_vars(match: Match, global_vars: list[Variable]) -> Match:
         right_word=match.right_word,
         ignore_case=match.ignore_case,
         when=dict(match.when),
+        image=match.image,
     )
 
 

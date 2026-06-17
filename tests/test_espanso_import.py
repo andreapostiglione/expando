@@ -25,6 +25,7 @@ def test_convert_espanso_match_maps_word_and_force_mode():
 def test_convert_espanso_match_maps_image_path():
     converted = convert_espanso_match({"trigger": ":img", "image_path": "icons/logo.png"})
     assert converted is not None
+    assert converted["image"] == "icons/logo.png"
     assert converted["replace"] == "icons/logo.png"
     assert converted["force_clipboard"] is True
 

@@ -19,6 +19,7 @@ from .renderer import render_match_interactive
 from .search import build_search_items, pick_snippet, resolve_snippet_text
 from .app_context import get_frontmost_context, match_allowed
 from .config import active_bundle, load_config, load_matches
+from .cli_output import echo_espanso_import_report, echo_external_import_report, echo_imported_files
 from .i18n import t, tf
 
 
@@ -147,7 +148,7 @@ def match_cmd(ctx: click.Context, trigger: str, check: bool) -> None:
     bundle = active_bundle(config_dir, load_config(config_dir))
     item = _find_match_for_trigger(trigger, bundle.matches)
     if item is None:
-        raise click.ClickException(f"Trigger not found: {trigger}")
+        raise click.ClickException(tf("cli.trigger_not_found", trigger=trigger))
 
     if check:
         context = get_frontmost_context()
@@ -164,11 +165,11 @@ def match_cmd(ctx: click.Context, trigger: str, check: bool) -> None:
         app_label = context.name or "unknown"
         if context.bundle_id:
             app_label = f"{app_label} ({context.bundle_id})"
-        click.echo(f"App: {app_label}")
+        click.echo(tf("cli.match.app", app=app_label))
         if allowed:
-            click.echo("Allowed: yes")
+            click.echo(t("cli.match.allowed_yes"))
         else:
-            click.echo("Allowed: no")
+            click.echo(t("cli.match.allowed_no"))
             if item.if_app:
                 click.echo(f"if_app: {', '.join(item.if_app)}")
             if item.if_bundle:
@@ -180,7 +181,7 @@ def match_cmd(ctx: click.Context, trigger: str, check: bool) -> None:
 
     rendered = render_match_interactive(item, app_config=bundle.app)
     if rendered is None:
-        raise click.ClickException("Snippet rendering cancelled")
+        raise click.ClickException(t("cli.render_cancelled"))
     click.echo(rendered)
 
 
@@ -288,9 +289,7 @@ def import_cmd(ctx: click.Context, source: str, force: bool) -> None:
         imported = import_matches(ctx.obj["config_dir"], Path(source).expanduser(), force=force)
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo("Imported:")
-    for name in imported:
-        click.echo(f"  - {name}")
+    echo_imported_files(imported)
 
 
 @main.command("editor")
@@ -325,16 +324,10 @@ def migrate_espanso_cmd(ctx: click.Context, source: str | None, force: bool) -> 
     except FileNotFoundError as exc:
         raise click.ClickException(str(exc)) from exc
 
-    imported = report.import_report
-    click.echo(f"Backup created: {report.backup_path}")
-    click.echo(f"Imported from {imported.source}")
-    if imported.config_merged:
-        click.echo("  - merged config/default.yml")
-    click.echo(f"  - {imported.matches_imported} matches in {len(imported.match_files)} file(s)")
-    if imported.matches_skipped:
-        click.echo(f"  - skipped {imported.matches_skipped} unsupported match(es)")
-    for warning in imported.warnings:
-        click.echo(f"  ! {warning}")
+    echo_espanso_import_report(
+        report.import_report,
+        backup_path=report.backup_path,
+    )
 
 
 @main.command("import-espanso")
@@ -360,27 +353,7 @@ def import_espanso_cmd(ctx: click.Context, source: str | None, force: bool) -> N
     except FileNotFoundError as exc:
         raise click.ClickException(str(exc)) from exc
 
-    click.echo(f"Imported from {report.source}")
-    if report.config_merged:
-        click.echo("  - merged config/default.yml")
-    click.echo(f"  - {report.matches_imported} matches in {len(report.match_files)} file(s)")
-    if report.matches_skipped:
-        click.echo(f"  - skipped {report.matches_skipped} unsupported match(es)")
-    for warning in report.warnings:
-        click.echo(f"  ! {warning}")
-
-
-def _echo_external_import_report(report, *, backup_path: Path | None = None) -> None:
-    if backup_path is not None:
-        click.echo(f"Backup created: {backup_path}")
-    click.echo(f"Imported from {report.source}")
-    click.echo(f"  - {report.matches_imported} matches in {len(report.match_files)} file(s)")
-    if report.matches_skipped:
-        click.echo(f"  - skipped {report.matches_skipped} unsupported snippet(s)")
-    for name in report.match_files:
-        click.echo(f"  - wrote {name}")
-    for warning in report.warnings:
-        click.echo(f"  ! {warning}")
+    echo_espanso_import_report(report)
 
 
 @main.command("migrate-textexpander")
@@ -406,7 +379,7 @@ def migrate_textexpander_cmd(ctx: click.Context, source: str | None, force: bool
     except FileNotFoundError as exc:
         raise click.ClickException(str(exc)) from exc
 
-    _echo_external_import_report(
+    echo_external_import_report(
         report.import_report,
         backup_path=report.backup_path,
     )
@@ -435,7 +408,7 @@ def import_textexpander_cmd(ctx: click.Context, source: str | None, force: bool)
     except FileNotFoundError as exc:
         raise click.ClickException(str(exc)) from exc
 
-    _echo_external_import_report(report)
+    echo_external_import_report(report)
 
 
 @main.command("migrate-raycast")
@@ -461,7 +434,7 @@ def migrate_raycast_cmd(ctx: click.Context, source: str, force: bool) -> None:
     except (FileNotFoundError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
 
-    _echo_external_import_report(
+    echo_external_import_report(
         report.import_report,
         backup_path=report.backup_path,
     )
@@ -490,7 +463,7 @@ def import_raycast_cmd(ctx: click.Context, source: str, force: bool) -> None:
     except (FileNotFoundError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
 
-    _echo_external_import_report(report)
+    echo_external_import_report(report)
 
 
 @main.group()
@@ -537,7 +510,7 @@ def install(ctx: click.Context, package_id: str, force: bool) -> None:
         path = install_hub_package(ctx.obj["config_dir"], package_id, force=force)
     except (ValueError, FileExistsError, FileNotFoundError, RuntimeError) as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(f"Installed {package_id} to {path}")
+    click.echo(tf("cli.hub.installed", package=package_id, path=path))
 
 
 @hub.command()
@@ -548,9 +521,9 @@ def uninstall(ctx: click.Context, package_id: str) -> None:
     from .hub import uninstall_hub_package
 
     if uninstall_hub_package(ctx.obj["config_dir"], package_id):
-        click.echo(f"Removed package {package_id}")
+        click.echo(tf("cli.hub.removed", package=package_id))
     else:
-        raise click.ClickException(f"Package not installed: {package_id}")
+        raise click.ClickException(tf("cli.hub.not_installed", package=package_id))
 
 
 @hub.command()
@@ -565,16 +538,16 @@ def browse(ctx: click.Context) -> None:
     if not picked:
         raise SystemExit(0)
     if picked.get("installed") == "1":
-        click.echo("Package already installed.")
+        click.echo(t("cli.hub.already_installed"))
         raise SystemExit(0)
     package_id = picked.get("package_id") or picked.get("trigger")
     if not package_id:
-        raise click.ClickException("No package selected")
+        raise click.ClickException(t("cli.hub.no_selection"))
     try:
         path = install_hub_package(config_dir, str(package_id))
     except (ValueError, FileExistsError, FileNotFoundError, RuntimeError) as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(f"Installed {package_id} to {path}")
+    click.echo(tf("cli.hub.installed", package=package_id, path=path))
 
 
 @main.command()
@@ -583,7 +556,7 @@ def packages(ctx: click.Context) -> None:
     """List installed snippet packages."""
     names = list_installed_packages(match_dir(ctx.obj["config_dir"]))
     if not names:
-        click.echo("No packages installed.")
+        click.echo(t("cli.packages.none"))
         return
     for name in names:
         click.echo(name)
@@ -595,7 +568,7 @@ def packages(ctx: click.Context) -> None:
 def backup(ctx: click.Context, output: str | None) -> None:
     """Backup the configuration directory."""
     destination = backup_config(ctx.obj["config_dir"], Path(output) if output else None)
-    click.echo(f"Backup created: {destination}")
+    click.echo(tf("cli.backup_created", path=destination))
 
 
 @main.command()
@@ -604,7 +577,7 @@ def backup(ctx: click.Context, output: str | None) -> None:
 def restore(ctx: click.Context, archive: str) -> None:
     """Restore configuration from a backup archive."""
     restore_config(ctx.obj["config_dir"], Path(archive))
-    click.echo("Configuration restored.")
+    click.echo(t("cli.restored"))
 
 
 @main.command()
@@ -658,7 +631,7 @@ def plugins_list(ctx: click.Context) -> None:
     manager = PluginManager(ctx.obj["config_dir"])
     names = manager.list_plugins()
     if not names:
-        click.echo("No plugins loaded.")
+        click.echo(t("cli.plugins.none"))
         return
     for name in names:
         click.echo(name)
@@ -680,13 +653,13 @@ def check_updates_cmd(ctx: click.Context) -> None:
         notify_user=False,
     )
     if result.error:
-        raise click.ClickException(f"Update check failed: {result.error}")
+        raise click.ClickException(tf("cli.update.failed", error=result.error))
     if result.available:
-        click.echo(f"Update available: v{result.available.version}")
+        click.echo(tf("cli.update.available", version=result.available.version))
         click.echo(result.available.download_url)
         open_download_url(result.available.download_url)
         return
-    click.echo(f"Expando v{result.current_version} is up to date.")
+    click.echo(tf("cli.update.current", version=result.current_version))
 
 
 @main.command()
@@ -756,14 +729,14 @@ def crashes_show(ctx: click.Context, report: str) -> None:
     if report == "latest":
         items = list_crash_reports(config_dir, limit=1)
         if not items:
-            raise click.ClickException("No crash reports found")
+            raise click.ClickException(t("cli.crash.none"))
         path = items[0].path
     else:
         path = directory / report
         if not path.exists():
             path = directory / f"crash-{report}.json"
         if not path.exists():
-            raise click.ClickException(f"Crash report not found: {report}")
+            raise click.ClickException(tf("cli.crash.not_found", name=report))
     click.echo(format_crash_report(path))
 
 

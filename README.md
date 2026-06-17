@@ -136,6 +136,7 @@ Or install auto-start at login:
 | `expando templates list` | List available snippet templates |
 | `expando benchmark` | Benchmark trigger buffer under load (1000+ matches) |
 | `expando security-audit` | Review shell allowlist, imports, and hub TLS |
+| Snippet `image:` field | Paste PNG/JPEG from config dir (fallback to `replace` text) |
 | `expando crashes list` | List local crash reports (never uploaded) |
 | `expando logs` | Show recent log lines |
 | `expando logs --tail` | Follow log file (debug) |

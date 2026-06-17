@@ -5,8 +5,11 @@ import subprocess
 import threading
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 from pynput.keyboard import Controller, Key
+
+from .image_paths import macos_clipboard_type_for
 
 
 @dataclass
@@ -28,6 +31,11 @@ class TextInjector:
                 self.keyboard.press(Key.backspace)
                 self.keyboard.release(Key.backspace)
                 time.sleep(0.005)
+
+    def inject_image(self, image_path: Path) -> bool:
+        if self._system != "Darwin":
+            return False
+        return self._mac_clipboard_paste_image(image_path)
 
     def inject(
         self,
@@ -79,6 +87,26 @@ class TextInjector:
             self._windows_clipboard_paste(text)
         else:
             self._linux_clipboard_paste(text)
+
+    def _mac_clipboard_paste_image(self, image_path: Path) -> bool:
+        type_code = macos_clipboard_type_for(image_path)
+        script = (
+            f'set imageFile to POSIX file "{image_path}"\n'
+            f"set the clipboard to (read imageFile as «class {type_code}»)"
+        )
+        result = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            return False
+        with self._lock:
+            with self.keyboard.pressed(Key.cmd):
+                self.keyboard.press("v")
+                self.keyboard.release("v")
+            time.sleep(0.05)
+        return True
 
     def _mac_clipboard_paste(self, text: str) -> None:
         previous = subprocess.run(["pbpaste"], capture_output=True, text=True)

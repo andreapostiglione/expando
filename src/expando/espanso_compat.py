@@ -32,24 +32,25 @@ def convert_espanso_match(raw: dict[str, Any], config_dir: Path | None = None) -
     if "triggers" in raw:
         converted["triggers"] = [str(item) for item in raw["triggers"]]
 
-    replace = raw.get("replace", "")
-    if raw.get("markdown"):
-        replace = markdown_to_plain(str(raw["markdown"]))
-    elif raw.get("html"):
-        replace = html_to_plain(str(raw["html"]))
-    elif raw.get("image_path"):
+    if raw.get("image_path"):
         image_path = str(raw["image_path"])
         if config_dir is not None:
             image_path = image_path.replace("$CONFIG", str(config_dir))
-        replace = image_path
+        converted["image"] = image_path
+        converted["replace"] = str(raw.get("replace", image_path))
         converted["force_clipboard"] = True
         converted["label"] = str(raw.get("label", "Image snippet"))
-
-    if not isinstance(replace, str):
-        replace = str(replace)
-    if config_dir is not None:
-        replace = replace.replace("$CONFIG", str(config_dir))
-    converted["replace"] = replace
+    else:
+        replace = raw.get("replace", "")
+        if raw.get("markdown"):
+            replace = markdown_to_plain(str(raw["markdown"]))
+        elif raw.get("html"):
+            replace = html_to_plain(str(raw["html"]))
+        if not isinstance(replace, str):
+            replace = str(replace)
+        if config_dir is not None:
+            replace = replace.replace("$CONFIG", str(config_dir))
+        converted["replace"] = replace
 
     for field in (
         "regex",

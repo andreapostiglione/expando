@@ -135,6 +135,64 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
     },
+    "cli.import.header": {"it": "Importati:", "en": "Imported:"},
+    "cli.import.item": {"it": "  - {name}", "en": "  - {name}"},
+    "cli.backup_created": {"it": "Backup creato: {path}", "en": "Backup created: {path}"},
+    "cli.imported_from": {"it": "Importato da {source}", "en": "Imported from {source}"},
+    "cli.config_merged": {"it": "  - config/default.yml unito", "en": "  - merged config/default.yml"},
+    "cli.matches_imported": {
+        "it": "  - {count} match in {files} file",
+        "en": "  - {count} matches in {files} file(s)",
+    },
+    "cli.matches_skipped": {
+        "it": "  - saltati {count} match non supportati",
+        "en": "  - skipped {count} unsupported match(es)",
+    },
+    "cli.snippets_skipped": {
+        "it": "  - saltati {count} snippet non supportati",
+        "en": "  - skipped {count} unsupported snippet(s)",
+    },
+    "cli.wrote_file": {"it": "  - scritto {name}", "en": "  - wrote {name}"},
+    "cli.warning": {"it": "  ! {message}", "en": "  ! {message}"},
+    "cli.hub.installed": {"it": "Installato {package} in {path}", "en": "Installed {package} to {path}"},
+    "cli.hub.removed": {"it": "Rimosso pacchetto {package}", "en": "Removed package {package}"},
+    "cli.hub.not_installed": {
+        "it": "Pacchetto non installato: {package}",
+        "en": "Package not installed: {package}",
+    },
+    "cli.hub.already_installed": {"it": "Pacchetto già installato.", "en": "Package already installed."},
+    "cli.hub.no_selection": {"it": "Nessun pacchetto selezionato", "en": "No package selected"},
+    "cli.packages.none": {"it": "Nessun pacchetto installato.", "en": "No packages installed."},
+    "cli.restored": {"it": "Configurazione ripristinata.", "en": "Configuration restored."},
+    "cli.plugins.none": {"it": "Nessun plugin caricato.", "en": "No plugins loaded."},
+    "cli.update.available": {
+        "it": "Aggiornamento disponibile: v{version}",
+        "en": "Update available: v{version}",
+    },
+    "cli.update.current": {
+        "it": "Expando v{version} è aggiornato.",
+        "en": "Expando v{version} is up to date.",
+    },
+    "cli.update.failed": {
+        "it": "Controllo aggiornamenti fallito: {error}",
+        "en": "Update check failed: {error}",
+    },
+    "cli.trigger_not_found": {
+        "it": "Trigger non trovato: {trigger}",
+        "en": "Trigger not found: {trigger}",
+    },
+    "cli.render_cancelled": {
+        "it": "Rendering snippet annullato",
+        "en": "Snippet rendering cancelled",
+    },
+    "cli.match.app": {"it": "App: {app}", "en": "App: {app}"},
+    "cli.match.allowed_yes": {"it": "Consentito: sì", "en": "Allowed: yes"},
+    "cli.match.allowed_no": {"it": "Consentito: no", "en": "Allowed: no"},
+    "cli.crash.not_found": {
+        "it": "Crash report non trovato: {name}",
+        "en": "Crash report not found: {name}",
+    },
+    "cli.crash.none": {"it": "Nessun crash report trovato", "en": "No crash reports found"},
 }
 
 

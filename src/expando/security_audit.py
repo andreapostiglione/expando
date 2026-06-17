@@ -174,6 +174,19 @@ def run_security_audit(config_dir: Path) -> SecurityAuditReport:
             "Import copies only .yml/.yaml files into match/",
         )
 
+    try:
+        from .image_paths import resolve_image_path
+
+        resolve_image_path(config_dir, "../outside.png")
+        report.add("image.path_traversal", "fail", "Image path resolver accepted traversal")
+        report.ok = False
+    except RuntimeError:
+        report.add(
+            "image.path_traversal",
+            "pass",
+            "Image paths cannot escape config directory",
+        )
+
     return report
 
 

@@ -68,6 +68,18 @@ _BUILTIN_TEMPLATES: dict[str, SnippetTemplate] = {
             "replace": "feat(scope): short description\n\n- detail",
         },
     ),
+    "logo": SnippetTemplate(
+        id="logo",
+        name="Image snippet",
+        description="Paste a PNG/JPEG from config/images/ (fallback: path text)",
+        match={
+            "trigger": "{trigger}",
+            "label": "Logo image",
+            "image": "images/logo.png",
+            "replace": "images/logo.png",
+            "force_clipboard": True,
+        },
+    ),
     "meeting": SnippetTemplate(
         id="meeting",
         name="Meeting notes",

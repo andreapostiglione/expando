@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.3.0
+**Versione attuale:** v2.4.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.3.0)
+## Stato attuale (baseline v2.4.0)
 
 | Area | Stato |
 |------|--------|
@@ -135,7 +135,7 @@ flowchart LR
 | T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git (documentato, manuale) | Media |
 | T4-05 | **Import TextExpander / Raycast** | `migrate-textexpander`, `migrate-raycast` con report | ✓ v2.1.0 |
 | T4-06 | **Snippet templates** | `expando new`, `templates list` (email, legal-it, dev, …) | ✓ v2.3.0 |
-| T4-07 | **Espansione immagini** | Paste immagine da path (clipboard) con fallback testo | Bassa |
+| T4-07 | **Espansione immagini** | Campo `image:` + paste clipboard macOS, fallback `replace` | ✓ v2.4.0 |
 
 **Release target:** H1 2027  
 **Criterio di done:** plugin di terze parti pubblicabile con README + test di esempio.
@@ -146,9 +146,9 @@ flowchart LR
 
 | ID | Feature | Descrizione | Quando |
 |----|---------|-------------|--------|
-| T5-01 | **CI self-hosted E2E** | Runner Mac con Accessibility per test listener globali | v1.4 |
+| T5-01 | **CI self-hosted E2E** | Workflow + `ENABLE_SELF_HOSTED_E2E`, docs, artifact JUnit | ✓ v2.4.0 |
 | T5-02 | **Benchmark engine** | `expando benchmark` con metriche compile/reload/latency | ✓ v2.2.0 |
-| T5-03 | **Localizzazione IT** | CLI principale, doctor, wizard, menu bar (`EXPANDO_LOCALE`) | ✓ v2.3.0 |
+| T5-03 | **Localizzazione IT** | CLI completa, doctor, wizard, menu bar (`EXPANDO_LOCALE`) | ✓ v2.4.0 |
 | T5-04 | **Security audit** | `expando security-audit` (shell, plugin path, hub HTTPS) | ✓ v2.3.0 |
 | T5-05 | **Crash reporting locale** | `crashes/` locale, `expando crashes`, faulthandler | ✓ v2.2.0 |
 

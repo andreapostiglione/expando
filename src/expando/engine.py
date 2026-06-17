@@ -390,11 +390,27 @@ class ExpansionEngine:
         replacement, cursor_left = strip_cursor_hint(replacement)
 
         self.injector.delete_chars(len(trigger))
-        self.injector.inject(
-            replacement,
-            force_clipboard=match.force_clipboard,
-            cursor_left=cursor_left,
-        )
+        pasted_image = False
+        if match.image and self._config_dir is not None:
+            try:
+                from .image_paths import resolve_image_path
+
+                image_file = resolve_image_path(self._config_dir, match.image)
+                pasted_image = self.injector.inject_image(image_file)
+                if not pasted_image and not replacement:
+                    replacement = str(image_file)
+            except RuntimeError as exc:
+                logger.warning("Image expansion failed for %r: %s", trigger, exc)
+
+        if pasted_image:
+            if cursor_left:
+                self.injector.move_cursor_left(cursor_left)
+        else:
+            self.injector.inject(
+                replacement,
+                force_clipboard=match.force_clipboard or bool(match.image),
+                cursor_left=cursor_left,
+            )
         self._buffer = suffix
         self._last_expansion = _LastExpansion(
             trigger=trigger,

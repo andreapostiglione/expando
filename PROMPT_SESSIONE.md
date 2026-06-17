@@ -25,6 +25,6 @@
 
 ## GOAL — opzionale
 
-- [ ] Homebrew tap → v1.3.1
+- [x] Homebrew tap → v1.3.1
 - [ ] E2E tastiera reale (Accessibility)
 - [ ] CI: aggiornare actions Node 24

@@ -303,8 +303,11 @@ Pushing a `v*` tag triggers GitHub Actions to build the DMG and attach it to the
 
 ### Homebrew
 
+Tap: [andreapostiglione/homebrew-tap](https://github.com/andreapostiglione/homebrew-tap) (`andreapostiglione/tap`).
+
 ```bash
-brew install andreapostiglione/tap/expando
+brew tap andreapostiglione/tap
+brew install expando
 ```
 
 ---

@@ -14,7 +14,7 @@
   - Package hub (`expando hub list/search/install/browse`)
   - UI nativa AppKit (search + form), fallback Tkinter
   - `search_terms` nel fuzzy search
-- **D. Test** ✓ 93 test (listener/daemon/CLI/hub)
+- **D. Test** ✓ 99 test (98 pass + 1 skip E2E senza Input Monitoring)
 - **v1.3.1** ✓
   - `ignore_case` per trigger
   - cache runtime (app context + secure input)
@@ -26,5 +26,9 @@
 ## GOAL — opzionale
 
 - [x] Homebrew tap → v1.3.1
-- [ ] E2E tastiera reale (Accessibility)
-- [ ] CI: aggiornare actions Node 24
+- [x] E2E tastiera reale (Accessibility)
+  - injection reale in TextEdit (typing + clipboard)
+  - pipeline E2E (build_service end-to-end)
+  - global listener E2E (skip senza Input Monitoring)
+  - `./scripts/run-e2e.sh`
+- [x] CI: aggiornare actions Node 24 (checkout@v6, setup-python@v6, gh-release@v3)

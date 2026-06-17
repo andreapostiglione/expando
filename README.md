@@ -321,6 +321,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 pytest -q
+./scripts/run-e2e.sh   # macOS E2E (Accessibility; Input Monitoring for global listener)
 ```
 
 ### Project structure
@@ -338,7 +339,7 @@ expando/
 │   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 93 pytest tests
+├── tests/                # 99 pytest tests (incl. tests/e2e)
 ├── scripts/              # Install, build, launch agent
 ├── default_config/       # Default YAML templates
 └── assets/               # Logo and branding

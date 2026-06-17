@@ -35,8 +35,15 @@ def test_listener_double_alt_toggles(keyboard_service: KeyboardService):
     toggled: list[bool] = []
     keyboard_service.on_toggle = lambda: toggled.append(keyboard_service.engine.enabled)
 
-    now = time.time()
-    with patch("expando.listener.time.time", side_effect=[now, now + 0.1]):
+    base = 1_000.0
+    calls = 0
+
+    def fake_time() -> float:
+        nonlocal calls
+        calls += 1
+        return base if calls == 1 else base + 0.1
+
+    with patch("expando.listener.time.time", side_effect=fake_time):
         keyboard_service._on_press(Key.alt)
         keyboard_service._on_press(Key.alt)
 

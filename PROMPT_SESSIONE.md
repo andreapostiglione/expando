@@ -1,7 +1,7 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 2.0.0 | **Release:** v2.0.0 (in preparazione)  
+**Versione:** 2.0.0 | **Release:** v2.0.0 notarized CI  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto

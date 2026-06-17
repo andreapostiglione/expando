@@ -46,7 +46,7 @@ def require_textedit_e2e(require_accessibility) -> None:
 def textedit_document(require_textedit_e2e) -> None:
     try:
         open_textedit_blank()
-    except RuntimeError as exc:
+    except (RuntimeError, subprocess.TimeoutExpired, OSError) as exc:
         pytest.skip(f"TextEdit E2E unavailable on this host: {exc}")
     yield
     try:

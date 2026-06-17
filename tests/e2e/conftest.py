@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import platform
+import subprocess
 from pathlib import Path
 
 import pytest
 
 from expando.permissions import _check_accessibility_macos
+from tests.e2e.helpers import close_textedit_documents, open_textedit_blank
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -24,6 +26,33 @@ def require_accessibility() -> None:
             "Accessibility permission not granted — enable Terminal or Python in "
             "System Settings → Privacy & Security → Accessibility"
         )
+
+
+@pytest.fixture
+def require_textedit_e2e(require_accessibility) -> None:
+    try:
+        subprocess.run(
+            ["osascript", "-e", 'tell application "TextEdit" to id'],
+            capture_output=True,
+            text=True,
+            timeout=3,
+            check=True,
+        )
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, OSError) as exc:
+        pytest.skip(f"TextEdit E2E unavailable on this host: {exc}")
+
+
+@pytest.fixture
+def textedit_document(require_textedit_e2e) -> None:
+    try:
+        open_textedit_blank()
+    except RuntimeError as exc:
+        pytest.skip(f"TextEdit E2E unavailable on this host: {exc}")
+    yield
+    try:
+        close_textedit_documents()
+    except Exception:
+        pass
 
 
 @pytest.fixture

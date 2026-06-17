@@ -48,10 +48,11 @@ def reset_textedit() -> None:
         end tell
         '''
     )
-    time.sleep(0.4)
-    app = frontmost_app_name()
-    if app != "TextEdit":
-        raise RuntimeError(f"TextEdit is not frontmost (got {app!r})")
+    for _ in range(6):
+        time.sleep(0.25)
+        if frontmost_app_name() == "TextEdit":
+            return
+    raise RuntimeError(f"TextEdit is not frontmost (got {frontmost_app_name()!r})")
 
 
 def open_textedit_blank() -> None:

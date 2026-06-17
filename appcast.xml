@@ -6,12 +6,12 @@
     <description>Expando macOS updates (Sparkle appcast)</description>
     <language>en</language>
     <item>
-      <title>Version 2.5.0</title>
-      <sparkle:version>2.5.0</sparkle:version>
-      <sparkle:shortVersionString>2.5.0</sparkle:shortVersionString>
-      <description><![CDATA[Expando 2.5.0 — see GitHub release notes for details.]]></description>
-      <pubDate>Wed, 17 Jun 2026 19:36:53 +0000</pubDate>
-      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v2.5.0/Expando.dmg" length="30048762" type="application/octet-stream"/>
+      <title>Version 2.7.0</title>
+      <sparkle:version>2.7.0</sparkle:version>
+      <sparkle:shortVersionString>2.7.0</sparkle:shortVersionString>
+      <description><![CDATA[Expando 2.7.0 — see GitHub release notes for details.]]></description>
+      <pubDate>Wed, 17 Jun 2026 19:54:02 +0000</pubDate>
+      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v2.7.0/Expando.dmg" length="33134419" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>

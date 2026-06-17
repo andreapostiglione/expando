@@ -34,7 +34,7 @@
 - Updater usa appcast Sparkle via Python (no Sparkle.framework nativo in .app)
 - E2E listener globale: skip su CI headless; runner self-hosted opzionale (`ENABLE_SELF_HOSTED_E2E`)
 - UI/CLI solo parzialmente in italiano (doctor + wizard + notifiche; resto EN)
-- Nessuna estensione/plugin API documentata
+- Plugin API documentata (`docs/PLUGINS.md`); nessun marketplace/registry snippet
 
 ---
 

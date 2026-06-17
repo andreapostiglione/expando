@@ -244,6 +244,10 @@ def build_service(config_dir: Path) -> KeyboardService:
 
 def run_service(config_dir: Path) -> None:
     setup_logging(config_dir)
+    if platform.system() == "Darwin":
+        from .onboarding import maybe_run_onboarding
+
+        maybe_run_onboarding(config_dir)
     service = build_service(config_dir)
 
     if platform.system() == "Darwin":

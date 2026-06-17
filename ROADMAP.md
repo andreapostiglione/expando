@@ -1,6 +1,6 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v1.3.2  
+**Versione attuale:** v1.4.0  
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
@@ -24,12 +24,12 @@
 ### Gap noti oggi
 
 - Nessun editor grafico snippet (solo YAML / `expando edit`)
-- Onboarding permessi manuale (Accessibility + Input Monitoring spiegati a voce)
+- ~~Onboarding permessi manuale~~ → wizard v1.4
 - Hub con un solo package (`core`)
 - Nessun auto-update per Expando.app
 - Homebrew formula, non cask (build locale del .app)
 - Listener globale E2E richiede Input Monitoring (skip su CI headless)
-- UI/CLI solo in inglese
+- UI/CLI solo parzialmente in italiano (doctor + wizard; resto EN)
 - Nessuna estensione/plugin API documentata
 
 ---

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.3.2"><img src="https://img.shields.io/badge/version-1.3.2-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.4.0"><img src="https://img.shields.io/badge/version-1.4.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -112,6 +112,7 @@ Or install auto-start at login:
 | `expando match :trigger` | Test-render a trigger |
 | `expando edit` | Open `match/base.yml` |
 | `expando doctor` | Full health check |
+| `expando setup` | Permission onboarding wizard (macOS) |
 | `expando packages` | List installed packages |
 | `expando backup` | Export config as `.tar.gz` |
 | `expando restore <file>` | Restore from backup |
@@ -339,7 +340,7 @@ expando/
 │   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 99 pytest tests (incl. tests/e2e)
+├── tests/                # 104 pytest tests (incl. tests/e2e)
 ├── scripts/              # Install, build, launch agent
 ├── default_config/       # Default YAML templates
 └── assets/               # Logo and branding

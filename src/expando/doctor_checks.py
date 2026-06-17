@@ -9,8 +9,10 @@ import yaml
 
 from .config import ConfigCompileError, compile_matches, load_config
 from .daemon import is_running
+from .i18n import t
 from .match_utils import find_duplicate_literal_triggers
-from .permissions import PermissionStatus, check_permissions
+from .permissions import PermissionStatus, check_permissions, permissions_ready
+from .runtime_info import RuntimeInfo, detect_runtime
 
 
 @dataclass
@@ -24,6 +26,7 @@ class DoctorReport:
     duplicate_triggers: list[str] = field(default_factory=list)
     config_errors: list[str] = field(default_factory=list)
     permissions: PermissionStatus | None = None
+    runtime: RuntimeInfo | None = None
     warnings: list[str] = field(default_factory=list)
 
 
@@ -110,6 +113,10 @@ def validate_config_files(config_dir: Path) -> list[str]:
     return errors
 
 
+def _runtime_label(mode: str) -> str:
+    return t(f"runtime.{mode}")
+
+
 def run_doctor(config_dir: Path) -> DoctorReport:
     config_dir.mkdir(parents=True, exist_ok=True)
     running, pid = is_running(config_dir)
@@ -117,18 +124,24 @@ def run_doctor(config_dir: Path) -> DoctorReport:
     config_errors = validate_config_files(config_dir)
     duplicate_triggers = find_duplicate_triggers(config_dir)
     permissions = check_permissions()
+    runtime = permissions.runtime or detect_runtime()
 
     warnings: list[str] = []
     if process_count > 1:
         warnings.append(
-            f"Found {process_count} Expando processes: run `expando stop` and restart"
+            f"Trovati {process_count} processi Expando: esegui `expando stop` e riavvia."
         )
     if duplicate_triggers:
         warnings.append(
-            "Duplicate triggers: " + ", ".join(duplicate_triggers)
+            "Trigger duplicati: " + ", ".join(duplicate_triggers)
         )
     if permissions:
         warnings.extend(permissions.notes)
+    if permissions and not permissions_ready(permissions):
+        warnings.append(
+            "L'espansione automatica non funzionerà finché Accessibilità non è concessa "
+            f"per {runtime.grant_label}."
+        )
 
     try:
         bundle = load_config(config_dir)
@@ -137,7 +150,12 @@ def run_doctor(config_dir: Path) -> DoctorReport:
         match_count = 0
         config_errors.append(f"Failed to load config: {exc}")
 
-    ok = not config_errors and process_count <= 1 and not duplicate_triggers
+    ok = (
+        not config_errors
+        and process_count <= 1
+        and not duplicate_triggers
+        and (permissions is None or permissions_ready(permissions))
+    )
 
     return DoctorReport(
         ok=ok,
@@ -149,44 +167,59 @@ def run_doctor(config_dir: Path) -> DoctorReport:
         duplicate_triggers=duplicate_triggers,
         config_errors=config_errors,
         permissions=permissions,
+        runtime=runtime,
         warnings=warnings,
     )
 
 
 def format_doctor_report(report: DoctorReport) -> str:
+    title = t("doctor.title.ok") if report.ok else t("doctor.title.issues")
     lines = [
-        f"Config dir: {report.config_dir}",
-        f"Status: {'OK' if report.ok else 'ISSUES FOUND'}",
-        f"Daemon running: {'yes' if report.running else 'no'}",
+        f"{title}",
+        f"{t('doctor.config_dir')}: {report.config_dir}",
+        f"{t('doctor.daemon_running')}: {t('doctor.yes') if report.running else t('doctor.no')}",
     ]
     if report.pid:
-        lines.append(f"PID: {report.pid}")
-    lines.append(f"Expando processes: {report.process_count}")
-    lines.append(f"Matches loaded: {report.match_count}")
+        lines.append(f"{t('doctor.pid')}: {report.pid}")
+    lines.append(f"{t('doctor.processes')}: {report.process_count}")
+    lines.append(f"{t('doctor.matches')}: {report.match_count}")
+
+    if report.runtime:
+        lines.append(
+            f"{t('doctor.runtime')}: {_runtime_label(report.runtime.mode)}"
+        )
+        lines.append(
+            f"{t('doctor.grant_target')}: {report.runtime.grant_label}"
+        )
+        lines.append(f"  → {report.runtime.grant_hint}")
 
     if report.permissions:
         acc = report.permissions.accessibility
         inp = report.permissions.input_monitoring
+        inj = report.permissions.injection_ready
         lines.append(
-            f"Accessibility: {_fmt_bool(acc)}"
+            f"{t('doctor.accessibility')}: {_fmt_bool(acc)}"
         )
         lines.append(
-            f"Input monitoring: {_fmt_bool(inp)}"
+            f"{t('doctor.input_monitoring')}: {_fmt_bool(inp)}"
+        )
+        lines.append(
+            f"{t('doctor.injection')}: {_fmt_bool(inj)}"
         )
 
     if report.config_errors:
         lines.append("")
-        lines.append("Config errors:")
+        lines.append(f"{t('doctor.config_errors')}:")
         lines.extend(f"  - {item}" for item in report.config_errors)
 
     if report.duplicate_triggers:
         lines.append("")
-        lines.append("Duplicate triggers:")
+        lines.append(f"{t('doctor.duplicates')}:")
         lines.extend(f"  - {item}" for item in report.duplicate_triggers)
 
     if report.warnings:
         lines.append("")
-        lines.append("Warnings:")
+        lines.append(f"{t('doctor.warnings')}:")
         lines.extend(f"  - {item}" for item in report.warnings)
 
     return "\n".join(lines)
@@ -194,5 +227,5 @@ def format_doctor_report(report: DoctorReport) -> str:
 
 def _fmt_bool(value: bool | None) -> str:
     if value is None:
-        return "unknown"
-    return "granted" if value else "missing"
+        return t("doctor.perm.unknown")
+    return t("doctor.perm.granted") if value else t("doctor.perm.missing")

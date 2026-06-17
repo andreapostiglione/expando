@@ -10,6 +10,7 @@ from . import __version__
 from .daemon import is_running, start_daemon, stop_daemon
 from .paths import default_config_dir, ensure_default_config, match_dir, package_root
 from .doctor_checks import format_doctor_report, run_doctor
+from .onboarding import run_onboarding
 from .backup import backup_config, restore_config
 from .match_store import append_match, format_match_list, import_matches
 from .packages import list_installed_packages
@@ -393,6 +394,16 @@ def restore(ctx: click.Context, archive: str) -> None:
     """Restore configuration from a backup archive."""
     restore_config(ctx.obj["config_dir"], Path(archive))
     click.echo("Configuration restored.")
+
+
+@main.command()
+@click.option("--force", is_flag=True, help="Show the permission wizard again.")
+@click.pass_context
+def setup(ctx: click.Context, force: bool) -> None:
+    """Run the macOS permission onboarding wizard."""
+    run_onboarding(ctx.obj["config_dir"], force=force)
+    report = run_doctor(ctx.obj["config_dir"])
+    click.echo(format_doctor_report(report))
 
 
 @main.command()

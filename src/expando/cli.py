@@ -8,7 +8,8 @@ import click
 
 from . import __version__
 from .daemon import is_running, start_daemon, stop_daemon
-from .paths import default_config_dir, ensure_default_config, match_dir, package_root
+from .paths import default_config_dir, ensure_default_config, log_file, match_dir, package_root
+from .log_viewer import print_log_tail
 from .doctor_checks import format_doctor_report, run_doctor
 from .onboarding import run_onboarding
 from .backup import backup_config, restore_config
@@ -404,6 +405,33 @@ def setup(ctx: click.Context, force: bool) -> None:
     run_onboarding(ctx.obj["config_dir"], force=force)
     report = run_doctor(ctx.obj["config_dir"])
     click.echo(format_doctor_report(report))
+
+
+@main.command()
+@click.option(
+    "--tail",
+    "-f",
+    is_flag=True,
+    help="Follow the log file (like tail -f).",
+)
+@click.option(
+    "--lines",
+    "-n",
+    default=50,
+    show_default=True,
+    help="Number of lines to show before following.",
+)
+@click.pass_context
+def logs(ctx: click.Context, tail: bool, lines: int) -> None:
+    """Show Expando log output."""
+    config_dir: Path = ctx.obj["config_dir"]
+    path = log_file(config_dir)
+    try:
+        print_log_tail(path, lines=lines, follow=tail)
+    except FileNotFoundError as exc:
+        raise click.ClickException(str(exc)) from exc
+    except KeyboardInterrupt:
+        raise SystemExit(0) from None
 
 
 @main.command()

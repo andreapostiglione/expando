@@ -29,7 +29,11 @@ def test_textinjector_clipboard_paste_into_textedit(textedit_document):
     assert "hello e2e clipboard" in content, content
 
 
-def test_global_listener_captures_keystrokes(textedit_document, e2e_config_dir):
+def test_global_listener_captures_keystrokes(
+    require_full_e2e,
+    textedit_document,
+    e2e_config_dir,
+):
     """Verifies the OS-wide pynput listener; needs Input Monitoring permission."""
     service = build_service(e2e_config_dir)
     events: list[object] = []

@@ -8,7 +8,14 @@ from typing import Callable
 
 from pynput.keyboard import Key
 
-from .app_context import AppContext, enrich_context_window_title, get_frontmost_context, match_allowed
+from .app_context import (
+    AppContext,
+    enrich_context_window_title,
+    get_frontmost_context,
+    match_allowed,
+    pattern_matches,
+)
+from .block_notifications import BlockNotifier
 from .config import ConfigBundle, Match, active_bundle, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
 from .renderer import render_match_interactive
@@ -50,11 +57,13 @@ class ExpansionEngine:
         on_expand: Callable[[ExpansionResult], None] | None = None,
         *,
         config_dir: Path | None = None,
+        block_notifier: BlockNotifier | None = None,
     ) -> None:
         self._config_dir = config_dir
         self._base_bundle = config
         self.injector = injector
         self.on_expand = on_expand
+        self._block_notifier = block_notifier
         self.enabled = config.app.enabled
         self._buffer = ""
         self._lock = threading.Lock()
@@ -75,6 +84,11 @@ class ExpansionEngine:
         with self._lock:
             self._base_bundle = config
             self.enabled = config.app.enabled
+            if self._block_notifier is not None:
+                self._block_notifier.enabled = config.app.notify_on_block
+                self._block_notifier.cooldown_seconds = float(
+                    config.app.notify_cooldown_seconds
+                )
             self._literal = literal
             self._regex = regex
             self._literal_triggers = set(literal)
@@ -258,6 +272,25 @@ class ExpansionEngine:
                 )
 
         if not match_info:
+            blocked = self._find_blocked_match(
+                require_word_break=require_word_break,
+                context=context,
+                config=config,
+            )
+            if blocked is not None:
+                trigger, match, detail = blocked
+                logger.info(
+                    "Trigger %r blocked in app %r (%s)",
+                    trigger,
+                    context.name,
+                    detail,
+                )
+                if self._block_notifier is not None:
+                    self._block_notifier.notify_app_rule(
+                        trigger=trigger,
+                        app_name=context.name or "",
+                        detail=detail,
+                    )
             return False
 
         trigger, match = match_info
@@ -282,8 +315,25 @@ class ExpansionEngine:
         suffix: str = "",
     ) -> bool:
         if self._secure_input_blocks(config):
+            logger.debug("Expansion of %r blocked by secure input", trigger)
+            if self._block_notifier is not None:
+                self._block_notifier.notify_secure_input(trigger=trigger)
             return False
-        replacement = render_match_interactive(match, app_config=config.app)
+        try:
+            replacement = render_match_interactive(match, app_config=config.app)
+        except RuntimeError as exc:
+            message = str(exc)
+            if "not allowed" in message.lower():
+                logger.warning(
+                    "Shell variable blocked for trigger %r: %s",
+                    trigger,
+                    message,
+                )
+                if self._block_notifier is not None:
+                    self._block_notifier.notify_shell_denied(trigger=trigger)
+            else:
+                logger.exception("Render failed for trigger %r", trigger)
+            return False
         if replacement is None:
             return False
 
@@ -370,6 +420,75 @@ class ExpansionEngine:
         candidates.sort(key=lambda item: (item[1].priority, len(item[0])), reverse=True)
         return candidates[0]
 
+    def _find_blocked_match(
+        self,
+        *,
+        require_word_break: bool,
+        context: AppContext,
+        config: ConfigBundle,
+    ) -> tuple[str, Match, str] | None:
+        blocked: list[tuple[str, Match, str]] = []
+
+        for trigger, match in self._literal.items():
+            if not self._buffer.endswith(trigger):
+                if not (
+                    match.ignore_case
+                    and self._buffer.casefold().endswith(trigger.casefold())
+                ):
+                    continue
+            if match.word_break and not require_word_break and not match.force_break:
+                continue
+            if match.right_word and not require_word_break and not match.force_break:
+                continue
+            if match.left_word and not self._has_left_word_boundary(trigger):
+                continue
+            if self._match_allowed(match, context, config):
+                continue
+            detail = self._app_rule_detail(match, context, config)
+            blocked.append((trigger, match, detail))
+
+        if self._regex and len(self._buffer) <= config.app.max_regex_buffer_size:
+            for pattern, match in self._regex:
+                found = pattern.search(self._buffer)
+                if not found or found.end() != len(self._buffer):
+                    continue
+                if match.word_break and not require_word_break and not match.force_break:
+                    continue
+                if match.right_word and not require_word_break and not match.force_break:
+                    continue
+                if self._match_allowed(match, context, config):
+                    continue
+                detail = self._app_rule_detail(match, context, config)
+                blocked.append((found.group(0), match, detail))
+
+        if not blocked:
+            return None
+
+        blocked.sort(key=lambda item: (item[1].priority, len(item[0])), reverse=True)
+        return blocked[0]
+
+    def _app_rule_detail(
+        self,
+        match: Match,
+        context: AppContext,
+        config: ConfigBundle,
+    ) -> str:
+        if pattern_matches(context.name, config.app.app_blacklist):
+            return "app_blacklist"
+        if match.unless_app and pattern_matches(context.name, match.unless_app):
+            return f"unless_app: {', '.join(match.unless_app)}"
+        if match.unless_bundle and pattern_matches(context.bundle_id, match.unless_bundle):
+            return f"unless_bundle: {', '.join(match.unless_bundle)}"
+        if match.unless_title and pattern_matches(context.window_title, match.unless_title):
+            return f"unless_title: {', '.join(match.unless_title)}"
+        if match.if_app and not pattern_matches(context.name, match.if_app):
+            return f"if_app: {', '.join(match.if_app)}"
+        if match.if_bundle and not pattern_matches(context.bundle_id, match.if_bundle):
+            return f"if_bundle: {', '.join(match.if_bundle)}"
+        if match.if_title and not pattern_matches(context.window_title, match.if_title):
+            return f"if_title: {', '.join(match.if_title)}"
+        return "app_rule"
+
 
 def build_engine(
     config_dir: Path,
@@ -382,9 +501,14 @@ def build_engine(
             clipboard_threshold=config.app.clipboard_threshold,
         )
     )
+    block_notifier = BlockNotifier(
+        enabled=config.app.notify_on_block,
+        cooldown_seconds=float(config.app.notify_cooldown_seconds),
+    )
     return ExpansionEngine(
         config=config,
         injector=injector,
         on_expand=on_expand,
         config_dir=config_dir,
+        block_notifier=block_notifier,
     )

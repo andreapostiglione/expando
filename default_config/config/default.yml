@@ -17,3 +17,10 @@ search_shortcut: CMD+SHIFT+E
 shell_allowlist:
   - echo
   - git
+
+# Toast when expansion is blocked (secure input, app rules, shell deny)
+notify_on_block: true
+notify_cooldown_seconds: 30
+
+# Log verbosity: DEBUG, INFO, WARNING, ERROR (or EXPANDO_LOG_LEVEL env)
+log_level: INFO

@@ -28,6 +28,9 @@ class AppConfig:
     search_shortcut: str = "CMD+SHIFT+E"
     respect_secure_input: bool = True
     undo_shortcut: str = "CMD+SHIFT+Z"
+    notify_on_block: bool = True
+    notify_cooldown_seconds: int = 30
+    log_level: str = "INFO"
 
 
 @dataclass
@@ -200,6 +203,9 @@ def load_app_config(path: Path) -> AppConfig:
         search_shortcut=str(data.get("search_shortcut", "CMD+SHIFT+E")),
         respect_secure_input=bool(data.get("respect_secure_input", True)),
         undo_shortcut=str(data.get("undo_shortcut", "CMD+SHIFT+Z")),
+        notify_on_block=bool(data.get("notify_on_block", True)),
+        notify_cooldown_seconds=int(data.get("notify_cooldown_seconds", 30)),
+        log_level=str(data.get("log_level", "INFO")).upper(),
     )
 
 

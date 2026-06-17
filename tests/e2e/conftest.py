@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import platform
 import subprocess
 from pathlib import Path
@@ -25,6 +26,15 @@ def require_accessibility() -> None:
         pytest.skip(
             "Accessibility permission not granted — enable Terminal or Python in "
             "System Settings → Privacy & Security → Accessibility"
+        )
+
+
+@pytest.fixture
+def require_full_e2e(require_accessibility) -> None:
+    if os.environ.get("EXPANDO_E2E_FULL") != "1":
+        pytest.skip(
+            "Full E2E requires self-hosted runner with Accessibility — "
+            "set EXPANDO_E2E_FULL=1"
         )
 
 

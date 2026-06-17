@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v1.4.0  
+**Versione attuale:** v1.4.1
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v1.3.2)
+## Stato attuale (baseline v1.4.1)
 
 | Area | Stato |
 |------|--------|
@@ -19,17 +19,18 @@
 | Import Espanso + package hub | ✓ |
 | Backup/restore, doctor, CLI completa | ✓ |
 | Distribuzione firmata/notarizzata + Homebrew | ✓ |
-| Test (99) + E2E Accessibility | ✓ |
+| Permission wizard + Doctor v2 + i18n IT | ✓ |
+| Notifiche blocco espansione + `expando logs` | ✓ |
+| Test (105) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 
 - Nessun editor grafico snippet (solo YAML / `expando edit`)
-- ~~Onboarding permessi manuale~~ → wizard v1.4
 - Hub con un solo package (`core`)
 - Nessun auto-update per Expando.app
 - Homebrew formula, non cask (build locale del .app)
-- Listener globale E2E richiede Input Monitoring (skip su CI headless)
-- UI/CLI solo parzialmente in italiano (doctor + wizard; resto EN)
+- E2E listener globale: skip su CI headless; runner self-hosted opzionale (`ENABLE_SELF_HOSTED_E2E`)
+- UI/CLI solo parzialmente in italiano (doctor + wizard + notifiche; resto EN)
 - Nessuna estensione/plugin API documentata
 
 ---
@@ -160,15 +161,15 @@ flowchart LR
 
 ## Priorità consigliata (prossimi 3 sprint)
 
-### Sprint 1 → v1.4.0
+### Sprint 1 → v1.4.0 ✓
 1. T3-01 Permission wizard
 2. T3-02 Doctor v2
 3. T5-03 Localizzazione IT (doctor + wizard)
 
-### Sprint 2 → v1.4.1
+### Sprint 2 → v1.4.1 ✓
 1. T3-03 Notifiche contestuali
 2. T3-04 Log strutturato
-3. T5-01 CI self-hosted E2E (se runner disponibile)
+3. T5-01 CI self-hosted E2E (workflow; attiva con repo var `ENABLE_SELF_HOSTED_E2E=true`)
 
 ### Sprint 3 → v1.5.0
 1. T3-06 Snippet editor AppKit (MVP: lista + edit trigger/replace)

@@ -53,6 +53,28 @@ _STRINGS: dict[str, dict[str, str]] = {
     "runtime.dev": {"it": "sviluppo (Python)", "en": "development (Python)"},
     "runtime.venv": {"it": "venv locale", "en": "local venv"},
     "runtime.unknown": {"it": "sconosciuta", "en": "unknown"},
+    "notify.block.title": {"it": "Expando", "en": "Expando"},
+    "notify.block.secure_input": {
+        "it": "Espansione bloccata: campo password attivo (secure input).",
+        "en": "Expansion blocked: secure input is active (password field).",
+    },
+    "notify.block.secure_input_trigger": {
+        "it": "Espansione di {trigger} bloccata: campo password attivo.",
+        "en": "Expansion of {trigger} blocked: secure input is active.",
+    },
+    "notify.block.app_rule": {
+        "it": "{trigger} non disponibile in {app}.",
+        "en": "{trigger} is not available in {app}.",
+    },
+    "notify.block.app_rule_detail": {
+        "it": "{trigger} non disponibile in {app} ({detail}).",
+        "en": "{trigger} is not available in {app} ({detail}).",
+    },
+    "notify.block.shell_denied": {
+        "it": "{trigger} usa un comando shell non consentito.",
+        "en": "{trigger} uses a shell command that is not allowed.",
+    },
+    "notify.block.unknown_app": {"it": "questa app", "en": "this app"},
 }
 
 

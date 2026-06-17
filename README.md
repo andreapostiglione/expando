@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.4.0"><img src="https://img.shields.io/badge/version-1.4.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.4.1"><img src="https://img.shields.io/badge/version-1.4.1-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -113,6 +113,8 @@ Or install auto-start at login:
 | `expando edit` | Open `match/base.yml` |
 | `expando doctor` | Full health check |
 | `expando setup` | Permission onboarding wizard (macOS) |
+| `expando logs` | Show recent log lines |
+| `expando logs --tail` | Follow log file (debug) |
 | `expando packages` | List installed packages |
 | `expando backup` | Export config as `.tar.gz` |
 | `expando restore <file>` | Restore from backup |
@@ -228,6 +230,26 @@ app_blacklist:
   - 1Password
   - Bitwarden
 ```
+
+### Block notifications & logging
+
+When expansion is blocked (password field, app rules, or shell deny), Expando shows a macOS notification toast. Configure in `config/default.yml`:
+
+```yaml
+notify_on_block: true
+notify_cooldown_seconds: 30
+log_level: INFO   # or DEBUG; override with EXPANDO_LOG_LEVEL
+```
+
+View logs:
+
+```bash
+expando logs          # last 50 lines
+expando logs -n 200   # last 200 lines
+expando logs --tail   # follow (Ctrl+C to stop)
+```
+
+Logs are written to `~/Library/Application Support/expando/expando.log` with automatic rotation.
 
 ### App profile
 

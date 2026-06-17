@@ -1,0 +1,42 @@
+matches:
+  - trigger: ":todo"
+    replace: "TODO: "
+
+  - trigger: ":fixme"
+    replace: "FIXME: "
+
+  - trigger: ":branch"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "git branch --show-current"
+
+  - trigger: ":commit"
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "git log -1 --pretty=format:%s"
+
+  - trigger: ":pr"
+    replace: "https://github.com/{{repo}}/pull/{{number}}"
+    vars:
+      - name: repo
+        type: env
+        params:
+          name: GITHUB_REPOSITORY
+      - name: number
+        type: plain
+        params:
+          value: "123"
+
+  - trigger: ":npm-install"
+    replace: "npm install"
+    if_app:
+      - Terminal
+      - iTerm2
+      - Warp
+      - Cursor

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.4.1"><img src="https://img.shields.io/badge/version-1.4.1-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.5.0"><img src="https://img.shields.io/badge/version-1.5.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -113,6 +113,8 @@ Or install auto-start at login:
 | `expando edit` | Open `match/base.yml` |
 | `expando doctor` | Full health check |
 | `expando setup` | Permission onboarding wizard (macOS) |
+| `expando editor` | Graphical snippet editor (AppKit on macOS) |
+| `expando migrate-espanso` | Import Espanso config with auto backup |
 | `expando logs` | Show recent log lines |
 | `expando logs --tail` | Follow log file (debug) |
 | `expando packages` | List installed packages |
@@ -282,7 +284,9 @@ Drop snippet bundles into `match/packages/<name>/`. Expando loads them automatic
 expando packages           # list installed packages
 expando hub list           # browse the online package hub
 expando hub search email   # search hub packages
-expando hub install core   # install a hub package
+expando hub install core      # install a hub package
+expando hub install email-it  # Italian email templates
+expando hub install dev       # dev shortcuts (git, TODO, …)
 expando hub browse         # visual package picker (AppKit on macOS)
 expando import ./my-snippets/
 ```

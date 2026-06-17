@@ -250,6 +250,50 @@ def import_cmd(ctx: click.Context, source: str, force: bool) -> None:
         click.echo(f"  - {name}")
 
 
+@main.command("editor")
+@click.pass_context
+def editor_cmd(ctx: click.Context) -> None:
+    """Open the graphical snippet editor."""
+    from .snippet_editor import open_snippet_editor
+
+    open_snippet_editor(ctx.obj["config_dir"])
+
+
+@main.command("migrate-espanso")
+@click.option(
+    "--source",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    default=None,
+    help="Espanso config directory (auto-detected if omitted)",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing imported files")
+@click.pass_context
+def migrate_espanso_cmd(ctx: click.Context, source: str | None, force: bool) -> None:
+    """Import Espanso config with automatic backup and migration report."""
+    from .espanso_migrate import migrate_espanso_config
+
+    config_dir: Path = ctx.obj["config_dir"]
+    try:
+        report = migrate_espanso_config(
+            config_dir,
+            source=Path(source).expanduser() if source else None,
+            force=force,
+        )
+    except FileNotFoundError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    imported = report.import_report
+    click.echo(f"Backup created: {report.backup_path}")
+    click.echo(f"Imported from {imported.source}")
+    if imported.config_merged:
+        click.echo("  - merged config/default.yml")
+    click.echo(f"  - {imported.matches_imported} matches in {len(imported.match_files)} file(s)")
+    if imported.matches_skipped:
+        click.echo(f"  - skipped {imported.matches_skipped} unsupported match(es)")
+    for warning in imported.warnings:
+        click.echo(f"  ! {warning}")
+
+
 @main.command("import-espanso")
 @click.option(
     "--source",

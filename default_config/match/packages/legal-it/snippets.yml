@@ -1,0 +1,33 @@
+matches:
+  - trigger: ":riservatezza"
+    replace: |
+      Il contenuto di questa comunicazione è riservato e destinato esclusivamente al destinatario indicato.
+      È vietata la diffusione, la copia o l'utilizzo da parte di soggetti non autorizzati.
+
+  - trigger: ":gdpr"
+    replace: |
+      Il trattamento dei dati personali avviene nel rispetto del Regolamento UE 2016/679 (GDPR)
+      e della normativa nazionale applicabile.
+
+  - trigger: ":pec"
+    replace: |
+      Si precisa che la presente comunicazione è stata inviata tramite posta elettronica certificata (PEC),
+      ai sensi della normativa vigente.
+
+  - trigger: ":clausola-firma"
+    form:
+      - name: nome
+        label: "Nome e cognome"
+      - name: ruolo
+        label: "Qualifica / ruolo"
+      - name: societa
+        label: "Società"
+    replace: |
+      {{nome}}
+      {{ruolo}}
+      {{societa}}
+
+  - trigger: ":diffida"
+    replace: |
+      Con la presente Vi diffidiamo formalmente a cessare immediatamente la condotta sopra descritta,
+      fissando un termine perentorio di 7 (sette) giorni dal ricevimento della presente.

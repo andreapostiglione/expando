@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-import subprocess
 import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -33,7 +31,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 self.enabled_item,
                 rumps.MenuItem("Search snippets", callback=self.search_snippets),
                 rumps.MenuItem("Package hub", callback=self.browse_packages),
-                rumps.MenuItem("Edit snippets", callback=self.edit_snippets),
+                rumps.MenuItem("Snippet editor", callback=self.edit_snippets),
                 rumps.MenuItem("Restart", callback=self.restart_service),
                 None,
                 rumps.MenuItem("Quit", callback=self.quit_app),
@@ -75,9 +73,13 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 rumps.notification("Expando", "", f"Package install failed: {exc}")
 
         def edit_snippets(self, _sender) -> None:
-            target = self.config_dir / "match" / "base.yml"
-            editor = os.environ.get("EDITOR") or os.environ.get("VISUAL") or "nano"
-            subprocess.Popen([editor, str(target)])
+            threading.Thread(target=self._open_snippet_editor, daemon=True).start()
+
+        def _open_snippet_editor(self) -> None:
+            from .ui_bridge import show_snippet_editor
+
+            show_snippet_editor(str(self.config_dir))
+            self.service.apply_config_reload()
 
         def restart_service(self, _sender) -> None:
             self.service.apply_config_reload()

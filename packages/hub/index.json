@@ -7,6 +7,27 @@
       "description": "Grazie, firma email con form multi-campo",
       "author": "Expando",
       "tags": ["italian", "email", "signature"]
+    },
+    {
+      "id": "dev",
+      "name": "Dev Shortcuts",
+      "description": "TODO, git branch, commit message, npm install",
+      "author": "Expando",
+      "tags": ["dev", "git", "terminal"]
+    },
+    {
+      "id": "email-it",
+      "name": "Email IT",
+      "description": "Saluti, ringraziamenti e template email in italiano",
+      "author": "Expando",
+      "tags": ["italian", "email", "business"]
+    },
+    {
+      "id": "legal-it",
+      "name": "Legal IT",
+      "description": "Riservatezza, GDPR, PEC, diffida e firme legali",
+      "author": "Expando",
+      "tags": ["italian", "legal", "pec"]
     }
   ]
 }

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v1.4.1
+**Versione attuale:** v1.5.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v1.4.1)
+## Stato attuale (baseline v1.5.0)
 
 | Area | Stato |
 |------|--------|
@@ -21,12 +21,13 @@
 | Distribuzione firmata/notarizzata + Homebrew | ✓ |
 | Permission wizard + Doctor v2 + i18n IT | ✓ |
 | Notifiche blocco espansione + `expando logs` | ✓ |
-| Test (105) + E2E Accessibility | ✓ |
+| Snippet editor grafico + `expando migrate-espanso` | ✓ |
+| Hub packages (`core`, `dev`, `email-it`, `legal-it`) | ✓ |
+| Test (110) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 
-- Nessun editor grafico snippet (solo YAML / `expando edit`)
-- Hub con un solo package (`core`)
+- Editor snippet: MVP trigger/replace/if_app (no form/vars in UI)
 - Nessun auto-update per Expando.app
 - Homebrew formula, non cask (build locale del .app)
 - E2E listener globale: skip su CI headless; runner self-hosted opzionale (`ENABLE_SELF_HOSTED_E2E`)
@@ -171,7 +172,7 @@ flowchart LR
 2. T3-04 Log strutturato
 3. T5-01 CI self-hosted E2E (workflow; attiva con repo var `ENABLE_SELF_HOSTED_E2E=true`)
 
-### Sprint 3 → v1.5.0
+### Sprint 3 → v1.5.0 ✓
 1. T3-06 Snippet editor AppKit (MVP: lista + edit trigger/replace)
 2. T3-07 Migrazione Espanso 1-click
 3. T3-08 Hub: package `dev`, `email-it`, `legal-it`

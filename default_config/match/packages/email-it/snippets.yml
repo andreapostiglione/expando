@@ -1,0 +1,45 @@
+matches:
+  - trigger: ":saluti"
+    replace: "Buongiorno,"
+
+  - trigger: ":cordiali"
+    replace: |
+      Cordiali saluti,
+      {{name}}
+    vars:
+      - name: name
+        type: env
+        params:
+          name: USER
+
+  - trigger: ":ringrazio"
+    replace: "La ringrazio per la cortese attenzione."
+
+  - trigger: ":disponibile"
+    replace: "Resto a disposizione per qualsiasi chiarimento."
+
+  - trigger: ":email"
+    form:
+      - name: oggetto
+        label: "Oggetto"
+      - name: corpo
+        label: "Messaggio"
+    replace: |
+      Oggetto: {{oggetto}}
+
+      Buongiorno,
+
+      {{corpo}}
+
+      Cordiali saluti,
+      {{USER}}
+
+  - trigger: ":followup"
+    replace: |
+      Buongiorno,
+
+      Le scrivo per un breve follow-up in merito alla nostra ultima conversazione.
+
+      Resto in attesa di un suo riscontro.
+
+      Cordiali saluti

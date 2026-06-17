@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 import sys
 
+from pathlib import Path
+
+from .snippet_editor import open_snippet_editor
 from .ui_native import run_form_dialog, run_search_picker
 
 
@@ -17,6 +20,11 @@ def main() -> None:
         result = run_search_picker(payload.get("items", []))
     elif command == "form":
         result = run_form_dialog(payload.get("fields", []))
+    elif command == "editor":
+        config_dir = payload.get("config_dir")
+        if not config_dir:
+            raise SystemExit(2)
+        result = open_snippet_editor(Path(config_dir))
     else:
         raise SystemExit(2)
 

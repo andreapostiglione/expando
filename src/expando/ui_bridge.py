@@ -53,3 +53,7 @@ def show_search_picker(items: list[dict[str, str]]) -> dict[str, str] | None:
 
 def show_form_dialog(fields: list[dict[str, str]]) -> dict[str, str] | None:
     return _run_ui_subprocess("form", {"fields": fields})
+
+
+def show_snippet_editor(config_dir: str) -> dict[str, str] | None:
+    return _run_ui_subprocess("editor", {"config_dir": config_dir})

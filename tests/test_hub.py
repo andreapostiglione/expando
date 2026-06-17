@@ -13,7 +13,11 @@ from expando.hub import (
 
 def test_fetch_registry_uses_local_index():
     packages = fetch_registry()
-    assert any(package.id == "core" for package in packages)
+    ids = {package.id for package in packages}
+    assert "core" in ids
+    assert "dev" in ids
+    assert "email-it" in ids
+    assert "legal-it" in ids
 
 
 def test_search_hub_packages():

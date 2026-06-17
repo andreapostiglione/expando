@@ -19,6 +19,7 @@ from .renderer import render_match_interactive
 from .search import build_search_items, pick_snippet, resolve_snippet_text
 from .app_context import get_frontmost_context, match_allowed
 from .config import active_bundle, load_config, load_matches
+from .i18n import t, tf
 
 
 def _resolve_config_dir(config_dir: str | None) -> Path:
@@ -77,9 +78,9 @@ def status(ctx: click.Context) -> None:
     config_dir: Path = ctx.obj["config_dir"]
     running, pid = is_running(config_dir)
     if running:
-        click.echo(f"expando is running (pid {pid})")
+        click.echo(tf("cli.status.running", pid=pid))
     else:
-        click.echo("expando is not running")
+        click.echo(t("cli.status.stopped"))
 
 
 @main.command()
@@ -88,7 +89,7 @@ def start(ctx: click.Context) -> None:
     """Start the background daemon."""
     config_dir: Path = ctx.obj["config_dir"]
     pid = start_daemon(config_dir)
-    click.echo(f"expando started (pid {pid})")
+    click.echo(tf("cli.started", pid=pid))
 
 
 @main.command()
@@ -97,9 +98,9 @@ def stop(ctx: click.Context) -> None:
     """Stop the background daemon."""
     config_dir: Path = ctx.obj["config_dir"]
     if stop_daemon(config_dir):
-        click.echo("expando stopped")
+        click.echo(t("cli.stopped"))
     else:
-        click.echo("expando was not running")
+        click.echo(t("cli.not_running"))
 
 
 @main.command()
@@ -109,7 +110,7 @@ def restart(ctx: click.Context) -> None:
     config_dir: Path = ctx.obj["config_dir"]
     stop_daemon(config_dir)
     pid = start_daemon(config_dir)
-    click.echo(f"expando restarted (pid {pid})")
+    click.echo(tf("cli.restarted", pid=pid))
 
 
 @main.command()
@@ -232,7 +233,49 @@ def add(
         )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(f"Added {trigger} to {path}")
+    click.echo(tf("cli.added", trigger=trigger, path=path))
+
+
+@main.command("new")
+@click.argument("trigger")
+@click.option(
+    "--template",
+    "template_id",
+    required=True,
+    help="Built-in template id (email, signature, legal-it, dev, meeting)",
+)
+@click.option("--file", "target_file", default="dev.yml", show_default=True, help="Match file to update")
+@click.pass_context
+def new_cmd(ctx: click.Context, trigger: str, template_id: str, target_file: str) -> None:
+    """Create a snippet from a built-in template."""
+    from .match_store import append_match_entry
+    from .snippet_templates import build_match_from_template
+
+    try:
+        entry = build_match_from_template(template_id, trigger)
+        path = append_match_entry(
+            ctx.obj["config_dir"],
+            entry,
+            target_file=target_file,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(tf("cli.created", trigger=trigger, template=template_id, path=path))
+
+
+@main.group()
+def templates() -> None:
+    """Built-in snippet templates."""
+
+
+@templates.command("list")
+def templates_list() -> None:
+    """List available snippet templates."""
+    from .snippet_templates import list_templates
+
+    click.echo(t("cli.templates.header"))
+    for item in list_templates():
+        click.echo(f"  {item.id:12} {item.name} — {item.description}")
 
 
 @main.command("import")
@@ -691,7 +734,7 @@ def crashes_list(ctx: click.Context, limit: int) -> None:
     config_dir: Path = ctx.obj["config_dir"]
     reports = list_crash_reports(config_dir, limit=limit)
     if not reports:
-        click.echo(f"No crash reports in {crashes_dir(config_dir)}")
+        click.echo(tf("cli.no_crashes", path=crashes_dir(config_dir)))
         return
     for item in reports:
         stamp = item.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -722,6 +765,18 @@ def crashes_show(ctx: click.Context, report: str) -> None:
         if not path.exists():
             raise click.ClickException(f"Crash report not found: {report}")
     click.echo(format_crash_report(path))
+
+
+@main.command("security-audit")
+@click.pass_context
+def security_audit_cmd(ctx: click.Context) -> None:
+    """Review shell allowlist, import paths, and hub TLS configuration."""
+    from .security_audit import format_security_audit_report, run_security_audit
+
+    report = run_security_audit(ctx.obj["config_dir"])
+    click.echo(format_security_audit_report(report))
+    if not report.ok:
+        raise SystemExit(1)
 
 
 @main.command()

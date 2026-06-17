@@ -1,20 +1,21 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 2.2.0 | **Release:** v2.2.0 (T5-02 benchmark, T5-05 crash)  
+**Versione:** 2.3.0 | **Release:** v2.3.0 (templates, i18n, security)  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
-- **v2.2.0** ✓ Qualità & ops
-  - T5-02 `expando benchmark` (1000+ match, latency p50/p95/p99)
-  - T5-05 Crash reporting locale in `crashes/` (no upload)
+- **v2.3.0** ✓ Estensibilità + ops
+  - T4-06 `expando new --template` + `templates list`
+  - T5-03 i18n IT (CLI, menubar; `EXPANDO_LOCALE=en`)
+  - T5-04 `expando security-audit`
+- **v2.2.0** ✓ Benchmark + crash locale
 - **v2.1.0** ✓ Import TextExpander / Raycast
-- **v2.0.0** ✓ Piattaforma (plugin, script vars, when:)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
 ## Prossimi item
 
-- [ ] T4-06 Snippet templates CLI
-- [ ] T5-03 Localizzazione IT (CLI completa)
-- [ ] T5-04 Security audit
+- [ ] T4-07 Espansione immagini
+- [ ] T5-03 Localizzazione IT completa (tutti i messaggi CLI)
+- [ ] T5-01 CI self-hosted E2E attivo su runner

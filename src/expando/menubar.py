@@ -4,6 +4,8 @@ import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .i18n import t, tf
+
 if TYPE_CHECKING:
     from .listener import KeyboardService
 
@@ -26,16 +28,16 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             super().__init__("Expando", quit_button=None)
             self.config_dir = config_dir
             self.service = service
-            self.enabled_item = rumps.MenuItem("Disable", callback=self.toggle_enabled)
+            self.enabled_item = rumps.MenuItem(t("menubar.disable"), callback=self.toggle_enabled)
             self.menu = [
                 self.enabled_item,
-                rumps.MenuItem("Search snippets", callback=self.search_snippets),
-                rumps.MenuItem("Package hub", callback=self.browse_packages),
-                rumps.MenuItem("Snippet editor", callback=self.edit_snippets),
-                rumps.MenuItem("Restart", callback=self.restart_service),
-                rumps.MenuItem("Check for updates", callback=self.check_updates),
+                rumps.MenuItem(t("menubar.search"), callback=self.search_snippets),
+                rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
+                rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
+                rumps.MenuItem(t("menubar.restart"), callback=self.restart_service),
+                rumps.MenuItem(t("menubar.updates"), callback=self.check_updates),
                 None,
-                rumps.MenuItem("Quit", callback=self.quit_app),
+                rumps.MenuItem(t("menubar.quit"), callback=self.quit_app),
             ]
             self._sync_enabled_label()
             service.on_toggle = self._sync_enabled_label
@@ -44,7 +46,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
         def _sync_enabled_label(self, *_args) -> None:
             enabled = self.service.engine.enabled
-            self.enabled_item.title = "Disable" if enabled else "Enable"
+            self.enabled_item.title = t("menubar.disable") if enabled else t("menubar.enable")
             self.title = "Expando ●" if enabled else "Expando ○"
 
         def toggle_enabled(self, _sender) -> None:
@@ -70,9 +72,17 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 return
             try:
                 install_hub_package(self.config_dir, str(package_id))
-                rumps.notification("Expando", "", f"Installed package {package_id}")
+                rumps.notification(
+                    "Expando",
+                    "",
+                    tf("menubar.installed", package=package_id),
+                )
             except Exception as exc:
-                rumps.notification("Expando", "", f"Package install failed: {exc}")
+                rumps.notification(
+                    "Expando",
+                    "",
+                    tf("menubar.install_failed", error=exc),
+                )
 
         def edit_snippets(self, _sender) -> None:
             threading.Thread(target=self._open_snippet_editor, daemon=True).start()
@@ -85,7 +95,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
         def restart_service(self, _sender) -> None:
             self.service.apply_config_reload()
-            rumps.notification("Expando", "", "Service restarted")
+            rumps.notification("Expando", "", t("menubar.restarted"))
 
         def _startup_tasks(self) -> None:
             from .changelog import maybe_show_whats_new
@@ -109,11 +119,15 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 notify_user=False,
             )
             if result.error:
-                rumps.notification("Expando", "", f"Update check failed: {result.error}")
+                rumps.notification(
+                    "Expando",
+                    "",
+                    tf("menubar.update_failed", error=result.error),
+                )
             elif result.available:
                 _notify_update_available(result.available, open_download=True)
             else:
-                rumps.notification("Expando", "", "Expando is up to date.")
+                rumps.notification("Expando", "", t("menubar.up_to_date"))
 
         def quit_app(self, _sender) -> None:
             self.service.stop()

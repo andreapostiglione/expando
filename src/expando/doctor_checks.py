@@ -9,7 +9,7 @@ import yaml
 
 from .config import ConfigCompileError, compile_matches, load_config
 from .daemon import is_running
-from .i18n import t
+from .i18n import t, tf
 from .match_utils import find_duplicate_literal_triggers
 from .permissions import PermissionStatus, check_permissions, permissions_ready
 from .crash_reporting import recent_crash_count
@@ -145,9 +145,7 @@ def run_doctor(config_dir: Path) -> DoctorReport:
         )
     crash_count = recent_crash_count(config_dir)
     if crash_count:
-        warnings.append(
-            f"{crash_count} crash report(s) negli ultimi 7 giorni — esegui `expando crashes`."
-        )
+        warnings.append(tf("doctor.crash_warning", count=crash_count))
 
     try:
         bundle = load_config(config_dir)

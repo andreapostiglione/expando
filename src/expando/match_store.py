@@ -92,6 +92,37 @@ def format_match_list(config_dir: Path) -> str:
     return "\n".join(lines)
 
 
+def append_match_entry(
+    config_dir: Path,
+    entry: dict,
+    *,
+    target_file: str = "dev.yml",
+) -> Path:
+    path = config_dir / "match" / target_file
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    triggers = extract_triggers(entry)
+    if not triggers:
+        raise ValueError("Match entry must define trigger or triggers")
+
+    if path.exists():
+        with path.open("r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        matches = list(data.get("matches", []) or [])
+        for item in matches:
+            for trigger in triggers:
+                if trigger in extract_triggers(item):
+                    raise ValueError(f"Trigger already exists in {path.name}: {trigger}")
+        matches.append(entry)
+        data["matches"] = matches
+    else:
+        data = {"matches": [entry]}
+
+    with path.open("w", encoding="utf-8") as handle:
+        yaml.safe_dump(data, handle, allow_unicode=True, sort_keys=False)
+    return path
+
+
 def append_match(
     config_dir: Path,
     trigger: str,
@@ -101,30 +132,12 @@ def append_match(
     if_app: list[str] | None = None,
     unless_app: list[str] | None = None,
 ) -> Path:
-    path = config_dir / "match" / target_file
-    path.parent.mkdir(parents=True, exist_ok=True)
-
     entry: dict = {"trigger": trigger, "replace": replace}
     if if_app:
         entry["if_app"] = if_app
     if unless_app:
         entry["unless_app"] = unless_app
-
-    if path.exists():
-        with path.open("r", encoding="utf-8") as handle:
-            data = yaml.safe_load(handle) or {}
-        matches = list(data.get("matches", []) or [])
-        for item in matches:
-            if trigger in extract_triggers(item):
-                raise ValueError(f"Trigger already exists in {path.name}: {trigger}")
-        matches.append(entry)
-        data["matches"] = matches
-    else:
-        data = {"matches": [entry]}
-
-    with path.open("w", encoding="utf-8") as handle:
-        yaml.safe_dump(data, handle, allow_unicode=True, sort_keys=False)
-    return path
+    return append_match_entry(config_dir, entry, target_file=target_file)
 
 
 def import_matches(config_dir: Path, source: Path, *, force: bool = False) -> list[str]:

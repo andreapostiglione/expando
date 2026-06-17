@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.2.0
+**Versione attuale:** v2.3.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.2.0)
+## Stato attuale (baseline v2.3.0)
 
 | Area | Stato |
 |------|--------|
@@ -28,7 +28,9 @@
 | Plugin API + script vars + `when:` | ✓ |
 | Import TextExpander / Raycast | ✓ |
 | Benchmark engine + crash reporting locale | ✓ |
-| Test (140+) + E2E Accessibility | ✓ |
+| Snippet templates CLI + security audit | ✓ |
+| CLI/menu bar localizzati (IT default) | ✓ |
+| Test (150+) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 
@@ -132,7 +134,7 @@ flowchart LR
 | T4-03 | **Conditional matches** | `when:` / condizioni su variabili o contesto | Media |
 | T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git (documentato, manuale) | Media |
 | T4-05 | **Import TextExpander / Raycast** | `migrate-textexpander`, `migrate-raycast` con report | ✓ v2.1.0 |
-| T4-06 | **Snippet templates** | Scaffold CLI: `expando new :trigger --template email` | Bassa |
+| T4-06 | **Snippet templates** | `expando new`, `templates list` (email, legal-it, dev, …) | ✓ v2.3.0 |
 | T4-07 | **Espansione immagini** | Paste immagine da path (clipboard) con fallback testo | Bassa |
 
 **Release target:** H1 2027  
@@ -146,8 +148,8 @@ flowchart LR
 |----|---------|-------------|--------|
 | T5-01 | **CI self-hosted E2E** | Runner Mac con Accessibility per test listener globali | v1.4 |
 | T5-02 | **Benchmark engine** | `expando benchmark` con metriche compile/reload/latency | ✓ v2.2.0 |
-| T5-03 | **Localizzazione IT** | CLI, doctor, wizard, menu bar | v1.4 |
-| T5-04 | **Security audit** | Review shell allowlist, path traversal import, hub TLS | ogni minor |
+| T5-03 | **Localizzazione IT** | CLI principale, doctor, wizard, menu bar (`EXPANDO_LOCALE`) | ✓ v2.3.0 |
+| T5-04 | **Security audit** | `expando security-audit` (shell, plugin path, hub HTTPS) | ✓ v2.3.0 |
 | T5-05 | **Crash reporting locale** | `crashes/` locale, `expando crashes`, faulthandler | ✓ v2.2.0 |
 
 ---

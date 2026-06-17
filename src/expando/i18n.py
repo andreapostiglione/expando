@@ -85,6 +85,56 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Benvenuto in Expando {version}. Vedi le novità su GitHub.",
         "en": "Welcome to Expando {version}. See what's new on GitHub.",
     },
+    "cli.status.running": {"it": "expando è attivo (pid {pid})", "en": "expando is running (pid {pid})"},
+    "cli.status.stopped": {"it": "expando non è attivo", "en": "expando is not running"},
+    "cli.started": {"it": "expando avviato (pid {pid})", "en": "expando started (pid {pid})"},
+    "cli.stopped": {"it": "expando fermato", "en": "expando stopped"},
+    "cli.not_running": {"it": "expando non era attivo", "en": "expando was not running"},
+    "cli.restarted": {"it": "expando riavviato (pid {pid})", "en": "expando restarted (pid {pid})"},
+    "cli.added": {
+        "it": "Aggiunto {trigger} in {path}",
+        "en": "Added {trigger} to {path}",
+    },
+    "cli.created": {
+        "it": "Creato {trigger} da template '{template}' in {path}",
+        "en": "Created {trigger} from template '{template}' in {path}",
+    },
+    "cli.templates.header": {"it": "Template disponibili:", "en": "Available templates:"},
+    "cli.no_crashes": {
+        "it": "Nessun crash report in {path}",
+        "en": "No crash reports in {path}",
+    },
+    "security.title.ok": {"it": "OK", "en": "OK"},
+    "security.title.issues": {"it": "PROBLEMI RILEVATI", "en": "ISSUES FOUND"},
+    "menubar.disable": {"it": "Disattiva", "en": "Disable"},
+    "menubar.enable": {"it": "Attiva", "en": "Enable"},
+    "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
+    "menubar.hub": {"it": "Package hub", "en": "Package hub"},
+    "menubar.editor": {"it": "Editor snippet", "en": "Snippet editor"},
+    "menubar.restart": {"it": "Riavvia", "en": "Restart"},
+    "menubar.updates": {"it": "Controlla aggiornamenti", "en": "Check for updates"},
+    "menubar.quit": {"it": "Esci", "en": "Quit"},
+    "menubar.installed": {
+        "it": "Pacchetto {package} installato",
+        "en": "Installed package {package}",
+    },
+    "menubar.install_failed": {
+        "it": "Installazione pacchetto fallita: {error}",
+        "en": "Package install failed: {error}",
+    },
+    "menubar.restarted": {"it": "Servizio riavviato", "en": "Service restarted"},
+    "menubar.up_to_date": {
+        "it": "Expando è aggiornato.",
+        "en": "Expando is up to date.",
+    },
+    "menubar.update_failed": {
+        "it": "Controllo aggiornamenti fallito: {error}",
+        "en": "Update check failed: {error}",
+    },
+    "doctor.crash_warning": {
+        "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
+        "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
+    },
 }
 
 
@@ -96,3 +146,7 @@ def t(key: str, *, locale: str | None = None) -> str:
     if "en" in entry:
         return entry["en"]
     return key
+
+
+def tf(key: str, *, locale: str | None = None, **kwargs: object) -> str:
+    return t(key, locale=locale).format(**kwargs)

@@ -24,8 +24,8 @@ jobs:
           python3 -c 'import sys; assert sys.version_info >= (3, 10), f"need Python 3.10+, got {sys.version}"'
           python3 -m venv .venv
           echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
-          python --version
-          pip --version
+          .venv/bin/python --version
+          .venv/bin/pip --version
 
       - name: Install dependencies
         run: pip install -e ".[dev]"

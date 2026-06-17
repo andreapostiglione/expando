@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,7 +8,7 @@ from typing import Callable
 
 from pynput.keyboard import Key
 
-from .app_context import AppContext, get_frontmost_context, match_allowed
+from .app_context import AppContext, enrich_context_window_title, get_frontmost_context, match_allowed
 from .config import ConfigBundle, Match, active_bundle, compile_matches, load_config
 from .injector import InjectorSettings, TextInjector
 from .renderer import render_match_interactive
@@ -18,6 +19,7 @@ from .text_transform import (
     strip_cursor_hint,
 )
 
+logger = logging.getLogger(__name__)
 
 WORD_BREAK_KEYS = {
     Key.space,
@@ -61,12 +63,12 @@ class ExpansionEngine:
         self._max_trigger_len = self._compute_max_trigger_len()
         self._postponed: tuple[str, Match] | None = None
         self._last_expansion: _LastExpansion | None = None
+        self._needs_window_title = self._compute_needs_window_title(config.matches)
 
     @property
     def config(self) -> ConfigBundle:
-        if self._config_dir is not None:
-            return active_bundle(self._config_dir, self._base_bundle)
-        return self._base_bundle
+        context = get_frontmost_context()
+        return self._resolve_config(context)
 
     def reload(self, config: ConfigBundle) -> None:
         literal, regex = compile_matches(config.matches)
@@ -77,6 +79,7 @@ class ExpansionEngine:
             self._regex = regex
             self._literal_triggers = set(literal)
             self._max_trigger_len = self._compute_max_trigger_len()
+            self._needs_window_title = self._compute_needs_window_title(config.matches)
             self._buffer = ""
             self._postponed = None
             self._last_expansion = None
@@ -100,12 +103,30 @@ class ExpansionEngine:
         regex_max = self._base_bundle.app.max_regex_buffer_size
         return max(literal_max, regex_max)
 
+    def _compute_needs_window_title(self, matches: list[Match]) -> bool:
+        return any(match.if_title or match.unless_title for match in matches)
+
+    def _resolve_config(self, context: AppContext) -> ConfigBundle:
+        if self._config_dir is None:
+            return self._base_bundle
+        return active_bundle(
+            self._config_dir,
+            self._base_bundle,
+            app_name=context.name,
+        )
+
+    def _runtime_context(self) -> AppContext:
+        context = get_frontmost_context()
+        if self._needs_window_title:
+            return enrich_context_window_title(context)
+        return context
+
     def handle_char(self, char: str) -> bool:
         with self._lock:
             if not self.enabled:
                 return False
-            context = get_frontmost_context()
-            config = self.config
+            context = self._runtime_context()
+            config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
                 return False
             self._buffer += char
@@ -121,8 +142,8 @@ class ExpansionEngine:
         with self._lock:
             if not self.enabled:
                 return False
-            context = get_frontmost_context()
-            config = self.config
+            context = self._runtime_context()
+            config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
                 return False
 
@@ -173,14 +194,13 @@ class ExpansionEngine:
         return None
 
     def _expansion_allowed(self, context: AppContext, config: ConfigBundle) -> bool:
-        if not match_allowed(
+        return match_allowed(
             context,
             global_blacklist=config.app.app_blacklist,
-        ):
-            return False
-        if config.app.respect_secure_input and is_secure_input_active():
-            return False
-        return True
+        )
+
+    def _secure_input_blocks(self, config: ConfigBundle) -> bool:
+        return config.app.respect_secure_input and is_secure_input_active()
 
     def _match_allowed(self, match: Match, context: AppContext, config: ConfigBundle) -> bool:
         return match_allowed(
@@ -261,6 +281,8 @@ class ExpansionEngine:
         config: ConfigBundle,
         suffix: str = "",
     ) -> bool:
+        if self._secure_input_blocks(config):
+            return False
         replacement = render_match_interactive(match, app_config=config.app)
         if replacement is None:
             return False
@@ -307,7 +329,11 @@ class ExpansionEngine:
 
         for trigger, match in self._literal.items():
             if not self._buffer.endswith(trigger):
-                continue
+                if not (
+                    match.ignore_case
+                    and self._buffer.casefold().endswith(trigger.casefold())
+                ):
+                    continue
             if match.word_break and not require_word_break and not match.force_break:
                 continue
             if match.right_word and not require_word_break and not match.force_break:
@@ -315,6 +341,13 @@ class ExpansionEngine:
             if match.left_word and not self._has_left_word_boundary(trigger):
                 continue
             if not self._match_allowed(match, context, config):
+                if self._buffer.casefold().endswith(trigger.casefold()):
+                    logger.debug(
+                        "Trigger %r matched buffer but blocked in app %r (%s)",
+                        trigger,
+                        context.name,
+                        context.bundle_id,
+                    )
                 continue
             candidates.append((trigger, match))
 

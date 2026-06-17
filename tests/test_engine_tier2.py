@@ -59,12 +59,16 @@ def test_engine_blocks_secure_input():
         [Match(triggers=[":hi"], replace="Hello")],
         respect_secure_input=True,
     )
+    injected: list[str] = []
+    engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),
     ), patch("expando.engine.is_secure_input_active", return_value=True):
         for char in ":hi":
             assert engine.handle_char(char) is False
+        assert injected == []
 
 
 def test_engine_undo_last():

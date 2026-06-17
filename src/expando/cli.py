@@ -15,6 +15,7 @@ from .match_store import append_match, format_match_list, import_matches
 from .packages import list_installed_packages
 from .renderer import render_match_interactive
 from .search import build_search_items, pick_snippet, resolve_snippet_text
+from .app_context import get_frontmost_context, match_allowed
 from .config import active_bundle, load_config, load_matches
 
 
@@ -118,21 +119,66 @@ def run(ctx: click.Context) -> None:
     foreground(ctx.obj["config_dir"])
 
 
+def _find_match_for_trigger(trigger: str, matches):
+    for item in matches:
+        if trigger in item.triggers:
+            return item
+        if item.ignore_case and any(
+            trigger.casefold() == candidate.casefold() for candidate in item.triggers
+        ):
+            return item
+    return None
+
+
 @main.command("match")
 @click.argument("trigger")
+@click.option(
+    "--check",
+    is_flag=True,
+    help="Show whether the trigger is allowed in the current app.",
+)
 @click.pass_context
-def match_cmd(ctx: click.Context, trigger: str) -> None:
+def match_cmd(ctx: click.Context, trigger: str, check: bool) -> None:
     """Test-render a trigger without typing."""
     config_dir: Path = ctx.obj["config_dir"]
     bundle = active_bundle(config_dir, load_config(config_dir))
-    for item in bundle.matches:
-        if trigger in item.triggers:
-            rendered = render_match_interactive(item, app_config=bundle.app)
-            if rendered is None:
-                raise click.ClickException("Snippet rendering cancelled")
-            click.echo(rendered)
-            return
-    raise click.ClickException(f"Trigger not found: {trigger}")
+    item = _find_match_for_trigger(trigger, bundle.matches)
+    if item is None:
+        raise click.ClickException(f"Trigger not found: {trigger}")
+
+    if check:
+        context = get_frontmost_context()
+        allowed = match_allowed(
+            context,
+            global_blacklist=bundle.app.app_blacklist,
+            if_app=item.if_app or None,
+            unless_app=item.unless_app or None,
+            if_bundle=item.if_bundle or None,
+            unless_bundle=item.unless_bundle or None,
+            if_title=item.if_title or None,
+            unless_title=item.unless_title or None,
+        )
+        app_label = context.name or "unknown"
+        if context.bundle_id:
+            app_label = f"{app_label} ({context.bundle_id})"
+        click.echo(f"App: {app_label}")
+        if allowed:
+            click.echo("Allowed: yes")
+        else:
+            click.echo("Allowed: no")
+            if item.if_app:
+                click.echo(f"if_app: {', '.join(item.if_app)}")
+            if item.if_bundle:
+                click.echo(f"if_bundle: {', '.join(item.if_bundle)}")
+        if not item.ignore_case and trigger not in item.triggers:
+            click.echo(
+                f"Note: trigger is case-sensitive; configured as {', '.join(item.triggers)}"
+            )
+
+    rendered = render_match_interactive(item, app_config=bundle.app)
+    if rendered is None:
+        raise click.ClickException("Snippet rendering cancelled")
+    click.echo(rendered)
 
 
 @main.command()

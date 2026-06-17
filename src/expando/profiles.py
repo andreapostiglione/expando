@@ -23,12 +23,18 @@ def _profile_matches_app(profile_data: dict[str, Any], app_name: str | None) -> 
     return app_matches_pattern(app_name, app_names)
 
 
-def resolve_app_config(config_dir: Path, base: AppConfig) -> AppConfig:
+def resolve_app_config(
+    config_dir: Path,
+    base: AppConfig,
+    *,
+    app_name: str | None = None,
+) -> AppConfig:
     config_directory = config_dir / "config"
     if not config_directory.exists():
         return base
 
-    app_name = get_frontmost_app()
+    if app_name is None:
+        app_name = get_frontmost_app()
     profile_files = [
         path
         for path in sorted(config_directory.glob("*.yml")) + sorted(config_directory.glob("*.yaml"))

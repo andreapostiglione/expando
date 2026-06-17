@@ -62,6 +62,7 @@ class Match:
     search_terms: list[str] = field(default_factory=list)
     left_word: bool = False
     right_word: bool = False
+    ignore_case: bool = False
 
 
 @dataclass
@@ -128,6 +129,7 @@ def normalize_match(raw: dict[str, Any]) -> Match:
         search_terms=[str(item) for item in raw.get("search_terms", []) or []],
         left_word=bool(raw.get("left_word", False)),
         right_word=bool(raw.get("right_word", False)),
+        ignore_case=bool(raw.get("ignore_case", False)),
     )
 
 
@@ -228,11 +230,16 @@ def load_config(config_dir: Path) -> ConfigBundle:
     return ConfigBundle(app=base, matches=matches)
 
 
-def active_bundle(config_dir: Path, bundle: ConfigBundle) -> ConfigBundle:
+def active_bundle(
+    config_dir: Path,
+    bundle: ConfigBundle,
+    *,
+    app_name: str | None = None,
+) -> ConfigBundle:
     from .profiles import resolve_app_config
 
     return ConfigBundle(
-        app=resolve_app_config(config_dir, bundle.app),
+        app=resolve_app_config(config_dir, bundle.app, app_name=app_name),
         matches=bundle.matches,
     )
 

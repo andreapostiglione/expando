@@ -1,7 +1,7 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 1.3.0 | **Release:** v1.2.5 notarized CI  
+**Versione:** 1.3.1 | **Release:** v1.3.1 notarized CI
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
@@ -14,10 +14,17 @@
   - Package hub (`expando hub list/search/install/browse`)
   - UI nativa AppKit (search + form), fallback Tkinter
   - `search_terms` nel fuzzy search
-- **D. Test** ✓ 87 test (listener/daemon/CLI/hub)
+- **D. Test** ✓ 93 test (listener/daemon/CLI/hub)
+- **v1.3.1** ✓
+  - `ignore_case` per trigger
+  - cache runtime (app context + secure input)
+  - fast path NSWorkspace per app frontmost
+  - window title lazy (solo se servono regole title)
+  - `expando match --check`
+  - profili risolti per app corrente
 
 ## GOAL — opzionale
 
-- [ ] Homebrew tap → v1.3.0
+- [ ] Homebrew tap → v1.3.1
 - [ ] E2E tastiera reale (Accessibility)
 - [ ] CI: aggiornare actions Node 24

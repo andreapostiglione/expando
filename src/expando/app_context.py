@@ -5,6 +5,8 @@ import platform
 import subprocess
 from dataclasses import dataclass
 
+from .runtime_cache import TimedCache
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +35,61 @@ def _run_applescript(script: str) -> str | None:
         return None
 
 
-def get_frontmost_context() -> AppContext:
+_CONTEXT_CACHE: TimedCache[AppContext] = TimedCache(ttl_seconds=1.0)
+
+
+def invalidate_frontmost_context_cache() -> None:
+    _CONTEXT_CACHE.invalidate()
+
+
+def _fetch_frontmost_context_nsworkspace() -> AppContext | None:
+    if platform.system() != "Darwin":
+        return AppContext()
+    try:
+        from AppKit import NSWorkspace
+    except ImportError:
+        return None
+
+    app = NSWorkspace.sharedWorkspace().frontmostApplication()
+    if app is None:
+        return AppContext()
+    return AppContext(
+        name=app.localizedName() or None,
+        bundle_id=app.bundleIdentifier() or None,
+    )
+
+
+def _fetch_window_title() -> str | None:
+    if platform.system() != "Darwin":
+        return None
+
+    script = '''
+        tell application "System Events"
+            set frontProc to first application process whose frontmost is true
+            try
+                if (count of windows of frontProc) > 0 then
+                    return name of front window of frontProc
+                end if
+            end try
+        end tell
+    '''
+    return _run_applescript(script)
+
+
+def enrich_context_window_title(context: AppContext) -> AppContext:
+    if context.window_title is not None:
+        return context
+    title = _fetch_window_title()
+    if not title:
+        return context
+    return AppContext(
+        name=context.name,
+        bundle_id=context.bundle_id,
+        window_title=title,
+    )
+
+
+def _fetch_frontmost_context_slow() -> AppContext:
     if platform.system() != "Darwin":
         return AppContext()
 
@@ -60,6 +116,13 @@ def get_frontmost_context() -> AppContext:
     bundle_id = parts[1] if len(parts) > 1 and parts[1] else None
     window_title = parts[2] if len(parts) > 2 and parts[2] else None
     return AppContext(name=name, bundle_id=bundle_id, window_title=window_title)
+
+
+def get_frontmost_context() -> AppContext:
+    fast = _fetch_frontmost_context_nsworkspace()
+    if fast is not None:
+        return fast
+    return _CONTEXT_CACHE.get(_fetch_frontmost_context_slow)
 
 
 def get_frontmost_app() -> str | None:

@@ -130,6 +130,8 @@ Or install auto-start at login:
 | `expando check-updates` | Check Sparkle appcast for new releases |
 | `expando plugins list` | List loaded Python plugins |
 | `expando migrate-espanso` | Import Espanso config with auto backup |
+| `expando migrate-textexpander` | Import TextExpander CSV or Settings.textexpander |
+| `expando migrate-raycast --source file.json` | Import Raycast snippets JSON export |
 | `expando logs` | Show recent log lines |
 | `expando logs --tail` | Follow log file (debug) |
 | `expando packages` | List installed packages |
@@ -141,6 +143,22 @@ Or install auto-start at login:
 ```bash
 expando add :deploy "npm run build" --if-app Terminal --if-app Cursor
 ```
+
+### Migrate from other expanders
+
+```bash
+# Espanso (auto-detects ~/Library/Application Support/espanso)
+expando migrate-espanso
+
+# TextExpander CSV export or live Settings.textexpander
+expando migrate-textexpander
+expando migrate-textexpander --source ~/Downloads/email-snippets.csv
+
+# Raycast: run "Export Snippets" in Raycast, then:
+expando migrate-raycast --source ~/Downloads/snippets.json
+```
+
+Each `migrate-*` command creates a config backup and prints a report (imported, skipped, warnings).
 
 ---
 

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.0.0
+**Versione attuale:** v2.1.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.0.0)
+## Stato attuale (baseline v2.1.0)
 
 | Area | Stato |
 |------|--------|
@@ -26,7 +26,8 @@
 | Sparkle appcast + update check + Homebrew cask | ✓ |
 | Sito GitHub Pages | ✓ |
 | Plugin API + script vars + `when:` | ✓ |
-| Test (123) + E2E Accessibility | ✓ |
+| Import TextExpander / Raycast | ✓ |
+| Test (133+) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 
@@ -129,7 +130,7 @@ flowchart LR
 | T4-02 | **Variable type `script`** | Esegui script Python con contesto (app, trigger, form values) | Alta |
 | T4-03 | **Conditional matches** | `when:` / condizioni su variabili o contesto | Media |
 | T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git (documentato, manuale) | Media |
-| T4-05 | **Import TextExpander / Raycast** | Converter one-shot con report | Media |
+| T4-05 | **Import TextExpander / Raycast** | `migrate-textexpander`, `migrate-raycast` con report | ✓ v2.1.0 |
 | T4-06 | **Snippet templates** | Scaffold CLI: `expando new :trigger --template email` | Bassa |
 | T4-07 | **Espansione immagini** | Paste immagine da path (clipboard) con fallback testo | Bassa |
 

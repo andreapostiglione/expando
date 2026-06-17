@@ -327,6 +327,129 @@ def import_espanso_cmd(ctx: click.Context, source: str | None, force: bool) -> N
         click.echo(f"  ! {warning}")
 
 
+def _echo_external_import_report(report, *, backup_path: Path | None = None) -> None:
+    if backup_path is not None:
+        click.echo(f"Backup created: {backup_path}")
+    click.echo(f"Imported from {report.source}")
+    click.echo(f"  - {report.matches_imported} matches in {len(report.match_files)} file(s)")
+    if report.matches_skipped:
+        click.echo(f"  - skipped {report.matches_skipped} unsupported snippet(s)")
+    for name in report.match_files:
+        click.echo(f"  - wrote {name}")
+    for warning in report.warnings:
+        click.echo(f"  ! {warning}")
+
+
+@main.command("migrate-textexpander")
+@click.option(
+    "--source",
+    type=click.Path(exists=True, dir_okay=True, file_okay=True),
+    default=None,
+    help="TextExpander CSV, Settings.textexpander, or folder of CSV exports",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing imported files")
+@click.pass_context
+def migrate_textexpander_cmd(ctx: click.Context, source: str | None, force: bool) -> None:
+    """Import TextExpander snippets with automatic backup and migration report."""
+    from .external_import import migrate_textexpander_snippets
+
+    config_dir: Path = ctx.obj["config_dir"]
+    try:
+        report = migrate_textexpander_snippets(
+            config_dir,
+            source=Path(source).expanduser() if source else None,
+            force=force,
+        )
+    except FileNotFoundError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    _echo_external_import_report(
+        report.import_report,
+        backup_path=report.backup_path,
+    )
+
+
+@main.command("import-textexpander")
+@click.option(
+    "--source",
+    type=click.Path(exists=True, dir_okay=True, file_okay=True),
+    default=None,
+    help="TextExpander CSV, Settings.textexpander, or folder of CSV exports",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing imported files")
+@click.pass_context
+def import_textexpander_cmd(ctx: click.Context, source: str | None, force: bool) -> None:
+    """Import TextExpander snippets (CSV export or live Settings.textexpander)."""
+    from .external_import import import_textexpander_snippets
+
+    config_dir: Path = ctx.obj["config_dir"]
+    try:
+        report = import_textexpander_snippets(
+            config_dir,
+            source=Path(source).expanduser() if source else None,
+            force=force,
+        )
+    except FileNotFoundError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    _echo_external_import_report(report)
+
+
+@main.command("migrate-raycast")
+@click.option(
+    "--source",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, file_okay=True),
+    help="Raycast snippets JSON export",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing imported files")
+@click.pass_context
+def migrate_raycast_cmd(ctx: click.Context, source: str, force: bool) -> None:
+    """Import Raycast snippets JSON with automatic backup and migration report."""
+    from .external_import import migrate_raycast_snippets
+
+    config_dir: Path = ctx.obj["config_dir"]
+    try:
+        report = migrate_raycast_snippets(
+            config_dir,
+            source=Path(source).expanduser(),
+            force=force,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    _echo_external_import_report(
+        report.import_report,
+        backup_path=report.backup_path,
+    )
+
+
+@main.command("import-raycast")
+@click.option(
+    "--source",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, file_okay=True),
+    help="Raycast snippets JSON export",
+)
+@click.option("--force", is_flag=True, help="Overwrite existing imported files")
+@click.pass_context
+def import_raycast_cmd(ctx: click.Context, source: str, force: bool) -> None:
+    """Import Raycast snippets JSON (Export Snippets in Raycast)."""
+    from .external_import import import_raycast_snippets
+
+    config_dir: Path = ctx.obj["config_dir"]
+    try:
+        report = import_raycast_snippets(
+            config_dir,
+            source=Path(source).expanduser(),
+            force=force,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    _echo_external_import_report(report)
+
+
 @main.group()
 def hub() -> None:
     """Browse and install snippet packages from the hub."""

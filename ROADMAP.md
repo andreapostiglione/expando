@@ -29,16 +29,20 @@
 | Import TextExpander / Raycast | ✓ |
 | Benchmark engine + crash reporting locale | ✓ |
 | Snippet templates CLI + security audit | ✓ |
-| CLI/menu bar localizzati (IT default) | ✓ |
-| Test (150+) + E2E Accessibility | ✓ |
+| CLI/menu bar localizzati (IT default) | ✓ (parziale, vedi gap) |
+| Changelog in-app post-update | ✓ |
+| Test (150+) + E2E su runner self-hosted | ✓ |
+| Sync opzionale git/iCloud | ✓ doc (`docs/SYNC.md`) |
 
 ### Gap noti oggi
 
-- Editor snippet: MVP trigger/replace/if_app (no form/vars in UI)
-- Updater usa appcast Sparkle via Python (no Sparkle.framework nativo in .app)
-- E2E listener globale: skip su CI headless; runner self-hosted opzionale (`ENABLE_SELF_HOSTED_E2E`)
-- UI/CLI solo parzialmente in italiano (doctor + wizard + notifiche; resto EN)
-- Plugin API documentata (`docs/PLUGINS.md`); nessun marketplace/registry snippet
+- **Editor snippet:** MVP trigger/replace/if_app — mancano **form e variabili in UI** (blocca criterio v1.5)
+- **Hub:** 4 package installati; target roadmap **≥8**; manca `expando hub publish` (T3-09)
+- **Updater:** appcast Sparkle via Python (no Sparkle.framework nativo in `.app`)
+- **i18n:** benchmark output, marker hub list e altri messaggi ancora in EN
+- **Plugin:** API documentata (`docs/PLUGINS.md`); nessun marketplace/registry snippet
+- **Test:** 2 failure noti (E2E clipboard flaky, `test_when_engine` mock ora)
+- **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC (Accessibilità + Monitoraggio input) sul servizio launchd
 
 ---
 
@@ -78,13 +82,13 @@ flowchart LR
 ### v1.4 — Onboarding & affidabilità
 **Obiettivo:** chi installa Expando capisce subito cosa fare e perché non espande.
 
-| ID | Feature | Descrizione | Priorità |
-|----|---------|-------------|----------|
-| T3-01 | **Permission wizard** | Finestra al primo avvio: Accessibility, Input Monitoring, passo-passo con link a Impostazioni | Alta |
-| T3-02 | **Doctor v2** | Check esplicito Input Monitoring; test injection di prova; suggerimenti per Expando.app vs python | Alta |
-| T3-03 | **Notifiche contestuali** | Toast quando espansione bloccata (secure input, `if_app`, shell deny) | Media |
-| T3-04 | **Log strutturato** | `expando logs --tail` + rotazione; livelli debug per supporto | Media |
-| T3-05 | **Statistiche locali** | Conteggio espansioni per trigger (file JSON locale, opt-in) | Bassa |
+| ID | Feature | Descrizione | Stato |
+|----|---------|-------------|-------|
+| T3-01 | **Permission wizard** | Finestra al primo avvio: Accessibility, Input Monitoring, passo-passo con link a Impostazioni | ✓ |
+| T3-02 | **Doctor v2** | Check esplicito Input Monitoring; test injection di prova; suggerimenti per Expando.app vs python | ✓ |
+| T3-03 | **Notifiche contestuali** | Toast quando espansione bloccata (secure input, `if_app`, shell deny) | ✓ |
+| T3-04 | **Log strutturato** | `expando logs --tail` + rotazione; livelli debug per supporto | ✓ |
+| T3-05 | **Statistiche locali** | Conteggio espansioni per trigger (file JSON locale, opt-in) | Da fare |
 
 **Release target:** Q3 2026  
 **Criterio di done:** nuovo utente da DMG → snippet funzionante in < 5 min senza leggere il README.
@@ -94,13 +98,13 @@ flowchart LR
 ### v1.5 — Editor & contenuti
 **Obiettivo:** non serve più aprire YAML per l'uso quotidiano.
 
-| ID | Feature | Descrizione | Priorità |
-|----|---------|-------------|----------|
-| T3-06 | **Snippet editor AppKit** | Lista snippet, crea/modifica/elimina, anteprima live, regole app semplificate | Alta |
-| T3-07 | **Migrazione Espanso** | `expando migrate-espanso` con report (importati/saltati/errori) e backup automatico | Alta |
-| T3-08 | **Hub ampliato** | 5–10 package curati (dev, email IT, legal, social); `index.json` versionato | Media |
-| T3-09 | **Hub submit** | `expando hub publish` da cartella locale + validazione schema | Media |
-| T3-10 | **Duplica / export snippet** | Esporta singolo match o package come YAML | Bassa |
+| ID | Feature | Descrizione | Stato |
+|----|---------|-------------|-------|
+| T3-06 | **Snippet editor AppKit** | Lista snippet, crea/modifica/elimina, anteprima live, regole app semplificate | MVP — form/vars UI mancanti |
+| T3-07 | **Migrazione Espanso** | `expando migrate-espanso` con report (importati/saltati/errori) e backup automatico | ✓ |
+| T3-08 | **Hub ampliato** | 5–10 package curati (dev, email IT, legal, social); `index.json` versionato | Parziale (4/8+) |
+| T3-09 | **Hub submit** | `expando hub publish` da cartella locale + validazione schema | Da fare |
+| T3-10 | **Duplica / export snippet** | Esporta singolo match o package come YAML | Da fare |
 
 **Release target:** Q4 2026  
 **Criterio di done:** creare `:email` con form dalla UI senza toccare YAML.
@@ -110,13 +114,13 @@ flowchart LR
 ### v1.6 — Distribuzione & discoverability
 **Obiettivo:** installazione e aggiornamento frictionless per utenti non-dev.
 
-| ID | Feature | Descrizione | Priorità |
-|----|---------|-------------|----------|
-| T3-11 | **Sparkle auto-update** | Feed appcast firmato; check silenzioso + notifica | Alta |
-| T3-12 | **Homebrew cask** | `brew install --cask expando` con DMG precompilato | Alta |
-| T3-13 | **Sito progetto** | Landing + docs (install, YAML reference, hub); GitHub Pages o sito Inochi | Media |
-| T3-14 | **Changelog in-app** | "What's new" alla prima apertura post-update | Bassa |
-| T3-15 | **Notarization hardening** | Hardened runtime audit; entitlement review periodico | Media |
+| ID | Feature | Descrizione | Stato |
+|----|---------|-------------|-------|
+| T3-11 | **Sparkle auto-update** | Feed appcast firmato; check silenzioso + notifica | ✓ (Python appcast) |
+| T3-12 | **Homebrew cask** | `brew install --cask expando` con DMG precompilato | ✓ |
+| T3-13 | **Sito progetto** | Landing + docs (install, YAML reference, hub); GitHub Pages o sito Inochi | ✓ |
+| T3-14 | **Changelog in-app** | "What's new" alla prima apertura post-update | ✓ |
+| T3-15 | **Notarization hardening** | Hardened runtime audit; entitlement review periodico | Ops continua |
 
 **Release target:** Q1 2027  
 **Criterio di done:** utente Homebrew cask riceve update senza rebuild locale.
@@ -129,13 +133,16 @@ flowchart LR
 
 | ID | Feature | Descrizione | Priorità |
 |----|---------|-------------|----------|
-| T4-01 | **Plugin API** | Hook Python in `~/Library/Application Support/expando/plugins/` | Alta |
-| T4-02 | **Variable type `script`** | Esegui script Python con contesto (app, trigger, form values) | Alta |
-| T4-03 | **Conditional matches** | `when:` / condizioni su variabili o contesto | Media |
-| T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git (documentato, manuale) | Media |
+| T4-01 | **Plugin API** | Hook Python in `~/Library/Application Support/expando/plugins/` | ✓ v2.0.0 |
+| T4-02 | **Variable type `script`** | Esegui script Python con contesto (app, trigger, form values) | ✓ v2.0.0 |
+| T4-03 | **Conditional matches** | `when:` / condizioni su variabili o contesto | ✓ v2.0.0 |
+| T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git (documentato, manuale) | ✓ doc — assistente CLI da fare |
 | T4-05 | **Import TextExpander / Raycast** | `migrate-textexpander`, `migrate-raycast` con report | ✓ v2.1.0 |
 | T4-06 | **Snippet templates** | `expando new`, `templates list` (email, legal-it, dev, …) | ✓ v2.3.0 |
 | T4-07 | **Espansione immagini** | Campo `image:` + paste clipboard macOS, fallback `replace` | ✓ v2.4.0 |
+| T4-08 | **Editor form/vars UI** | Form multi-campo e variabili nell'editor AppKit | Alta — prossimo |
+| T4-09 | **Plugin/snippet registry** | Marketplace o index pubblico per plugin e package hub | Media |
+| T4-10 | **Sync assistito** | `expando sync` check + guida symlink iCloud/git | Bassa |
 
 **Release target:** H1 2027  
 **Criterio di done:** plugin di terze parti pubblicabile con README + test di esempio.
@@ -146,9 +153,9 @@ flowchart LR
 
 | ID | Feature | Descrizione | Quando |
 |----|---------|-------------|--------|
-| T5-01 | **CI self-hosted E2E** | Workflow + `ENABLE_SELF_HOSTED_E2E`, docs, artifact JUnit | ✓ v2.4.0 |
+| T5-01 | **CI self-hosted E2E** | Workflow + runner `macos-MacBook-Pro-di-Inochi-2`, artifact JUnit | ✓ operativo |
 | T5-02 | **Benchmark engine** | `expando benchmark` con metriche compile/reload/latency | ✓ v2.2.0 |
-| T5-03 | **Localizzazione IT** | CLI completa, doctor, wizard, menu bar (`EXPANDO_LOCALE`) | ✓ v2.4.0 |
+| T5-03 | **Localizzazione IT** | CLI, doctor, wizard, menu bar (`EXPANDO_LOCALE`) | Parziale — benchmark/hub EN |
 | T5-04 | **Security audit** | `expando security-audit` (shell, plugin path, hub HTTPS) | ✓ v2.3.0 |
 | T5-05 | **Crash reporting locale** | `crashes/` locale, `expando crashes`, faulthandler | ✓ v2.2.0 |
 
@@ -183,17 +190,32 @@ flowchart LR
 2. T3-07 Migrazione Espanso 1-click
 3. T3-08 Hub: package `dev`, `email-it`, `legal-it`
 
+### Sprint 4 → v2.5.0 (prossimo)
+1. **T4-08** Editor: form + variabili in UI (chiude criterio v1.5)
+2. **T3-08** +4 hub package (social, medical-it, …)
+3. **T3-09** `expando hub publish` con validazione schema
+4. **T5-03** i18n residua (benchmark, hub markers)
+
+### Backlog
+- T3-05 statistiche locali
+- T3-10 export/duplica snippet
+- T3-15 notarization audit periodico
+- T4-09 registry plugin/snippet
+- T4-10 sync assistito CLI
+- Sparkle.framework nativo in `.app`
+- Fix test flaky (clipboard E2E, `test_when_engine`)
+
 ---
 
 ## Metriche di successo
 
-| Metrica | Target v1.6 |
-|---------|-------------|
-| Tempo install → prima espansione | < 5 min |
-| Test suite | ≥ 120 test, E2E verde su runner dedicato |
-| Hub packages | ≥ 8 |
-| Download release GitHub | tracking manuale; obiettivo 100+ |
-| Issue aperte critiche | 0 su permessi / injection |
+| Metrica | Target v1.6 | Attuale |
+|---------|-------------|---------|
+| Tempo install → prima espansione | < 5 min | ~ok (wizard) |
+| Test suite | ≥ 120 test, E2E verde su runner dedicato | 150+ test, E2E ✓ runner |
+| Hub packages | ≥ 8 | **4** |
+| Download release GitHub | tracking manuale; obiettivo 100+ | manuale |
+| Issue aperte critiche | 0 su permessi / injection | 0 note |
 
 ---
 

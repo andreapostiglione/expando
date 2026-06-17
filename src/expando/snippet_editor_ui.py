@@ -26,8 +26,8 @@ class SnippetEditor:
         self.root = tk.Tk()
         self._configure_style()
         self.root.title("Expando — Snippet editor")
-        self.root.geometry("900x560")
-        self.root.minsize(720, 480)
+        self.root.geometry("920x720")
+        self.root.minsize(760, 600)
         self._build()
         self.root.protocol("WM_DELETE_WINDOW", self._close)
         self.root.bind("<Escape>", lambda _event: self._close())
@@ -64,7 +64,7 @@ class SnippetEditor:
 
         editor_frame = ttk.Frame(panes, padding=(8, 0, 0, 0))
         editor_frame.columnconfigure(1, weight=1)
-        editor_frame.rowconfigure(2, weight=1)
+        editor_frame.rowconfigure(6, weight=1)
 
         ttk.Label(editor_frame, text="Trigger").grid(row=0, column=0, sticky=tk.W, pady=4)
         self.trigger_var = tk.StringVar()
@@ -84,17 +84,37 @@ class SnippetEditor:
             font=("SF Pro Text", 11),
         ).grid(row=1, column=2, sticky=tk.W, padx=(8, 0))
 
-        ttk.Label(editor_frame, text="Testo").grid(row=2, column=0, sticky=tk.NW, pady=4)
-        self.replace_text = tk.Text(editor_frame, wrap=tk.WORD, height=10, relief=tk.FLAT, padx=8, pady=8)
+        ttk.Label(editor_frame, text="Form").grid(row=2, column=0, sticky=tk.NW, pady=4)
+        self.form_text = tk.Text(editor_frame, wrap=tk.NONE, height=3, relief=tk.FLAT, padx=8, pady=6)
+        self.form_text.configure(background="#ffffff", foreground="#1d1d1f")
+        self.form_text.grid(row=2, column=1, columnspan=2, sticky=tk.EW, pady=(4, 0))
+        ttk.Label(
+            editor_frame,
+            text="Una riga per campo: nome|etichetta|default",
+            font=("SF Pro Text", 11),
+        ).grid(row=3, column=1, columnspan=2, sticky=tk.W, pady=(0, 4))
+
+        ttk.Label(editor_frame, text="Variabili").grid(row=4, column=0, sticky=tk.NW, pady=4)
+        self.vars_text = tk.Text(editor_frame, wrap=tk.NONE, height=5, relief=tk.FLAT, padx=8, pady=6)
+        self.vars_text.configure(background="#ffffff", foreground="#1d1d1f")
+        self.vars_text.grid(row=4, column=1, columnspan=2, sticky=tk.EW, pady=(4, 0))
+        ttk.Label(
+            editor_frame,
+            text="Lista YAML (come in match YAML: vars:)",
+            font=("SF Pro Text", 11),
+        ).grid(row=5, column=1, columnspan=2, sticky=tk.W, pady=(0, 4))
+
+        ttk.Label(editor_frame, text="Testo").grid(row=6, column=0, sticky=tk.NW, pady=4)
+        self.replace_text = tk.Text(editor_frame, wrap=tk.WORD, height=8, relief=tk.FLAT, padx=8, pady=8)
         self.replace_text.configure(background="#ffffff", foreground="#1d1d1f")
-        self.replace_text.grid(row=2, column=1, columnspan=2, sticky=tk.NSEW, pady=4)
+        self.replace_text.grid(row=6, column=1, columnspan=2, sticky=tk.NSEW, pady=4)
         self.replace_text.bind("<<Modified>>", self._on_replace_modified)
 
-        ttk.Label(editor_frame, text="Anteprima").grid(row=3, column=0, sticky=tk.NW, pady=4)
+        ttk.Label(editor_frame, text="Anteprima").grid(row=7, column=0, sticky=tk.NW, pady=4)
         self.preview_text = tk.Text(
             editor_frame,
             wrap=tk.WORD,
-            height=6,
+            height=4,
             relief=tk.FLAT,
             padx=8,
             pady=8,
@@ -102,7 +122,7 @@ class SnippetEditor:
             background="#f0f0f2",
             foreground="#1d1d1f",
         )
-        self.preview_text.grid(row=3, column=1, columnspan=2, sticky=tk.NSEW, pady=4)
+        self.preview_text.grid(row=7, column=1, columnspan=2, sticky=tk.NSEW, pady=4)
         panes.add(editor_frame, weight=3)
 
         actions = ttk.Frame(container)
@@ -150,6 +170,8 @@ class SnippetEditor:
         self._current_id = None
         self.trigger_var.set("")
         self.if_app_var.set("")
+        self.form_text.delete("1.0", tk.END)
+        self.vars_text.delete("1.0", tk.END)
         self.replace_text.delete("1.0", tk.END)
         self._update_preview()
 
@@ -161,11 +183,17 @@ class SnippetEditor:
         self._current_id = item.get("id")
         self.trigger_var.set(item.get("trigger", ""))
         self.if_app_var.set(item.get("if_app", ""))
+        self.form_text.delete("1.0", tk.END)
+        self.form_text.insert(tk.END, item.get("form", ""))
+        self.vars_text.delete("1.0", tk.END)
+        self.vars_text.insert(tk.END, item.get("vars", ""))
         self.replace_text.delete("1.0", tk.END)
         self.replace_text.insert(tk.END, item.get("replace", ""))
         editable = item.get("editable", "1") == "1"
         state = tk.NORMAL if editable else tk.DISABLED
         self.replace_text.configure(state=state)
+        self.form_text.configure(state=state)
+        self.vars_text.configure(state=state)
         self.status_var.set(
             "Modifica lo snippet selezionato."
             if editable
@@ -186,12 +214,18 @@ class SnippetEditor:
             "trigger": self.trigger_var.get().strip(),
             "replace": self.replace_text.get("1.0", tk.END).strip(),
             "if_app": self.if_app_var.get().strip(),
+            "form": self.form_text.get("1.0", tk.END).strip(),
+            "vars": self.vars_text.get("1.0", tk.END).strip(),
         }
 
     def _new_snippet(self) -> None:
         self._current_id = None
         self.trigger_var.set(":nuovo")
         self.if_app_var.set("")
+        self.form_text.configure(state=tk.NORMAL)
+        self.vars_text.configure(state=tk.NORMAL)
+        self.form_text.delete("1.0", tk.END)
+        self.vars_text.delete("1.0", tk.END)
         self.replace_text.configure(state=tk.NORMAL)
         self.replace_text.delete("1.0", tk.END)
         self.status_var.set("Nuovo snippet — salva per aggiungerlo a dev.yml.")

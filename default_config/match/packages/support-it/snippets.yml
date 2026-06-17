@@ -1,0 +1,26 @@
+matches:
+  - trigger: ":ticket-ack"
+    form:
+      - name: id
+        label: "ID ticket"
+    replace: |
+      Abbiamo ricevuto la sua richiesta (ticket {{id}}).
+      Il team supporto la prenderà in carico al più presto.
+
+  - trigger: ":ticket-update"
+    form:
+      - name: stato
+        label: "Stato"
+    replace: |
+      Aggiornamento ticket: {{stato}}.
+      La terremo informata sui prossimi passi.
+
+  - trigger: ":sla"
+    replace: |
+      Il nostro tempo medio di prima risposta è entro 4 ore lavorative.
+      Per urgenze critiche indichi «URGENTE» nell'oggetto.
+
+  - trigger: ":escalation"
+    replace: |
+      Ho inoltrato il caso al team senior per un'analisi approfondita.
+      Riceverà un aggiornamento appena disponibile.

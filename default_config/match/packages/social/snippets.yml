@@ -1,0 +1,26 @@
+matches:
+  - trigger: ":li"
+    replace: |
+      Condivido con piacere un aggiornamento su questo progetto.
+      #professional #update
+
+  - trigger: ":ig"
+    replace: |
+      Nuovo contenuto in arrivo ✨
+      Seguimi per non perdere gli aggiornamenti.
+
+  - trigger: ":cta"
+    replace: "Scopri di più nel link in bio 👇"
+
+  - trigger: ":story"
+    form:
+      - name: topic
+        label: "Argomento"
+      - name: hook
+        label: "Hook iniziale"
+        default: "Ecco cosa ho imparato oggi:"
+    replace: |
+      {{hook}}
+      {{topic}}
+
+      Salva il post se ti è utile.

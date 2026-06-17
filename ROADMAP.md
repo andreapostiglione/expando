@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.4.0
+**Versione attuale:** v2.5.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.4.0)
+## Stato attuale (baseline v2.5.0)
 
 | Area | Stato |
 |------|--------|
@@ -21,28 +21,25 @@
 | Distribuzione firmata/notarizzata + Homebrew | ✓ |
 | Permission wizard + Doctor v2 + i18n IT | ✓ |
 | Notifiche blocco espansione + `expando logs` | ✓ |
-| Snippet editor grafico + `expando migrate-espanso` | ✓ |
-| Hub packages (`core`, `dev`, `email-it`, `legal-it`) | ✓ |
+| Snippet editor grafico (trigger/replace/form/vars) | ✓ |
+| Hub packages (8 curati) + `expando hub publish` | ✓ |
 | Sparkle appcast + update check + Homebrew cask | ✓ |
 | Sito GitHub Pages | ✓ |
 | Plugin API + script vars + `when:` | ✓ |
 | Import TextExpander / Raycast | ✓ |
 | Benchmark engine + crash reporting locale | ✓ |
 | Snippet templates CLI + security audit | ✓ |
-| CLI/menu bar localizzati (IT default) | ✓ (parziale, vedi gap) |
+| CLI/menu bar localizzati (IT default) | ✓ |
 | Changelog in-app post-update | ✓ |
 | Test (150+) + E2E su runner self-hosted | ✓ |
 | Sync opzionale git/iCloud | ✓ doc (`docs/SYNC.md`) |
 
 ### Gap noti oggi
 
-- **Editor snippet:** MVP trigger/replace/if_app — mancano **form e variabili in UI** (blocca criterio v1.5)
-- **Hub:** 4 package installati; target roadmap **≥8**; manca `expando hub publish` (T3-09)
 - **Updater:** appcast Sparkle via Python (no Sparkle.framework nativo in `.app`)
-- **i18n:** benchmark output, marker hub list e altri messaggi ancora in EN
-- **Plugin:** API documentata (`docs/PLUGINS.md`); nessun marketplace/registry snippet
-- **Test:** 2 failure noti (E2E clipboard flaky, `test_when_engine` mock ora)
-- **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC (Accessibilità + Monitoraggio input) sul servizio launchd
+- **Plugin:** API documentata (`docs/PLUGINS.md`); nessun marketplace/registry snippet (T4-09)
+- **Test:** failure noti su E2E clipboard, daemon CLI, `test_when_engine` mock ora
+- **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC sul servizio launchd
 
 ---
 
@@ -100,10 +97,10 @@ flowchart LR
 
 | ID | Feature | Descrizione | Stato |
 |----|---------|-------------|-------|
-| T3-06 | **Snippet editor AppKit** | Lista snippet, crea/modifica/elimina, anteprima live, regole app semplificate | MVP — form/vars UI mancanti |
+| T3-06 | **Snippet editor AppKit** | Lista snippet, crea/modifica/elimina, anteprima live, regole app semplificate | ✓ v2.5.0 |
 | T3-07 | **Migrazione Espanso** | `expando migrate-espanso` con report (importati/saltati/errori) e backup automatico | ✓ |
-| T3-08 | **Hub ampliato** | 5–10 package curati (dev, email IT, legal, social); `index.json` versionato | Parziale (4/8+) |
-| T3-09 | **Hub submit** | `expando hub publish` da cartella locale + validazione schema | Da fare |
+| T3-08 | **Hub ampliato** | 5–10 package curati (dev, email IT, legal, social); `index.json` versionato | ✓ v2.5.0 (8) |
+| T3-09 | **Hub submit** | `expando hub publish` da cartella locale + validazione schema | ✓ v2.5.0 |
 | T3-10 | **Duplica / export snippet** | Esporta singolo match o package come YAML | Da fare |
 
 **Release target:** Q4 2026  
@@ -140,7 +137,7 @@ flowchart LR
 | T4-05 | **Import TextExpander / Raycast** | `migrate-textexpander`, `migrate-raycast` con report | ✓ v2.1.0 |
 | T4-06 | **Snippet templates** | `expando new`, `templates list` (email, legal-it, dev, …) | ✓ v2.3.0 |
 | T4-07 | **Espansione immagini** | Campo `image:` + paste clipboard macOS, fallback `replace` | ✓ v2.4.0 |
-| T4-08 | **Editor form/vars UI** | Form multi-campo e variabili nell'editor AppKit | Alta — prossimo |
+| T4-08 | **Editor form/vars UI** | Form multi-campo e variabili nell'editor AppKit | ✓ v2.5.0 |
 | T4-09 | **Plugin/snippet registry** | Marketplace o index pubblico per plugin e package hub | Media |
 | T4-10 | **Sync assistito** | `expando sync` check + guida symlink iCloud/git | Bassa |
 
@@ -155,7 +152,7 @@ flowchart LR
 |----|---------|-------------|--------|
 | T5-01 | **CI self-hosted E2E** | Workflow + runner `macos-MacBook-Pro-di-Inochi-2`, artifact JUnit | ✓ operativo |
 | T5-02 | **Benchmark engine** | `expando benchmark` con metriche compile/reload/latency | ✓ v2.2.0 |
-| T5-03 | **Localizzazione IT** | CLI, doctor, wizard, menu bar (`EXPANDO_LOCALE`) | Parziale — benchmark/hub EN |
+| T5-03 | **Localizzazione IT** | CLI, doctor, wizard, menu bar, benchmark, hub (`EXPANDO_LOCALE`) | ✓ v2.5.0 |
 | T5-04 | **Security audit** | `expando security-audit` (shell, plugin path, hub HTTPS) | ✓ v2.3.0 |
 | T5-05 | **Crash reporting locale** | `crashes/` locale, `expando crashes`, faulthandler | ✓ v2.2.0 |
 
@@ -190,11 +187,17 @@ flowchart LR
 2. T3-07 Migrazione Espanso 1-click
 3. T3-08 Hub: package `dev`, `email-it`, `legal-it`
 
-### Sprint 4 → v2.5.0 (prossimo)
-1. **T4-08** Editor: form + variabili in UI (chiude criterio v1.5)
-2. **T3-08** +4 hub package (social, medical-it, …)
-3. **T3-09** `expando hub publish` con validazione schema
-4. **T5-03** i18n residua (benchmark, hub markers)
+### Sprint 4 → v2.5.0 ✓
+1. T4-08 Editor: form + variabili in UI
+2. T3-08 Hub: social, medical-it, sales-it, support-it (8 totali)
+3. T3-09 `expando hub publish` + validazione schema
+4. T5-03 i18n benchmark + hub list markers
+
+### Sprint 5 → v2.6.0 (prossimo)
+1. T3-10 export/duplica snippet YAML
+2. T3-05 statistiche espansioni locali (opt-in)
+3. T4-09 registry plugin/snippet
+4. Fix test flaky (when_engine, E2E clipboard)
 
 ### Backlog
 - T3-05 statistiche locali
@@ -213,7 +216,7 @@ flowchart LR
 |---------|-------------|---------|
 | Tempo install → prima espansione | < 5 min | ~ok (wizard) |
 | Test suite | ≥ 120 test, E2E verde su runner dedicato | 150+ test, E2E ✓ runner |
-| Hub packages | ≥ 8 | **4** |
+| Hub packages | ≥ 8 | **8** |
 | Download release GitHub | tracking manuale; obiettivo 100+ | manuale |
 | Issue aperte critiche | 0 su permessi / injection | 0 note |
 

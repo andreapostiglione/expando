@@ -8,6 +8,7 @@ from unittest.mock import patch
 from .app_context import AppContext
 from .config import AppConfig, ConfigBundle, Match, compile_matches
 from .engine import ExpansionEngine
+from .i18n import t
 from .injector import InjectorSettings, TextInjector
 
 
@@ -130,21 +131,23 @@ def run_engine_benchmark(
 
 def format_benchmark_report(result: BenchmarkResult) -> str:
     lines = [
-        f"Matches: {result.match_count}",
-        f"Compile: {result.compile_ms:.2f} ms",
-        f"Reload: {result.reload_ms:.2f} ms",
+        f"{t('benchmark.matches')}: {result.match_count}",
+        f"{t('benchmark.compile')}: {result.compile_ms:.2f} ms",
+        f"{t('benchmark.reload')}: {result.reload_ms:.2f} ms",
         (
-            "handle_char (no match): "
-            f"{result.char_ops_per_sec:,.0f} ops/s over {result.char_iterations:,} iterations"
+            f"{t('benchmark.handle_char')}: "
+            f"{result.char_ops_per_sec:,.0f} {t('benchmark.ops_per_sec')} "
+            f"{result.char_iterations:,} {t('benchmark.iterations')}"
         ),
         (
-            "handle_char latency: "
+            f"{t('benchmark.handle_char_latency')}: "
             f"p50 {result.char_latency_p50_us:.1f} µs, "
             f"p95 {result.char_latency_p95_us:.1f} µs, "
             f"p99 {result.char_latency_p99_us:.1f} µs"
         ),
         (
-            f"expand lookup ({result.expand_iterations:,} iterations): "
+            f"{t('benchmark.expand_lookup')} ({result.expand_iterations:,} "
+            f"{t('benchmark.iterations')}): "
             f"p50 {result.expand_lookup_p50_us:.1f} µs, "
             f"p95 {result.expand_lookup_p95_us:.1f} µs, "
             f"p99 {result.expand_lookup_p99_us:.1f} µs"

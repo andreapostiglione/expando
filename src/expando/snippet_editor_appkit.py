@@ -84,15 +84,21 @@ class _SnippetEditorController(NSObject):
             self.current_id = None
             self.trigger_field.setString_("")
             self.if_app_field.setString_("")
+            self.form_view.setString_("")
+            self.vars_view.setString_("")
             self.replace_view.setString_("")
             self._update_preview()
             return
         self.current_id = item.get("id")
         self.trigger_field.setString_(item.get("trigger", ""))
         self.if_app_field.setString_(item.get("if_app", ""))
+        self.form_view.setString_(item.get("form", ""))
+        self.vars_view.setString_(item.get("vars", ""))
         self.replace_view.setString_(item.get("replace", ""))
         editable = item.get("editable", "1") == "1"
         self.replace_view.setEditable_(editable)
+        self.form_view.setEditable_(editable)
+        self.vars_view.setEditable_(editable)
         self._update_preview()
 
     def replaceChanged_(self, _notification):
@@ -105,6 +111,10 @@ class _SnippetEditorController(NSObject):
         self.current_id = None
         self.trigger_field.setString_(":nuovo")
         self.if_app_field.setString_("")
+        self.form_view.setEditable_(True)
+        self.vars_view.setEditable_(True)
+        self.form_view.setString_("")
+        self.vars_view.setString_("")
         self.replace_view.setEditable_(True)
         self.replace_view.setString_("")
         self._update_preview()
@@ -158,6 +168,8 @@ class _SnippetEditorController(NSObject):
             "trigger": str(self.trigger_field.stringValue()).strip(),
             "replace": str(self.replace_view.string()).strip(),
             "if_app": str(self.if_app_field.stringValue()).strip(),
+            "form": str(self.form_view.string()).strip(),
+            "vars": str(self.vars_view.string()).strip(),
         }
 
     def _alert(self, message: str) -> None:
@@ -185,7 +197,7 @@ def run_snippet_editor(
             reload_items,
         )
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, 900, 560),
+            NSMakeRect(0, 0, 920, 720),
             NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
             NSBackingStoreBuffered,
             False,
@@ -194,7 +206,7 @@ def run_snippet_editor(
         window.setDelegate_(controller)
 
         content = window.contentView()
-        search = NSTextField.alloc().initWithFrame_(NSMakeRect(16, 512, 868, 28))
+        search = NSTextField.alloc().initWithFrame_(NSMakeRect(16, 672, 888, 28))
         search.setPlaceholderString_("Cerca snippet")
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
@@ -205,7 +217,7 @@ def run_snippet_editor(
         controller.search_field = search
         content.addSubview_(search)
 
-        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(16, 180, 280, 320))
+        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(16, 180, 280, 480))
         table_scroll.setBorderType_(NSBezelBorder)
         table_scroll.setHasVerticalScroller_(True)
         table = NSTableView.alloc().initWithFrame_(table_scroll.bounds())
@@ -215,29 +227,61 @@ def run_snippet_editor(
         table_scroll.setDocumentView_(table)
         content.addSubview_(table_scroll)
 
-        trigger_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 512, 80, 22))
+        trigger_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 672, 80, 22))
         trigger_label.setStringValue_("Trigger")
         trigger_label.setEditable_(False)
         trigger_label.setBezeled_(False)
         trigger_label.setDrawsBackground_(False)
         content.addSubview_(trigger_label)
 
-        trigger_field = NSTextField.alloc().initWithFrame_(NSMakeRect(392, 510, 492, 24))
+        trigger_field = NSTextField.alloc().initWithFrame_(NSMakeRect(392, 670, 512, 24))
         controller.trigger_field = trigger_field
         content.addSubview_(trigger_field)
 
-        if_app_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 478, 80, 22))
+        if_app_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 638, 80, 22))
         if_app_label.setStringValue_("Solo in app")
         if_app_label.setEditable_(False)
         if_app_label.setBezeled_(False)
         if_app_label.setDrawsBackground_(False)
         content.addSubview_(if_app_label)
 
-        if_app_field = NSTextField.alloc().initWithFrame_(NSMakeRect(392, 476, 492, 24))
+        if_app_field = NSTextField.alloc().initWithFrame_(NSMakeRect(392, 636, 512, 24))
         controller.if_app_field = if_app_field
         content.addSubview_(if_app_field)
 
-        replace_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(312, 300, 572, 168))
+        form_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 606, 80, 22))
+        form_label.setStringValue_("Form")
+        form_label.setEditable_(False)
+        form_label.setBezeled_(False)
+        form_label.setDrawsBackground_(False)
+        content.addSubview_(form_label)
+
+        form_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(392, 574, 512, 56))
+        form_scroll.setBorderType_(NSBezelBorder)
+        form_scroll.setHasVerticalScroller_(True)
+        form_view = NSTextView.alloc().initWithFrame_(form_scroll.bounds())
+        form_view.setEditable_(True)
+        controller.form_view = form_view
+        form_scroll.setDocumentView_(form_view)
+        content.addSubview_(form_scroll)
+
+        vars_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 544, 80, 22))
+        vars_label.setStringValue_("Variabili")
+        vars_label.setEditable_(False)
+        vars_label.setBezeled_(False)
+        vars_label.setDrawsBackground_(False)
+        content.addSubview_(vars_label)
+
+        vars_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(392, 468, 512, 72))
+        vars_scroll.setBorderType_(NSBezelBorder)
+        vars_scroll.setHasVerticalScroller_(True)
+        vars_view = NSTextView.alloc().initWithFrame_(vars_scroll.bounds())
+        vars_view.setEditable_(True)
+        controller.vars_view = vars_view
+        vars_scroll.setDocumentView_(vars_view)
+        content.addSubview_(vars_scroll)
+
+        replace_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(312, 300, 592, 160))
         replace_scroll.setBorderType_(NSBezelBorder)
         replace_scroll.setHasVerticalScroller_(True)
         replace_view = NSTextView.alloc().initWithFrame_(replace_scroll.bounds())
@@ -252,7 +296,7 @@ def run_snippet_editor(
         replace_scroll.setDocumentView_(replace_view)
         content.addSubview_(replace_scroll)
 
-        preview_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(312, 180, 572, 108))
+        preview_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(312, 180, 592, 108))
         preview_scroll.setBorderType_(NSBezelBorder)
         preview_scroll.setHasVerticalScroller_(True)
         preview = NSTextView.alloc().initWithFrame_(preview_scroll.bounds())

@@ -481,7 +481,7 @@ def hub_list(ctx: click.Context) -> None:
     config_dir: Path = ctx.obj["config_dir"]
     installed = set(list_installed_packages(match_dir(config_dir)))
     for package in fetch_registry():
-        marker = " [installed]" if package.id in installed else ""
+        marker = t("cli.hub.installed_marker") if package.id in installed else ""
         click.echo(f"{package.id}: {package.name}{marker}")
         if package.description:
             click.echo(f"  {package.description}")
@@ -524,6 +524,60 @@ def uninstall(ctx: click.Context, package_id: str) -> None:
         click.echo(tf("cli.hub.removed", package=package_id))
     else:
         raise click.ClickException(tf("cli.hub.not_installed", package=package_id))
+
+
+@hub.command("publish")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--install", is_flag=True, help="Install the package into the local config")
+@click.option(
+    "--bundle",
+    is_flag=True,
+    help="Copy into the Expando bundle (default_config/match/packages)",
+)
+@click.option(
+    "--register",
+    is_flag=True,
+    help="Register package metadata in packages/hub/index.json",
+)
+@click.pass_context
+def hub_publish(
+    ctx: click.Context,
+    package_dir: Path,
+    install: bool,
+    bundle: bool,
+    register: bool,
+) -> None:
+    """Validate a local hub package directory and optionally install or bundle it."""
+    from .hub import publish_hub_package
+
+    config_dir: Path = ctx.obj["config_dir"]
+    report = publish_hub_package(
+        package_dir,
+        config_dir=config_dir,
+        install=install,
+        bundle=bundle,
+        register=register,
+    )
+    if report.warnings:
+        click.echo(t("cli.hub.publish.warning"))
+        for warning in report.warnings:
+            click.echo(f"  ! {warning}")
+
+    if not report.ok:
+        click.echo(t("cli.hub.publish.error"))
+        for error in report.errors:
+            click.echo(f"  - {error}")
+        raise SystemExit(1)
+
+    click.echo(
+        tf("cli.hub.publish.ok", package_id=report.package_id, matches=report.match_count)
+    )
+    if report.installed_to:
+        click.echo(tf("cli.hub.publish.installed", path=report.installed_to))
+    if report.bundled_to:
+        click.echo(tf("cli.hub.publish.bundled", path=report.bundled_to))
+    if report.registered:
+        click.echo(t("cli.hub.publish.registered"))
 
 
 @hub.command()

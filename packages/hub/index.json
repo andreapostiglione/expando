@@ -28,6 +28,34 @@
       "description": "Riservatezza, GDPR, PEC, diffida e firme legali",
       "author": "Expando",
       "tags": ["italian", "legal", "pec"]
+    },
+    {
+      "id": "social",
+      "name": "Social Media",
+      "description": "Caption LinkedIn, Instagram, CTA e story con form",
+      "author": "Expando",
+      "tags": ["social", "marketing", "instagram", "linkedin"]
+    },
+    {
+      "id": "medical-it",
+      "name": "Medical IT",
+      "description": "Appuntamenti, referti, privacy sanitaria e ricette",
+      "author": "Expando",
+      "tags": ["italian", "medical", "healthcare"]
+    },
+    {
+      "id": "sales-it",
+      "name": "Sales IT",
+      "description": "Preventivi, follow-up commerciali e gestione obiezioni",
+      "author": "Expando",
+      "tags": ["italian", "sales", "business"]
+    },
+    {
+      "id": "support-it",
+      "name": "Support IT",
+      "description": "Risposte ticket, SLA e escalation per customer support",
+      "author": "Expando",
+      "tags": ["italian", "support", "helpdesk"]
     }
   ]
 }

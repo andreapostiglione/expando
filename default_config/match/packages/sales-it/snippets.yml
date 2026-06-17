@@ -1,0 +1,30 @@
+matches:
+  - trigger: ":preventivo"
+    form:
+      - name: cliente
+        label: "Cliente"
+      - name: importo
+        label: "Importo"
+    replace: |
+      Gentile {{cliente}},
+      in allegato trova il preventivo per un importo di {{importo}}.
+      Restiamo a disposizione per eventuali chiarimenti.
+
+  - trigger: ":followup"
+    form:
+      - name: argomento
+        label: "Argomento"
+    replace: |
+      Buongiorno,
+      le scrivo per un rapido follow-up su {{argomento}}.
+      Ha avuto modo di valutare la nostra proposta?
+
+  - trigger: ":chiusura"
+    replace: |
+      Perfetto, procediamo come concordato.
+      Le invierò a breve i dettagli operativi e i prossimi passi.
+
+  - trigger: ":obiezione"
+    replace: |
+      Capisco la sua osservazione. Possiamo rivedere insieme le opzioni
+      per trovare la soluzione più adatta alle sue esigenze.

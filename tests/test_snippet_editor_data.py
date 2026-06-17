@@ -6,7 +6,11 @@ from expando.snippet_editor_data import (
     create_snippet_entry,
     delete_snippet_entry,
     entries_for_editor,
+    format_form_for_editor,
+    format_vars_for_editor,
     list_snippet_entries,
+    parse_form_from_editor,
+    parse_vars_from_editor,
     update_snippet_entry,
 )
 
@@ -58,6 +62,42 @@ def test_create_rejects_duplicate_trigger(tmp_path: Path):
     config_dir = _setup_config(tmp_path)
     with pytest.raises(ValueError, match="already exists"):
         create_snippet_entry(config_dir, ":old", "Duplicate")
+
+
+def test_form_and_vars_round_trip(tmp_path: Path):
+    config_dir = _setup_config(tmp_path)
+    created = create_snippet_entry(
+        config_dir,
+        ":email",
+        "Ciao {{name}},\n{{body}}",
+        form=parse_form_from_editor("name|Nome|\nbody|Messaggio|"),
+        variables=parse_vars_from_editor(
+            "- name: ts\n  type: date\n  params:\n    format: '%H:%M'\n"
+        ),
+    )
+    assert created.match.form
+    assert created.match.vars
+    rows = entries_for_editor(config_dir)
+    row = next(item for item in rows if item["trigger"] == ":email")
+    assert "name|Nome|" in row["form"]
+    assert "type: date" in row["vars"]
+
+    entry = list_snippet_entries(config_dir)[-1]
+    updated = update_snippet_entry(
+        config_dir,
+        entry.entry_id,
+        trigger=":email",
+        replace="Buongiorno {{name}}",
+        form=parse_form_from_editor("name|Nome destinatario|"),
+        variables=[],
+    )
+    assert len(updated.match.form) == 1
+    assert not updated.match.vars
+
+
+def test_parse_form_rejects_invalid_line():
+    with pytest.raises(ValueError, match="nome\\|etichetta"):
+        parse_form_from_editor("solo-un-campo")
 
 
 def test_entries_for_editor_marks_packages_readonly(tmp_path: Path):

@@ -4,12 +4,15 @@ import json
 import os
 import re
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
 from urllib.request import urlopen
 
+import yaml
+
+from .config import normalize_match
 from .paths import match_dir, package_root
 
 
@@ -152,6 +155,155 @@ def _validate_package_id(package_id: str) -> str:
     if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*", package_id):
         raise ValueError(f"Invalid package id: {package_id!r}")
     return package_id
+
+
+@dataclass
+class HubPublishReport:
+    package_id: str
+    match_count: int = 0
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    installed_to: Path | None = None
+    bundled_to: Path | None = None
+    registered: bool = False
+
+    @property
+    def ok(self) -> bool:
+        return not self.errors
+
+
+def _package_yaml_files(package_dir: Path) -> list[Path]:
+    names = ("snippets.yml", "snippets.yaml", "base.yml", "base.yaml")
+    found = [package_dir / name for name in names if (package_dir / name).exists()]
+    if found:
+        return found
+    return sorted(package_dir.glob("*.yml")) + sorted(package_dir.glob("*.yaml"))
+
+
+def _read_hub_manifest(package_dir: Path) -> HubPackage:
+    manifest_path = package_dir / "hub.json"
+    if not manifest_path.exists():
+        raise ValueError("hub.json mancante: serve id, name e description")
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    package_id = _validate_package_id(str(data["id"]))
+    if package_dir.name != package_id:
+        raise ValueError(
+            f"La cartella deve chiamarsi {package_id!r}, trovata {package_dir.name!r}"
+        )
+    return HubPackage.from_dict(data)
+
+
+def validate_hub_package_dir(package_dir: Path) -> HubPublishReport:
+    package_dir = package_dir.expanduser().resolve()
+    report = HubPublishReport(package_id=package_dir.name)
+    if not package_dir.is_dir():
+        report.errors.append(f"Cartella package non trovata: {package_dir}")
+        return report
+
+    try:
+        manifest = _read_hub_manifest(package_dir)
+    except (ValueError, KeyError, json.JSONDecodeError) as exc:
+        report.errors.append(str(exc))
+        return report
+
+    report.package_id = manifest.id
+    yaml_files = _package_yaml_files(package_dir)
+    if not yaml_files:
+        report.errors.append("Nessun file YAML snippet trovato (snippets.yml o *.yml)")
+        return report
+
+    match_count = 0
+    for yaml_path in yaml_files:
+        try:
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError as exc:
+            report.errors.append(f"{yaml_path.name}: YAML non valido ({exc})")
+            continue
+        matches = data.get("matches", []) or []
+        if not matches:
+            report.warnings.append(f"{yaml_path.name}: nessun match definito")
+            continue
+        for index, raw in enumerate(matches):
+            if not isinstance(raw, dict):
+                report.errors.append(f"{yaml_path.name}[{index}]: match non è un oggetto")
+                continue
+            try:
+                normalize_match(raw)
+                match_count += 1
+            except ValueError as exc:
+                report.errors.append(f"{yaml_path.name}[{index}]: {exc}")
+
+    report.match_count = match_count
+    if match_count == 0 and not report.errors:
+        report.errors.append("Il package non contiene match validi")
+    return report
+
+
+def _copy_package_tree(source_dir: Path, destination: Path) -> None:
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    for path in sorted(source_dir.iterdir()):
+        if path.name.startswith("."):
+            continue
+        target = destination / path.name
+        if path.is_dir():
+            shutil.copytree(path, target)
+        else:
+            shutil.copy2(path, target)
+
+
+def _register_package_in_index(manifest: HubPackage) -> None:
+    index_path = _local_index_path()
+    data = json.loads(index_path.read_text(encoding="utf-8"))
+    packages = [item for item in data.get("packages", []) or [] if item.get("id") != manifest.id]
+    packages.append(
+        {
+            "id": manifest.id,
+            "name": manifest.name,
+            "description": manifest.description,
+            "author": manifest.author,
+            "tags": manifest.tags or [],
+        }
+    )
+    packages.sort(key=lambda item: str(item.get("id", "")))
+    data["packages"] = packages
+    index_path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def publish_hub_package(
+    package_dir: Path,
+    *,
+    config_dir: Path | None = None,
+    install: bool = False,
+    bundle: bool = False,
+    register: bool = False,
+) -> HubPublishReport:
+    report = validate_hub_package_dir(package_dir)
+    if not report.ok:
+        return report
+
+    manifest = _read_hub_manifest(package_dir.expanduser().resolve())
+    source = package_dir.expanduser().resolve()
+
+    if install:
+        if config_dir is None:
+            report.errors.append("config_dir richiesto con --install")
+            return report
+        destination = match_dir(config_dir) / "packages" / manifest.id
+        _copy_package_tree(source, destination)
+        report.installed_to = destination
+
+    if bundle:
+        destination = _local_package_dir(manifest.id)
+        _copy_package_tree(source, destination)
+        report.bundled_to = destination
+
+    if register:
+        _register_package_in_index(manifest)
+        report.registered = True
+
+    return report
 
 
 def hub_packages_for_picker(config_dir: Path) -> list[dict[str, str]]:

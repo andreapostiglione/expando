@@ -1,0 +1,30 @@
+matches:
+  - trigger: ":visita"
+    form:
+      - name: data
+        label: "Data appuntamento"
+      - name: ora
+        label: "Ora"
+    replace: |
+      La confermiamo per il {{data}} alle {{ora}}.
+      In caso di impedimento la preghiamo di avvisarci con almeno 24 ore di anticipo.
+
+  - trigger: ":referto"
+    replace: |
+      Il referto è disponibile presso la segreteria negli orari di apertura.
+      Per informazioni contatti la struttura ai recapiti ufficiali.
+
+  - trigger: ":privacy-san"
+    replace: |
+      Il trattamento dei dati sanitari avviene nel rispetto del GDPR e della normativa vigente.
+      Per maggiori dettagli consulti l'informativa privacy della struttura.
+
+  - trigger: ":ricetta"
+    form:
+      - name: farmaco
+        label: "Farmaco"
+      - name: posologia
+        label: "Posologia"
+    replace: |
+      Prescrizione: {{farmaco}}
+      Posologia: {{posologia}}

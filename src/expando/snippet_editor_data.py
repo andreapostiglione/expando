@@ -5,8 +5,72 @@ from pathlib import Path
 
 import yaml
 
-from .config import Match, normalize_match
+from .config import Match, Variable, normalize_match
+from .forms import FormField
 from .match_utils import extract_triggers
+
+
+def format_form_for_editor(form: list[FormField]) -> str:
+    lines: list[str] = []
+    for field in form:
+        name = field.name.replace("|", "\\|")
+        label = field.label.replace("|", "\\|")
+        default = field.default.replace("|", "\\|")
+        lines.append(f"{name}|{label}|{default}")
+    return "\n".join(lines)
+
+
+def parse_form_from_editor(text: str) -> list[FormField]:
+    fields: list[FormField] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        parts = [part.replace("\\|", "|") for part in line.split("|")]
+        if len(parts) < 2:
+            raise ValueError(
+                "Ogni riga form deve essere: nome|etichetta|default (default opzionale)"
+            )
+        name = parts[0].strip()
+        label = parts[1].strip()
+        default = parts[2].strip() if len(parts) > 2 else ""
+        if not name:
+            raise ValueError("Il nome campo form non può essere vuoto")
+        fields.append(FormField(name=name, label=label or name, default=default))
+    return fields
+
+
+def format_vars_for_editor(variables: list[Variable]) -> str:
+    if not variables:
+        return ""
+    payload: list[dict] = []
+    for variable in variables:
+        item: dict = {"name": variable.name, "type": variable.type}
+        if variable.params:
+            item["params"] = dict(variable.params)
+        payload.append(item)
+    return yaml.safe_dump(payload, allow_unicode=True, sort_keys=False).strip()
+
+
+def parse_vars_from_editor(text: str) -> list[Variable]:
+    stripped = text.strip()
+    if not stripped:
+        return []
+    data = yaml.safe_load(stripped)
+    if not isinstance(data, list):
+        raise ValueError("Le variabili devono essere una lista YAML")
+    variables: list[Variable] = []
+    for index, item in enumerate(data):
+        if not isinstance(item, dict) or "name" not in item:
+            raise ValueError(f"Variabile {index + 1}: serve almeno 'name'")
+        variables.append(
+            Variable(
+                name=str(item["name"]),
+                type=str(item.get("type", "plain")),
+                params=dict(item.get("params", {}) or {}),
+            )
+        )
+    return variables
 
 
 @dataclass(frozen=True)
@@ -85,10 +149,30 @@ def _build_entry_dict(
     replace: str,
     *,
     if_app: list[str] | None = None,
+    form: list[FormField] | None = None,
+    variables: list[Variable] | None = None,
 ) -> dict:
     entry: dict = {"trigger": trigger, "replace": replace}
     if if_app:
         entry["if_app"] = if_app
+    if form:
+        entry["form"] = [
+            {
+                "name": field.name,
+                "label": field.label,
+                **({"default": field.default} if field.default else {}),
+            }
+            for field in form
+        ]
+    if variables:
+        entry["vars"] = [
+            {
+                "name": variable.name,
+                "type": variable.type,
+                **({"params": dict(variable.params)} if variable.params else {}),
+            }
+            for variable in variables
+        ]
     return entry
 
 
@@ -99,6 +183,8 @@ def create_snippet_entry(
     *,
     target_file: str = "dev.yml",
     if_app: list[str] | None = None,
+    form: list[FormField] | None = None,
+    variables: list[Variable] | None = None,
 ) -> SnippetEntry:
     path = _match_path(config_dir, target_file)
     data = _load_match_file(path)
@@ -106,7 +192,15 @@ def create_snippet_entry(
     for item in matches:
         if trigger in extract_triggers(item):
             raise ValueError(f"Trigger already exists in {target_file}: {trigger}")
-    matches.append(_build_entry_dict(trigger, replace, if_app=if_app))
+    matches.append(
+        _build_entry_dict(
+            trigger,
+            replace,
+            if_app=if_app,
+            form=form,
+            variables=variables,
+        )
+    )
     data["matches"] = matches
     _write_match_file(path, data)
     index = len(matches) - 1
@@ -126,6 +220,8 @@ def update_snippet_entry(
     trigger: str,
     replace: str,
     if_app: list[str] | None = None,
+    form: list[FormField] | None = None,
+    variables: list[Variable] | None = None,
 ) -> SnippetEntry:
     source_file, index = _parse_entry_id(entry_id)
     path = _match_path(config_dir, source_file)
@@ -140,7 +236,13 @@ def update_snippet_entry(
         if trigger in extract_triggers(item):
             raise ValueError(f"Trigger already exists in {source_file}: {trigger}")
 
-    matches[index] = _build_entry_dict(trigger, replace, if_app=if_app)
+    matches[index] = _build_entry_dict(
+        trigger,
+        replace,
+        if_app=if_app,
+        form=form,
+        variables=variables,
+    )
     data["matches"] = matches
     _write_match_file(path, data)
     return SnippetEntry(
@@ -169,6 +271,10 @@ def entries_for_editor(config_dir: Path) -> list[dict[str, str]]:
     for entry in list_snippet_entries(config_dir):
         trigger = entry.match.triggers[0] if entry.match.triggers else ""
         preview = " ".join(entry.match.replace.split())
+        if entry.match.form:
+            preview = f"[form] {preview}"
+        elif entry.match.vars:
+            preview = f"[vars] {preview}"
         if len(preview) > 80:
             preview = preview[:79] + "…"
         scope = ""
@@ -182,6 +288,8 @@ def entries_for_editor(config_dir: Path) -> list[dict[str, str]]:
                 "preview": entry.match.replace,
                 "replace": entry.match.replace,
                 "if_app": ", ".join(entry.match.if_app),
+                "form": format_form_for_editor(entry.match.form),
+                "vars": format_vars_for_editor(entry.match.vars),
                 "editable": "1" if entry.editable else "0",
                 "source_file": entry.source_file,
             }

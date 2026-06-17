@@ -59,19 +59,39 @@ def _local_package_dir(package_id: str) -> Path:
     return package_root() / "default_config" / "match" / "packages" / package_id
 
 
-def fetch_registry() -> list[HubPackage]:
-    local_index = _local_index_path()
-    if local_index.exists():
-        data = json.loads(local_index.read_text(encoding="utf-8"))
+def _load_index_data(path: Path | None = None) -> list[HubPackage]:
+    if path is None:
+        local_index = _local_index_path()
+        if local_index.exists():
+            data = json.loads(local_index.read_text(encoding="utf-8"))
+            return [HubPackage.from_dict(item) for item in data.get("packages", []) or []]
+        try:
+            with urlopen(_index_url(), timeout=15) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except URLError as exc:
+            raise RuntimeError(f"Could not fetch package hub index: {exc}") from exc
         return [HubPackage.from_dict(item) for item in data.get("packages", []) or []]
 
-    try:
-        with urlopen(_index_url(), timeout=15) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except URLError as exc:
-        raise RuntimeError(f"Could not fetch package hub index: {exc}") from exc
-
+    data = json.loads(path.read_text(encoding="utf-8"))
     return [HubPackage.from_dict(item) for item in data.get("packages", []) or []]
+
+
+def fetch_registry(*, include_marketplace: bool = True) -> list[HubPackage]:
+    packages = _load_index_data()
+    if not include_marketplace:
+        return packages
+
+    try:
+        from .hub_marketplace import fetch_marketplace_packages
+
+        known = {item.id for item in packages}
+        for item in fetch_marketplace_packages():
+            if item.id not in known:
+                packages.append(item)
+                known.add(item.id)
+    except RuntimeError:
+        pass
+    return packages
 
 
 def search_hub_packages(query: str) -> list[HubPackage]:

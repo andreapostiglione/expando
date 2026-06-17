@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "Optional community packages merged when EXPANDO_HUB_MARKETPLACE_URL points here",
+  "packages": []
+}

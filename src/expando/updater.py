@@ -151,6 +151,10 @@ def check_for_updates_silent(config_dir: Path) -> None:
         config = load_config(config_dir)
         if not config.app.check_updates:
             return
+        from .sparkle_native import check_for_updates_via_sparkle, sparkle_available
+
+        if sparkle_available() and check_for_updates_via_sparkle(background=True):
+            return
         feed = config.app.update_feed_url or None
         check_for_updates(
             config_dir,

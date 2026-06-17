@@ -350,6 +350,55 @@ def duplicate_cmd(ctx: click.Context, trigger: str, new_trigger: str, target_fil
     )
 
 
+@main.group()
+def sync() -> None:
+    """Assist optional config sync via git or iCloud Drive."""
+
+
+@sync.command("status")
+@click.pass_context
+def sync_status(ctx: click.Context) -> None:
+    """Show how the config directory is synced."""
+    from .sync_assist import format_sync_report, inspect_sync_status
+
+    click.echo(format_sync_report(inspect_sync_status(ctx.obj["config_dir"])))
+
+
+@sync.command("init-git")
+@click.option("--commit", is_flag=True, help="Create an initial commit")
+@click.pass_context
+def sync_init_git(ctx: click.Context, commit: bool) -> None:
+    """Initialize git in the config directory with a safe .gitignore."""
+    from .sync_assist import init_git_sync
+
+    try:
+        messages = init_git_sync(ctx.obj["config_dir"], commit=commit)
+    except RuntimeError as exc:
+        raise click.ClickException(str(exc)) from exc
+    for line in messages:
+        click.echo(line)
+
+
+@sync.command("icloud")
+@click.option("--folder", "folder_name", default="expando-config", show_default=True)
+@click.option("--dry-run", is_flag=True, help="Show planned actions without changing files")
+@click.pass_context
+def sync_icloud(ctx: click.Context, folder_name: str, dry_run: bool) -> None:
+    """Move config to iCloud Drive and symlink the default path."""
+    from .sync_assist import setup_icloud_symlink
+
+    try:
+        messages = setup_icloud_symlink(
+            ctx.obj["config_dir"],
+            folder_name=folder_name,
+            dry_run=dry_run,
+        )
+    except RuntimeError as exc:
+        raise click.ClickException(str(exc)) from exc
+    for line in messages:
+        click.echo(line)
+
+
 @main.command("stats")
 @click.option("--enable", "enable", is_flag=True, help="Start recording local expansion counts")
 @click.option("--disable", "disable", is_flag=True, help="Stop recording local expansion counts")
@@ -670,6 +719,37 @@ def hub_publish(
         click.echo(tf("cli.hub.publish.bundled", path=report.bundled_to))
     if report.registered:
         click.echo(t("cli.hub.publish.registered"))
+
+
+@hub.command("submit")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write submission zip to this path",
+)
+@click.pass_context
+def hub_submit(ctx: click.Context, package_dir: Path, output: Path | None) -> None:
+    """Validate a package and prepare a marketplace submission bundle."""
+    from .hub_marketplace import (
+        create_submission_bundle,
+        format_submission_instructions,
+        publish_submission_bundle,
+    )
+
+    try:
+        submission = create_submission_bundle(package_dir)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    bundle_path = output
+    if bundle_path is None:
+        bundle_path = (
+            ctx.obj["config_dir"] / f"hub-submit-{submission.package_id}.zip"
+        )
+    publish_submission_bundle(submission, bundle_path)
+    click.echo(format_submission_instructions(submission, bundle_path=bundle_path))
 
 
 @hub.command()

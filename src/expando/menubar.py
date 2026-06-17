@@ -109,7 +109,12 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
         def _check_updates(self) -> None:
             from .config import load_config
+            from .sparkle_native import check_for_updates_via_sparkle, sparkle_available
             from .updater import _notify_update_available, check_for_updates
+
+            if sparkle_available():
+                check_for_updates_via_sparkle(background=False)
+                return
 
             config = load_config(self.config_dir)
             result = check_for_updates(

@@ -1,27 +1,26 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 2.6.0 | **Release:** v2.6.0 (export, stats, registry)  
+**Versione:** 2.7.0 | **Release:** v2.7.0 (sync, Sparkle nativo, hub submit)  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
-- **v2.6.0** ✓ Sprint 5
-  - T3-10 `expando export` / `expando duplicate`
-  - T3-05 `track_expansions` + `expando stats --enable`
-  - T4-09 `expando registry` (+ `--json`)
-  - Test suite 165 pass (fix daemon i18n, when_engine)
-- **v2.5.0** ✓ tag `v2.5.0` (release CI in corso)
-- **v2.4.0** ✓ E2E self-hosted runner operativo
+- **v2.7.0** ✓ Sprint 6
+  - T4-10 `expando sync` (status, init-git, icloud)
+  - Sparkle.framework nativo in `.app` (distribution build)
+  - `expando hub submit` + marketplace merge (`EXPANDO_HUB_MARKETPLACE_URL`)
+  - Test suite 171 pass
+- **v2.6.0** ✓ Sprint 5 (export, stats, registry)
+- **v2.5.0** ✓ editor form/vars, hub 8 package, hub publish
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 6)
-
-- [ ] T4-10 `expando sync` assistito
-- [ ] Sparkle.framework nativo in `.app`
-- [ ] Hub marketplace / publish remoto
-
-## Backlog
+## Prossimi item (Sprint 7)
 
 - [ ] T3-15 notarization audit periodico
 - [ ] E2E clipboard su runner con TCC completo
+- [ ] Hub marketplace remoto avanzato (review/approval flow)
+
+## Backlog
+
+- [ ] Fix test flaky clipboard E2E headless

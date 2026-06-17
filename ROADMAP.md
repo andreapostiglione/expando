@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.6.0
+**Versione attuale:** v2.7.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.6.0)
+## Stato attuale (baseline v2.7.0)
 
 | Area | Stato |
 |------|--------|
@@ -33,13 +33,15 @@
 | Snippet templates CLI + security audit | ✓ |
 | CLI/menu bar localizzati (IT default) | ✓ |
 | Changelog in-app post-update | ✓ |
-| Test (150+) + E2E su runner self-hosted | ✓ |
-| Sync opzionale git/iCloud | ✓ doc (`docs/SYNC.md`) |
+| Test (170+) + E2E su runner self-hosted | ✓ |
+| Sync assistito CLI (`expando sync`) | ✓ v2.7.0 |
+| Sparkle.framework nativo (distribution build) | ✓ v2.7.0 |
+| Hub marketplace submit + merge remoto | ✓ v2.7.0 |
 
 ### Gap noti oggi
 
-- **Updater:** appcast Sparkle via Python (no Sparkle.framework nativo in `.app`)
-- **Plugin:** API documentata (`docs/PLUGINS.md`); registry locale via `expando registry` (no marketplace remoto)
+- **Updater:** Sparkle nativo solo in build `EXPANDO_DISTRIBUTION=1`; fallback Python appcast in dev
+- **Hub marketplace:** submit via issue + bundle; nessun approval flow automatico
 - **Test:** E2E clipboard flaky in CI headless (skip su runner senza TCC)
 - **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC sul servizio launchd
 
@@ -135,13 +137,13 @@ flowchart LR
 | T4-01 | **Plugin API** | Hook Python in `~/Library/Application Support/expando/plugins/` | ✓ v2.0.0 |
 | T4-02 | **Variable type `script`** | Esegui script Python con contesto (app, trigger, form values) | ✓ v2.0.0 |
 | T4-03 | **Conditional matches** | `when:` / condizioni su variabili o contesto | ✓ v2.0.0 |
-| T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git (documentato, manuale) | ✓ doc — assistente CLI da fare |
+| T4-04 | **Sync opzionale** | Cartella config in iCloud Drive o repo git | ✓ v2.7.0 |
 | T4-05 | **Import TextExpander / Raycast** | `migrate-textexpander`, `migrate-raycast` con report | ✓ v2.1.0 |
 | T4-06 | **Snippet templates** | `expando new`, `templates list` (email, legal-it, dev, …) | ✓ v2.3.0 |
 | T4-07 | **Espansione immagini** | Campo `image:` + paste clipboard macOS, fallback `replace` | ✓ v2.4.0 |
 | T4-08 | **Editor form/vars UI** | Form multi-campo e variabili nell'editor AppKit | ✓ v2.5.0 |
 | T4-09 | **Plugin/snippet registry** | `expando registry` catalogo locale hub + plugin | ✓ v2.6.0 |
-| T4-10 | **Sync assistito** | `expando sync` check + guida symlink iCloud/git | Bassa |
+| T4-10 | **Sync assistito** | `expando sync` check + guida symlink iCloud/git | ✓ v2.7.0 |
 
 **Release target:** H1 2027  
 **Criterio di done:** plugin di terze parti pubblicabile con README + test di esempio.
@@ -201,17 +203,18 @@ flowchart LR
 3. T4-09 `expando registry`
 4. Fix test i18n daemon + `test_when_engine`
 
-### Sprint 6 → v2.7.0 (prossimo)
-1. T4-10 sync assistito CLI
-2. Sparkle.framework nativo
-3. Hub publish remoto / marketplace
+### Sprint 6 → v2.7.0 ✓
+1. T4-10 sync assistito CLI (`expando sync status|init-git|icloud`)
+2. Sparkle.framework nativo in distribution `.app`
+3. Hub submit + marketplace merge (`expando hub submit`, `EXPANDO_HUB_MARKETPLACE_URL`)
+
+### Sprint 7 → v2.8.0 (prossimo)
+1. T3-15 notarization audit periodico
+2. E2E clipboard con TCC completo sul runner
+3. Hub marketplace review/approval flow
 
 ### Backlog
-- T3-15 notarization audit periodico
-- T4-09 registry plugin/snippet
-- T4-10 sync assistito CLI
-- Sparkle.framework nativo in `.app`
-- Fix test flaky (clipboard E2E, `test_when_engine`)
+- Fix test flaky clipboard E2E headless
 
 ---
 

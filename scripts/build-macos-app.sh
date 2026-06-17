@@ -77,6 +77,11 @@ cat > "$APP/Contents/Info.plist" <<EOF
 </plist>
 EOF
 
+if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
+  chmod +x "$ROOT/scripts/embed-sparkle.sh"
+  "$ROOT/scripts/embed-sparkle.sh" "$APP" || echo "Sparkle embed skipped (no clang/framework)" >&2
+fi
+
 echo "Built $APP (v${VERSION}, distribution=${EXPANDO_DISTRIBUTION:-0})"
 if [[ "${EXPANDO_DISTRIBUTION:-0}" != "1" ]]; then
   echo "Grant Accessibility permission to Expando.app (not python3.14)"

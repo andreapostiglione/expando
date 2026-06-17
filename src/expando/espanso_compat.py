@@ -65,6 +65,7 @@ def convert_espanso_match(raw: dict[str, Any], config_dir: Path | None = None) -
         "vars",
         "label",
         "search_terms",
+        "ignore_case",
     ):
         if field in raw:
             converted[field] = raw[field]

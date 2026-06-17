@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.3.1"><img src="https://img.shields.io/badge/version-1.3.1-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.3.2"><img src="https://img.shields.io/badge/version-1.3.2-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>

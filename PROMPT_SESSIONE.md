@@ -1,7 +1,7 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 1.3.1 | **Release:** v1.3.1 notarized CI
+**Versione:** 1.3.2 | **Release:** v1.3.2 notarized CI  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
@@ -14,7 +14,7 @@
   - Package hub (`expando hub list/search/install/browse`)
   - UI nativa AppKit (search + form), fallback Tkinter
   - `search_terms` nel fuzzy search
-- **D. Test** ✓ 99 test (98 pass + 1 skip E2E senza Input Monitoring)
+- **D. Test** ✓ 99 test (97 pass + 2 skip E2E su CI headless)
 - **v1.3.1** ✓
   - `ignore_case` per trigger
   - cache runtime (app context + secure input)
@@ -22,13 +22,12 @@
   - window title lazy (solo se servono regole title)
   - `expando match --check`
   - profili risolti per app corrente
+- **v1.3.2** ✓
+  - suite E2E Accessibility (`tests/e2e`, `./scripts/run-e2e.sh`)
+  - CI Node 24 (checkout@v6, setup-python@v6, gh-release@v3)
+  - Homebrew tap v1.3.2
+  - `ignore_case` in import Espanso
 
 ## GOAL — opzionale
 
-- [x] Homebrew tap → v1.3.1
-- [x] E2E tastiera reale (Accessibility)
-  - injection reale in TextEdit (typing + clipboard)
-  - pipeline E2E (build_service end-to-end)
-  - global listener E2E (skip senza Input Monitoring)
-  - `./scripts/run-e2e.sh`
-- [x] CI: aggiornare actions Node 24 (checkout@v6, setup-python@v6, gh-release@v3)
+Tutti completati. Nessuna fase in sospeso.

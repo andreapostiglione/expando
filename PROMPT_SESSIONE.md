@@ -28,6 +28,15 @@
   - Homebrew tap v1.3.2
   - `ignore_case` in import Espanso
 
-## GOAL — opzionale
+## GOAL — opzionale (v1.3.x)
 
-Tutti completati. Nessuna fase in sospeso.
+Tutti completati.
+
+## Roadmap 2026
+
+Vedi **[ROADMAP.md](ROADMAP.md)** — prossima milestone: **v1.4 Onboarding**.
+
+### Prossimi 3 item
+- [ ] T3-01 Permission wizard (Accessibility + Input Monitoring)
+- [ ] T3-02 Doctor v2
+- [ ] T5-03 Localizzazione IT (doctor + wizard)

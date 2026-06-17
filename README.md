@@ -364,6 +364,10 @@ Logs: `~/Library/Application Support/expando/expando.log`
 
 ---
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for planned features (v1.4 onboarding, v1.5 snippet editor, v1.6 auto-update).
+
 ## Contributing
 
 Contributions welcome. Fork the repo, create a branch, add tests, open a PR.

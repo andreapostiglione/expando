@@ -23,13 +23,14 @@
 | Notifiche blocco espansione + `expando logs` | ✓ |
 | Snippet editor grafico + `expando migrate-espanso` | ✓ |
 | Hub packages (`core`, `dev`, `email-it`, `legal-it`) | ✓ |
-| Test (110) + E2E Accessibility | ✓ |
+| Sparkle appcast + update check + Homebrew cask | ✓ |
+| Sito GitHub Pages | ✓ |
+| Test (115) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 
 - Editor snippet: MVP trigger/replace/if_app (no form/vars in UI)
-- Nessun auto-update per Expando.app
-- Homebrew formula, non cask (build locale del .app)
+- Updater usa appcast Sparkle via Python (no Sparkle.framework nativo in .app)
 - E2E listener globale: skip su CI headless; runner self-hosted opzionale (`ENABLE_SELF_HOSTED_E2E`)
 - UI/CLI solo parzialmente in italiano (doctor + wizard + notifiche; resto EN)
 - Nessuna estensione/plugin API documentata

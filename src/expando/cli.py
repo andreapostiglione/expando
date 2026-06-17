@@ -647,6 +647,84 @@ def check_updates_cmd(ctx: click.Context) -> None:
 
 
 @main.command()
+@click.option("--count", default=1000, show_default=True, help="Number of synthetic matches")
+@click.option(
+    "--char-iterations",
+    default=10_000,
+    show_default=True,
+    help="Iterations for handle_char throughput",
+)
+@click.option(
+    "--expand-iterations",
+    default=2_000,
+    show_default=True,
+    help="Iterations for expansion lookup latency",
+)
+def benchmark(count: int, char_iterations: int, expand_iterations: int) -> None:
+    """Benchmark trigger buffer performance under load."""
+    from .benchmark import format_benchmark_report, run_engine_benchmark
+
+    try:
+        result = run_engine_benchmark(
+            match_count=count,
+            char_iterations=char_iterations,
+            expand_iterations=expand_iterations,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(format_benchmark_report(result))
+
+
+@main.group()
+def crashes() -> None:
+    """Inspect local crash reports (never uploaded)."""
+
+
+@crashes.command("list")
+@click.option("--limit", default=10, show_default=True, help="Maximum reports to show")
+@click.pass_context
+def crashes_list(ctx: click.Context, limit: int) -> None:
+    """List recent local crash reports."""
+    from .crash_reporting import list_crash_reports
+    from .paths import crashes_dir
+
+    config_dir: Path = ctx.obj["config_dir"]
+    reports = list_crash_reports(config_dir, limit=limit)
+    if not reports:
+        click.echo(f"No crash reports in {crashes_dir(config_dir)}")
+        return
+    for item in reports:
+        stamp = item.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+        click.echo(f"{stamp}  {item.exception_type}  [{item.source}]  {item.path.name}")
+        if item.message:
+            click.echo(f"  {item.message}")
+
+
+@crashes.command("show")
+@click.argument("report", required=False, default="latest")
+@click.pass_context
+def crashes_show(ctx: click.Context, report: str) -> None:
+    """Show a crash report by filename or 'latest'."""
+    from .crash_reporting import format_crash_report, list_crash_reports
+    from .paths import crashes_dir
+
+    config_dir: Path = ctx.obj["config_dir"]
+    directory = crashes_dir(config_dir)
+    if report == "latest":
+        items = list_crash_reports(config_dir, limit=1)
+        if not items:
+            raise click.ClickException("No crash reports found")
+        path = items[0].path
+    else:
+        path = directory / report
+        if not path.exists():
+            path = directory / f"crash-{report}.json"
+        if not path.exists():
+            raise click.ClickException(f"Crash report not found: {report}")
+    click.echo(format_crash_report(path))
+
+
+@main.command()
 @click.pass_context
 def doctor(ctx: click.Context) -> None:
     """Validate configuration, permissions, and daemon health."""

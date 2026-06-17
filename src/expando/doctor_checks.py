@@ -12,6 +12,7 @@ from .daemon import is_running
 from .i18n import t
 from .match_utils import find_duplicate_literal_triggers
 from .permissions import PermissionStatus, check_permissions, permissions_ready
+from .crash_reporting import recent_crash_count
 from .runtime_info import RuntimeInfo, detect_runtime
 
 
@@ -141,6 +142,11 @@ def run_doctor(config_dir: Path) -> DoctorReport:
         warnings.append(
             "L'espansione automatica non funzionerà finché Accessibilità non è concessa "
             f"per {runtime.grant_label}."
+        )
+    crash_count = recent_crash_count(config_dir)
+    if crash_count:
+        warnings.append(
+            f"{crash_count} crash report(s) negli ultimi 7 giorni — esegui `expando crashes`."
         )
 
     try:

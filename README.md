@@ -132,6 +132,8 @@ Or install auto-start at login:
 | `expando migrate-espanso` | Import Espanso config with auto backup |
 | `expando migrate-textexpander` | Import TextExpander CSV or Settings.textexpander |
 | `expando migrate-raycast --source file.json` | Import Raycast snippets JSON export |
+| `expando benchmark` | Benchmark trigger buffer under load (1000+ matches) |
+| `expando crashes list` | List local crash reports (never uploaded) |
 | `expando logs` | Show recent log lines |
 | `expando logs --tail` | Follow log file (debug) |
 | `expando packages` | List installed packages |

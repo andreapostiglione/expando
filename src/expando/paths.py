@@ -41,6 +41,10 @@ def log_file(config_dir: Path) -> Path:
     return config_dir / "expando.log"
 
 
+def crashes_dir(config_dir: Path) -> Path:
+    return config_dir / "crashes"
+
+
 def plugins_dir(config_dir: Path) -> Path:
     return config_dir / "plugins"
 

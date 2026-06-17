@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.1.0
+**Versione attuale:** v2.2.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.1.0)
+## Stato attuale (baseline v2.2.0)
 
 | Area | Stato |
 |------|--------|
@@ -27,7 +27,8 @@
 | Sito GitHub Pages | ✓ |
 | Plugin API + script vars + `when:` | ✓ |
 | Import TextExpander / Raycast | ✓ |
-| Test (133+) + E2E Accessibility | ✓ |
+| Benchmark engine + crash reporting locale | ✓ |
+| Test (140+) + E2E Accessibility | ✓ |
 
 ### Gap noti oggi
 
@@ -144,10 +145,10 @@ flowchart LR
 | ID | Feature | Descrizione | Quando |
 |----|---------|-------------|--------|
 | T5-01 | **CI self-hosted E2E** | Runner Mac con Accessibility per test listener globali | v1.4 |
-| T5-02 | **Benchmark engine** | Suite trigger buffer sotto carico (1000+ match) | v1.5 |
+| T5-02 | **Benchmark engine** | `expando benchmark` con metriche compile/reload/latency | ✓ v2.2.0 |
 | T5-03 | **Localizzazione IT** | CLI, doctor, wizard, menu bar | v1.4 |
 | T5-04 | **Security audit** | Review shell allowlist, path traversal import, hub TLS | ogni minor |
-| T5-05 | **Crash reporting locale** | Crash log in `~/Library/.../expando/crashes/` (no upload) | v1.6 |
+| T5-05 | **Crash reporting locale** | `crashes/` locale, `expando crashes`, faulthandler | ✓ v2.2.0 |
 
 ---
 

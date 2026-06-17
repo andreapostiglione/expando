@@ -1,0 +1,153 @@
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from typing import Callable
+from unittest.mock import patch
+
+from .app_context import AppContext
+from .config import AppConfig, ConfigBundle, Match, compile_matches
+from .engine import ExpansionEngine
+from .injector import InjectorSettings, TextInjector
+
+
+@dataclass
+class BenchmarkResult:
+    match_count: int
+    compile_ms: float
+    reload_ms: float
+    char_iterations: int
+    char_ops_per_sec: float
+    char_latency_p50_us: float
+    char_latency_p95_us: float
+    char_latency_p99_us: float
+    expand_iterations: int
+    expand_lookup_p50_us: float
+    expand_lookup_p95_us: float
+    expand_lookup_p99_us: float
+
+
+def generate_benchmark_matches(count: int) -> list[Match]:
+    width = max(4, len(str(count)))
+    return [
+        Match(
+            triggers=[f":b{index:0{width}d}"],
+            replace=f"snippet-{index}",
+        )
+        for index in range(1, count + 1)
+    ]
+
+
+def _percentile_us(samples_us: list[float], percentile: float) -> float:
+    if not samples_us:
+        return 0.0
+    ordered = sorted(samples_us)
+    rank = max(0, min(len(ordered) - 1, int(round((percentile / 100) * (len(ordered) - 1)))))
+    return ordered[rank]
+
+
+def _time_call(callback: Callable[[], None], iterations: int) -> list[float]:
+    samples: list[float] = []
+    for _ in range(iterations):
+        start = time.perf_counter()
+        callback()
+        elapsed_us = (time.perf_counter() - start) * 1_000_000
+        samples.append(elapsed_us)
+    return samples
+
+
+def run_engine_benchmark(
+    *,
+    match_count: int = 1000,
+    char_iterations: int = 10_000,
+    expand_iterations: int = 2_000,
+) -> BenchmarkResult:
+    if match_count < 1:
+        raise ValueError("match_count must be at least 1")
+    if char_iterations < 1 or expand_iterations < 1:
+        raise ValueError("iterations must be at least 1")
+
+    matches = generate_benchmark_matches(match_count)
+    context = AppContext(name="Benchmark")
+
+    compile_start = time.perf_counter()
+    compile_matches(matches)
+    compile_ms = (time.perf_counter() - compile_start) * 1000
+
+    config = ConfigBundle(app=AppConfig(respect_secure_input=False), matches=matches)
+    injector = TextInjector(InjectorSettings())
+    engine = ExpansionEngine(config=config, injector=injector)
+
+    engine.injector.inject = lambda text, **kwargs: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+
+    with patch(
+        "expando.engine.get_frontmost_context",
+        return_value=context,
+    ), patch("expando.engine.is_secure_input_active", return_value=False), patch(
+        "expando.engine.render_match_interactive",
+        side_effect=lambda match, **kwargs: match.replace,
+    ):
+        reload_start = time.perf_counter()
+        engine.reload(config)
+        reload_ms = (time.perf_counter() - reload_start) * 1000
+
+        def feed_char() -> None:
+            engine.handle_char("x")
+
+        char_samples = _time_call(feed_char, char_iterations)
+        char_total_s = sum(char_samples) / 1_000_000
+        char_ops_per_sec = char_iterations / char_total_s if char_total_s > 0 else 0.0
+
+        target = matches[match_count // 2]
+        trigger = target.triggers[0]
+        prefix = trigger[:-1]
+        last_char = trigger[-1]
+
+        def lookup_expand() -> None:
+            engine.clear_buffer()
+            for char in prefix:
+                engine.handle_char(char)
+            engine.handle_char(last_char)
+
+        expand_samples = _time_call(lookup_expand, expand_iterations)
+
+    return BenchmarkResult(
+        match_count=match_count,
+        compile_ms=compile_ms,
+        reload_ms=reload_ms,
+        char_iterations=char_iterations,
+        char_ops_per_sec=char_ops_per_sec,
+        char_latency_p50_us=_percentile_us(char_samples, 50),
+        char_latency_p95_us=_percentile_us(char_samples, 95),
+        char_latency_p99_us=_percentile_us(char_samples, 99),
+        expand_iterations=expand_iterations,
+        expand_lookup_p50_us=_percentile_us(expand_samples, 50),
+        expand_lookup_p95_us=_percentile_us(expand_samples, 95),
+        expand_lookup_p99_us=_percentile_us(expand_samples, 99),
+    )
+
+
+def format_benchmark_report(result: BenchmarkResult) -> str:
+    lines = [
+        f"Matches: {result.match_count}",
+        f"Compile: {result.compile_ms:.2f} ms",
+        f"Reload: {result.reload_ms:.2f} ms",
+        (
+            "handle_char (no match): "
+            f"{result.char_ops_per_sec:,.0f} ops/s over {result.char_iterations:,} iterations"
+        ),
+        (
+            "handle_char latency: "
+            f"p50 {result.char_latency_p50_us:.1f} µs, "
+            f"p95 {result.char_latency_p95_us:.1f} µs, "
+            f"p99 {result.char_latency_p99_us:.1f} µs"
+        ),
+        (
+            f"expand lookup ({result.expand_iterations:,} iterations): "
+            f"p50 {result.expand_lookup_p50_us:.1f} µs, "
+            f"p95 {result.expand_lookup_p95_us:.1f} µs, "
+            f"p99 {result.expand_lookup_p99_us:.1f} µs"
+        ),
+    ]
+    return "\n".join(lines)

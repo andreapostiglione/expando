@@ -113,9 +113,11 @@ def stop_daemon(config_dir: Path) -> bool:
 
 
 def foreground(config_dir: Path) -> None:
+    from .crash_reporting import install_crash_handlers
     from .listener import run_service
 
     setup_logging(config_dir)
+    install_crash_handlers(config_dir)
     lock = SingleInstanceLock(lock_file(config_dir))
     if not lock.acquire():
         running, pid = is_running(config_dir)

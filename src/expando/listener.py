@@ -243,7 +243,10 @@ def build_service(config_dir: Path) -> KeyboardService:
 
 
 def run_service(config_dir: Path) -> None:
+    from .crash_reporting import install_crash_handlers
+
     setup_logging(config_dir)
+    install_crash_handlers(config_dir)
     if platform.system() == "Darwin":
         from .onboarding import maybe_run_onboarding
 

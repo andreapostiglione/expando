@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expando — Text expander per macOS</title>
+  <meta name="description" content="Expando è un text expander open-source, privacy-first, solo macOS. Tutto locale, niente cloud." />
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #141820;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --accent: #4f8cff;
+      --accent-2: #7c5cff;
+      --border: #232a36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2240 0%, transparent 60%),
+                  radial-gradient(900px 500px at 90% 0%, #2a1840 0%, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }
+    header { display: flex; align-items: center; gap: 16px; margin-bottom: 40px; }
+    header img { width: 72px; height: 72px; border-radius: 18px; }
+    h1 { font-size: 2.4rem; margin: 0 0 8px; letter-spacing: -0.03em; }
+    .lead { color: var(--muted); font-size: 1.15rem; max-width: 640px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 48px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+    }
+    .btn-secondary {
+      border-color: var(--border);
+      background: var(--panel);
+      color: var(--text);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 24px 0 40px;
+    }
+    .card {
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1rem; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9rem;
+    }
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+    h2 { margin-top: 48px; font-size: 1.35rem; }
+    footer { margin-top: 56px; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="https://raw.githubusercontent.com/andreapostiglione/expando/main/assets/logo.png" alt="Expando logo" />
+      <div>
+        <h1>Expando</h1>
+        <p class="lead">Text expander open-source per macOS. Trigger → snippet. Ovunque. Solo in locale.</p>
+      </div>
+    </header>
+
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/andreapostiglione/expando/releases/latest">Scarica DMG</a>
+      <a class="btn btn-secondary" href="https://github.com/andreapostiglione/expando">GitHub</a>
+      <a class="btn btn-secondary" href="https://github.com/andreapostiglione/expando/blob/main/README.md">Documentazione</a>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>🔒 Privacy-first</h3><p>Niente account, niente cloud, niente telemetry. I tuoi snippet restano sul Mac.</p></div>
+      <div class="card"><h3>⌨️ System-wide</h3><p>Funziona in browser, Slack, Terminal, IDE — ovunque digiti testo.</p></div>
+      <div class="card"><h3>📝 YAML + UI</h3><p>Power user con YAML; editor grafico e hub di package per tutti gli altri.</p></div>
+      <div class="card"><h3>🔄 Auto-update</h3><p>Feed Sparkle compatibile; controllo aggiornamenti dal menu bar.</p></div>
+    </div>
+
+    <h2>Installazione rapida</h2>
+    <p>Scarica <code>Expando.dmg</code> dalla pagina release, trascina in Applicazioni, poi:</p>
+    <pre>expando setup
+expando start</pre>
+
+    <h2>Homebrew</h2>
+    <p>Formula (build da sorgente + CLI):</p>
+    <pre>brew tap andreapostiglione/tap
+brew install expando</pre>
+    <p>Cask (DMG precompilato):</p>
+    <pre>brew install --cask andreapostiglione/tap/expando</pre>
+
+    <h2>Esempio</h2>
+    <pre>Digiti:  :email
+Ottieni:  you@example.com</pre>
+
+    <footer>
+      MIT License · <a href="https://github.com/andreapostiglione/expando">andreapostiglione/expando</a>
+    </footer>
+  </div>
+</body>
+</html>

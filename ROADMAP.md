@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v1.5.0
+**Versione attuale:** v1.6.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v1.5.0)
+## Stato attuale (baseline v1.6.0)
 
 | Area | Stato |
 |------|--------|

@@ -75,6 +75,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "{trigger} uses a shell command that is not allowed.",
     },
     "notify.block.unknown_app": {"it": "questa app", "en": "this app"},
+    "update.title": {"it": "Expando", "en": "Expando"},
+    "update.available": {
+        "it": "Disponibile la versione {version}. Scarica da GitHub Releases.",
+        "en": "Version {version} is available. Download from GitHub Releases.",
+    },
+    "changelog.title": {"it": "Expando aggiornato", "en": "Expando updated"},
+    "changelog.new_version": {
+        "it": "Benvenuto in Expando {version}. Vedi le novità su GitHub.",
+        "en": "Welcome to Expando {version}. See what's new on GitHub.",
+    },
 }
 
 

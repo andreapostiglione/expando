@@ -31,6 +31,8 @@ class AppConfig:
     notify_on_block: bool = True
     notify_cooldown_seconds: int = 30
     log_level: str = "INFO"
+    check_updates: bool = True
+    update_feed_url: str = ""
 
 
 @dataclass
@@ -206,6 +208,8 @@ def load_app_config(path: Path) -> AppConfig:
         notify_on_block=bool(data.get("notify_on_block", True)),
         notify_cooldown_seconds=int(data.get("notify_cooldown_seconds", 30)),
         log_level=str(data.get("log_level", "INFO")).upper(),
+        check_updates=bool(data.get("check_updates", True)),
+        update_feed_url=str(data.get("update_feed_url", "") or ""),
     )
 
 

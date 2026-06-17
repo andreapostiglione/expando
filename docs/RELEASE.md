@@ -43,6 +43,35 @@ Push a tag `v*` to trigger `.github/workflows/release.yml`.
 
 Optional API key alternative: `NOTARY_API_KEY`, `NOTARY_API_KEY_ID`, `NOTARY_API_ISSUER`.
 
+## Sparkle appcast
+
+Each release generates `appcast.xml` (Sparkle-compatible feed) and attaches it to the GitHub release.
+
+Optional secret for EdDSA signatures:
+
+| Secret | Description |
+|--------|-------------|
+| `SPARKLE_PRIVATE_KEY` | EdDSA private key PEM for `sign_update` |
+
+Local generation:
+
+```bash
+chmod +x scripts/generate-appcast.sh
+./scripts/generate-appcast.sh 1.6.0 Expando.dmg appcast.xml
+```
+
+Feed URL (default): `https://raw.githubusercontent.com/andreapostiglione/expando/main/appcast.xml`
+
+## Homebrew cask
+
+Prebuilt DMG install:
+
+```bash
+brew install --cask andreapostiglione/tap/expando
+```
+
+Update `Casks/expando.rb` in the tap with version + DMG `sha256` after each release.
+
 ### Export certificate
 
 1. Keychain Access → My Certificates → Developer ID Application

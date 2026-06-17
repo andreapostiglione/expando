@@ -33,12 +33,14 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 rumps.MenuItem("Package hub", callback=self.browse_packages),
                 rumps.MenuItem("Snippet editor", callback=self.edit_snippets),
                 rumps.MenuItem("Restart", callback=self.restart_service),
+                rumps.MenuItem("Check for updates", callback=self.check_updates),
                 None,
                 rumps.MenuItem("Quit", callback=self.quit_app),
             ]
             self._sync_enabled_label()
             service.on_toggle = self._sync_enabled_label
             service.start()
+            threading.Thread(target=self._startup_tasks, daemon=True).start()
 
         def _sync_enabled_label(self, *_args) -> None:
             enabled = self.service.engine.enabled
@@ -84,6 +86,34 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
         def restart_service(self, _sender) -> None:
             self.service.apply_config_reload()
             rumps.notification("Expando", "", "Service restarted")
+
+        def _startup_tasks(self) -> None:
+            from .changelog import maybe_show_whats_new
+            from .updater import check_for_updates_silent
+
+            maybe_show_whats_new(self.config_dir)
+            check_for_updates_silent(self.config_dir)
+
+        def check_updates(self, _sender) -> None:
+            threading.Thread(target=self._check_updates, daemon=True).start()
+
+        def _check_updates(self) -> None:
+            from .config import load_config
+            from .updater import _notify_update_available, check_for_updates
+
+            config = load_config(self.config_dir)
+            result = check_for_updates(
+                self.config_dir,
+                feed_url=config.app.update_feed_url or None,
+                force=True,
+                notify_user=False,
+            )
+            if result.error:
+                rumps.notification("Expando", "", f"Update check failed: {result.error}")
+            elif result.available:
+                _notify_update_available(result.available, open_download=True)
+            else:
+                rumps.notification("Expando", "", "Expando is up to date.")
 
         def quit_app(self, _sender) -> None:
             self.service.stop()

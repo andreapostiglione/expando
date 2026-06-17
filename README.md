@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.5.0"><img src="https://img.shields.io/badge/version-1.5.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v1.6.0"><img src="https://img.shields.io/badge/version-1.6.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -53,12 +53,25 @@ Expando:      claude --dangerously-skip-permissions
 
 ### 1. Install
 
+**DMG (recommended):** download [Expando.dmg](https://github.com/andreapostiglione/expando/releases/latest) from GitHub Releases.
+
+**Homebrew cask:**
+
+```bash
+brew tap andreapostiglione/tap
+brew install --cask expando
+```
+
+**From source:**
+
 ```bash
 git clone https://github.com/andreapostiglione/expando.git
 cd expando
 ./install.sh
 ./scripts/build-macos-app.sh
 ```
+
+Website: [andreapostiglione.github.io/expando](https://andreapostiglione.github.io/expando/)
 
 ### 2. Grant permissions
 
@@ -114,6 +127,7 @@ Or install auto-start at login:
 | `expando doctor` | Full health check |
 | `expando setup` | Permission onboarding wizard (macOS) |
 | `expando editor` | Graphical snippet editor (AppKit on macOS) |
+| `expando check-updates` | Check Sparkle appcast for new releases |
 | `expando migrate-espanso` | Import Espanso config with auto backup |
 | `expando logs` | Show recent log lines |
 | `expando logs --tail` | Follow log file (debug) |

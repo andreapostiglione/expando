@@ -478,6 +478,31 @@ def logs(ctx: click.Context, tail: bool, lines: int) -> None:
         raise SystemExit(0) from None
 
 
+@main.command("check-updates")
+@click.pass_context
+def check_updates_cmd(ctx: click.Context) -> None:
+    """Check for app updates via the Sparkle appcast feed."""
+    from .config import load_config
+    from .updater import check_for_updates, open_download_url
+
+    config_dir: Path = ctx.obj["config_dir"]
+    config = load_config(config_dir)
+    result = check_for_updates(
+        config_dir,
+        feed_url=config.app.update_feed_url or None,
+        force=True,
+        notify_user=False,
+    )
+    if result.error:
+        raise click.ClickException(f"Update check failed: {result.error}")
+    if result.available:
+        click.echo(f"Update available: v{result.available.version}")
+        click.echo(result.available.download_url)
+        open_download_url(result.available.download_url)
+        return
+    click.echo(f"Expando v{result.current_version} is up to date.")
+
+
 @main.command()
 @click.pass_context
 def doctor(ctx: click.Context) -> None:

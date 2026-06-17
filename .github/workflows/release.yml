@@ -65,8 +65,30 @@ jobs:
           fi
           ./scripts/build-dmg.sh
 
-      - name: Attach DMG to GitHub Release
+      - name: Generate Sparkle appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          chmod +x scripts/generate-appcast.sh
+          TAG="${GITHUB_REF_NAME#v}"
+          ./scripts/generate-appcast.sh "$TAG" Expando.dmg appcast.xml
+
+      - name: Attach DMG and appcast to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          files: Expando.dmg
+          files: |
+            Expando.dmg
+            appcast.xml
           generate_release_notes: true
+
+      - name: Update appcast on main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp appcast.xml /tmp/appcast-release.xml
+          git fetch origin main
+          git checkout main
+          cp /tmp/appcast-release.xml appcast.xml
+          git add appcast.xml
+          git diff --staged --quiet || git commit -m "chore: update appcast for ${GITHUB_REF_NAME}"
+          git push origin main

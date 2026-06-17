@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Expando</title>
+    <link>https://github.com/andreapostiglione/expando</link>
+    <description>Expando macOS updates (Sparkle appcast)</description>
+    <language>en</language>
+    <item>
+      <title>Version 1.6.0</title>
+      <sparkle:version>1.6.0</sparkle:version>
+      <sparkle:shortVersionString>1.6.0</sparkle:shortVersionString>
+      <description><![CDATA[Sparkle auto-update, Homebrew cask, project website, what's new on upgrade.]]></description>
+      <pubDate>Wed, 17 Jun 2026 15:00:00 +0000</pubDate>
+      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v1.6.0/Expando.dmg" length="0" type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>

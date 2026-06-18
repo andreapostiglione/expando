@@ -5,6 +5,7 @@ import pytest
 
 from expando.hub_marketplace import (
     DEFAULT_MARKETPLACE_URL,
+    build_maintainer_hub_html,
     build_portal_site_html,
     build_publishable_portal_index,
     export_portal_index,
@@ -142,15 +143,28 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     assert paths["html"] == html_path
     assert paths["json"] == json_path
     assert "suggestions_html" in paths
+    assert "maintainer_html" in paths
     html = html_path.read_text(encoding="utf-8")
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     suggestions = paths["suggestions_html"].read_text(encoding="utf-8")
     assert "Social" in html
+    assert "hub-maintainer.html" in html
     assert "hub-trigger-suggestions.html" in html
     assert "Pending" not in html
     assert len(payload["packages"]) == 1
     assert payload["packages"][0]["id"] == "social"
     assert "Community Trigger Dashboard" in suggestions
+    maintainer = paths["maintainer_html"].read_text(encoding="utf-8")
+    assert "Maintainer Portal" in maintainer
+    assert "hub-marketplace.html" in maintainer
+
+
+def test_build_maintainer_hub_html_links_portal_pages():
+    html = build_maintainer_hub_html(updated_at="2026-06-18T10:00:00+00:00")
+    assert "Maintainer Portal" in html
+    assert "hub-marketplace.html" in html
+    assert "hub-trigger-suggestions.html" in html
+    assert "publish-site" in html
 
 
 def test_build_portal_site_html_escapes_markup():

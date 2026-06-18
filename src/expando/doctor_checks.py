@@ -445,6 +445,12 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
     if not isinstance(suggestions, list):
         suggestions = []
 
+    from .notarization_history import notarization_history_trend_svg
+    from .sparkle_benchmark_history import sparkle_benchmark_trend_svg
+
+    notarize_svg = notarization_history_trend_svg(notarize_entries)
+    sparkle_svg = sparkle_benchmark_trend_svg(sparkle_entries)
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -528,6 +534,8 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
       overflow-x: auto;
       font-size: 0.88rem;
     }}
+    .chart {{ margin: 16px 0; max-width: 100%; overflow-x: auto; }}
+    .chart svg {{ display: block; max-width: 100%; height: auto; }}
     footer {{ margin-top: 48px; color: var(--muted); font-size: 0.9rem; }}
   </style>
 </head>
@@ -575,6 +583,7 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
 
     <h2>Notarization history</h2>
     <p class="meta">Runs: {notarize_stats.get('total', 0)} · OK: {notarize_stats.get('ok', 0)} · Failed: {notarize_stats.get('failed', 0)}</p>
+    <div class="chart">{notarize_svg}</div>
     <table>
       <thead><tr><th>Recorded</th><th>Status</th><th>Pass</th><th>Warn</th><th>Fail</th></tr></thead>
       <tbody>{notarize_table}</tbody>
@@ -582,6 +591,7 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
 
     <h2>Sparkle benchmark history</h2>
     <p class="meta">Runs: {sparkle_stats.get('total', 0)} · Trend: <code>{html.escape(str(sparkle_stats.get('trend_sparkline', '')))}</code></p>
+    <div class="chart">{sparkle_svg}</div>
     <table>
       <thead><tr><th>Recorded</th><th>Version</th><th>Helper ms</th><th>Slow</th></tr></thead>
       <tbody>{sparkle_table}</tbody>

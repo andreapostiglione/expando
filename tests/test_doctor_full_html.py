@@ -70,6 +70,8 @@ def test_build_doctor_full_html_includes_sections():
     assert "Sparkle benchmark history" in html_text
     assert "typing-it" in html_text
     assert "3.12.0" in html_text
+    assert "<svg" in html_text
+    assert "polyline" in html_text
 
 
 def test_write_doctor_full_html(tmp_path: Path, monkeypatch):

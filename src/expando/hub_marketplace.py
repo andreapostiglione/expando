@@ -1655,7 +1655,7 @@ def build_portal_site_html(payload: dict[str, Any]) -> str:
     <p><a href="index.html">← Expando home</a></p>
     <h1>Hub Marketplace</h1>
     <p class="lead">Approved community snippet packages for <code>expando hub install</code>.</p>
-    <p class="meta">Updated {updated_at} · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
+    <p class="meta">Updated {updated_at} · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
 
     <div class="grid">
       {packages_html}
@@ -1680,17 +1680,132 @@ expando hub portal publish-site</pre>
 """
 
 
+def default_maintainer_hub_html_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "docs" / "hub-maintainer.html"
+
+
+def build_maintainer_hub_html(*, updated_at: str | None = None) -> str:
+    timestamp = updated_at or _utc_now()
+    escaped_updated = html.escape(timestamp)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expando Hub — Maintainer Portal</title>
+  <meta name="description" content="Maintainer tools for Expando hub marketplace and community validation." />
+  <style>
+    :root {{
+      --bg: #0b0d12;
+      --panel: #141820;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --accent: #4f8cff;
+      --border: #232a36;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2240 0%, transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }}
+    a {{ color: var(--accent); text-decoration: none; }}
+    .wrap {{ max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }}
+    h1, h2 {{ letter-spacing: -0.03em; }}
+    h2 {{ margin-top: 40px; font-size: 1.2rem; }}
+    .lead {{ color: var(--muted); max-width: 760px; }}
+    .meta {{ color: var(--muted); font-size: 0.9rem; margin: 12px 0 24px; }}
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }}
+    .card {{
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }}
+    .card h3 {{ margin: 0 0 8px; font-size: 1.05rem; }}
+    .card p {{ margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; }}
+    pre {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9rem;
+    }}
+    footer {{ margin-top: 56px; color: var(--muted); font-size: 0.9rem; }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="index.html">← Expando home</a></p>
+    <h1>Maintainer Portal</h1>
+    <p class="lead">Tools for reviewing community packages, publishing the hub index, and monitoring release health.</p>
+    <p class="meta">Updated {escaped_updated}</p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Hub Marketplace</h3>
+        <p>Approved community packages for <code>expando hub install</code>.</p>
+        <p><a href="hub-marketplace.html">Open marketplace →</a></p>
+      </div>
+      <div class="card">
+        <h3>Trigger Dashboard</h3>
+        <p>Community validation, duplicate lint, and fuzzy similarity warnings.</p>
+        <p><a href="hub-trigger-suggestions.html">Open trigger dashboard →</a></p>
+      </div>
+      <div class="card">
+        <h3>Health Dashboard</h3>
+        <p>Local snapshot from <code>expando doctor --full-html</code> with embedded release trend charts.</p>
+        <p><a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs →</a></p>
+      </div>
+    </div>
+
+    <h2>Publish GitHub Pages</h2>
+    <pre>expando hub portal publish-site</pre>
+
+    <h2>Validate community packages</h2>
+    <pre>expando hub validate-community
+expando hub validate-community --html
+expando doctor --full-json
+expando doctor --full-html</pre>
+
+    <footer>
+      <a href="hub/marketplace.json">marketplace.json</a>
+      · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit package</a>
+    </footer>
+  </div>
+</body>
+</html>
+"""
+
+
 def publish_portal_site(
     *,
     html_path: Path | None = None,
     json_path: Path | None = None,
     suggestions_html_path: Path | None = None,
+    maintainer_html_path: Path | None = None,
 ) -> dict[str, Path]:
     default_html, default_json = default_portal_site_paths()
     html_destination = (html_path or default_html).expanduser().resolve()
     json_destination = (json_path or default_json).expanduser().resolve()
     suggestions_destination = (
         suggestions_html_path or default_trigger_suggestions_html_path()
+    ).expanduser().resolve()
+    maintainer_destination = (
+        maintainer_html_path or default_maintainer_hub_html_path()
     ).expanduser().resolve()
     payload = build_publishable_portal_index()
     json_destination.parent.mkdir(parents=True, exist_ok=True)
@@ -1701,10 +1816,16 @@ def publish_portal_site(
     html_destination.parent.mkdir(parents=True, exist_ok=True)
     html_destination.write_text(build_portal_site_html(payload), encoding="utf-8")
     write_trigger_suggestions_html(suggestions_destination)
+    maintainer_destination.parent.mkdir(parents=True, exist_ok=True)
+    maintainer_destination.write_text(
+        build_maintainer_hub_html(updated_at=str(payload.get("updated_at", ""))),
+        encoding="utf-8",
+    )
     return {
         "html": html_destination,
         "json": json_destination,
         "suggestions_html": suggestions_destination,
+        "maintainer_html": maintainer_destination,
     }
 
 

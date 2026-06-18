@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.13.0"><img src="https://img.shields.io/badge/version-3.13.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.14.0"><img src="https://img.shields.io/badge/version-3.14.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -25,6 +25,7 @@ Recent releases focused on the **hub marketplace**, **release quality**, and **d
 
 | Version | Highlights |
 |---------|------------|
+| **v3.14** | Inline SVG trends in `doctor --full-html` · `hub-maintainer.html` on Pages · CI smoke doctor HTML + `sparkle-benchmark-history --svg` |
 | **v3.13** | `doctor --full-html` health dashboard · CI `validate-community --html` gate · release artifact `doctor-health.html` |
 | **v3.12** | `doctor --full-json` health export · notarization trend SVG · release CI artifacts (`doctor-full.json`, `notarize-audit-trend.svg`) |
 | **v3.11** | Trigger dashboard on GitHub Pages (`publish-site`) · `doctor --doctor-json` · Sparkle benchmark SVG trend in release artifact |
@@ -218,7 +219,7 @@ Each `migrate-*` command creates a config backup and prints a report (imported, 
 | `expando hub submit status <id>` | Marketplace review status for a submission |
 | `expando hub portal status` | Local vs remote marketplace index stats |
 | `expando hub portal sync` | Merge remote marketplace JSON into local queue |
-| `expando hub portal publish-site` | Regenerate Hub Pages HTML + JSON + trigger dashboard |
+| `expando hub portal publish-site` | Regenerate Hub Pages HTML + JSON + trigger dashboard + maintainer portal |
 | `expando hub portal pending-diff` | Export remote vs local pending metadata diff (JSON) |
 | `expando doctor --full-json` | Export full health JSON (doctor, marketplace, histories, validation) |
 | `expando doctor --full-html` | Write full health HTML dashboard |

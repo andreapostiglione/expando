@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -158,6 +159,78 @@ def doctor_notarization_lines(config_dir: Path) -> list[str]:
     if not last.get("ok"):
         lines.append(t("doctor.notarize_history.hint_fail"))
     return lines
+
+
+def default_trend_svg_path(config_dir: Path) -> Path:
+    return config_dir / "notarize-audit-trend.svg"
+
+
+def notarization_history_trend_svg(
+    entries: list[dict[str, Any]],
+    *,
+    width: int = 480,
+    height: int = 160,
+    padding: int = 28,
+) -> str:
+    if not entries:
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}">'
+            f'<text x="{width // 2}" y="{height // 2}" text-anchor="middle" '
+            f'fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="12">'
+            "No notarization history</text></svg>"
+        )
+
+    plot_width = max(1, width - padding * 2)
+    plot_height = max(1, height - padding * 2)
+    bar_width = plot_width / max(len(entries), 1)
+    bars: list[str] = []
+    labels: list[str] = []
+    for position, item in enumerate(entries):
+        ok = bool(item.get("ok"))
+        color = "#3ecf8e" if ok else "#ff6b6b"
+        x = padding + position * bar_width + bar_width * 0.15
+        bar_w = max(4.0, bar_width * 0.7)
+        y = padding + plot_height * 0.15
+        bar_h = plot_height * 0.7
+        bars.append(
+            f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w:.1f}" height="{bar_h:.1f}" '
+            f'fill="{color}" rx="3"/>'
+        )
+        recorded_at = str(item.get("recorded_at", ""))
+        label = recorded_at[5:10] if len(recorded_at) >= 10 else str(position + 1)
+        labels.append(
+            f'<text x="{x + bar_w / 2:.1f}" y="{height - 6}" text-anchor="middle" '
+            f'fill="#9aa3b2" font-family="ui-monospace,Menlo,monospace" font-size="9">'
+            f"{html.escape(label)}</text>"
+        )
+
+    ok_count = sum(1 for item in entries if item.get("ok"))
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Notarization audit trend">
+  <rect width="{width}" height="{height}" fill="#0b0d12" rx="8"/>
+  <line x1="{padding}" y1="{padding + plot_height}" x2="{width - padding}" y2="{padding + plot_height}" stroke="#232a36"/>
+  <text x="{padding}" y="{padding - 8}" fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="10">notarization audits ({ok_count}/{len(entries)} ok)</text>
+  {''.join(bars)}
+  {''.join(labels)}
+</svg>"""
+
+
+def write_notarization_history_trend_svg(
+    config_dir: Path,
+    path: Path | None = None,
+    *,
+    limit: int | None = None,
+) -> Path:
+    destination = (path or default_trend_svg_path(config_dir)).expanduser().resolve()
+    entries = load_notarization_history(config_dir)
+    if limit is not None:
+        entries = entries[-limit:]
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        notarization_history_trend_svg(entries) + "\n",
+        encoding="utf-8",
+    )
+    return destination
 
 
 def format_notarization_history_report(

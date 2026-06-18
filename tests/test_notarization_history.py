@@ -10,7 +10,9 @@ from expando.notarization_history import (
     load_notarization_history,
     notarization_history_stats,
     notarization_history_to_dict,
+    notarization_history_trend_svg,
     record_notarization_audit,
+    write_notarization_history_trend_svg,
 )
 
 
@@ -85,3 +87,28 @@ def test_notarization_history_caps_entries(tmp_path: Path, monkeypatch: pytest.M
     entries = load_notarization_history(config_dir)
     assert len(entries) == 2
     assert entries[0]["report"]["findings"][0]["message"] == "run-1"
+
+
+def test_notarization_history_trend_svg_marks_pass_and_fail():
+    entries = [
+        {"ok": True, "recorded_at": "2026-06-18T10:00:00+00:00"},
+        {"ok": False, "recorded_at": "2026-06-18T11:00:00+00:00"},
+    ]
+    svg = notarization_history_trend_svg(entries)
+    assert "<svg" in svg
+    assert "#3ecf8e" in svg
+    assert "#ff6b6b" in svg
+    assert "1/2 ok" in svg
+
+
+def test_write_notarization_history_trend_svg(tmp_path: Path):
+    config_dir = tmp_path / "expando"
+    config_dir.mkdir()
+    report = NotarizationAuditReport(ok=True)
+    report.add("codesign.verify", "pass", "ok")
+    record_notarization_audit(config_dir, report)
+
+    svg_path = tmp_path / "trend.svg"
+    written = write_notarization_history_trend_svg(config_dir, svg_path)
+    assert written == svg_path
+    assert "<svg" in svg_path.read_text(encoding="utf-8")

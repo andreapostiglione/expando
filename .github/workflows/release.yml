@@ -74,17 +74,21 @@ jobs:
             STRICT=1
           fi
           if [[ "$STRICT" == "1" ]]; then
-            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg --strict -o notarize-audit.json
+            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg --strict -o notarize-audit.json --record --svg-path notarize-audit-trend.svg
           else
-            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg -o notarize-audit.json
+            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg -o notarize-audit.json --record --svg-path notarize-audit-trend.svg
           fi
+          .venv/bin/expando doctor --full-output doctor-full.json
 
       - name: Upload notarization audit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: notarize-audit-${{ github.ref_name }}
-          path: notarize-audit.json
+          path: |
+            notarize-audit.json
+            notarize-audit-trend.svg
+            doctor-full.json
           if-no-files-found: ignore
 
       - name: Sparkle helper smoke test

@@ -292,6 +292,27 @@ def doctor_combined_document(config_dir: Path) -> dict[str, Any]:
     return payload
 
 
+def doctor_full_document(
+    config_dir: Path,
+    *,
+    history_limit: int = 10,
+) -> dict[str, Any]:
+    from .hub_marketplace import community_validation_document
+    from .notarization_history import notarization_history_to_dict
+    from .sparkle_benchmark_history import sparkle_benchmark_history_to_dict
+
+    payload = doctor_combined_document(config_dir)
+    payload["notarization_history"] = notarization_history_to_dict(
+        config_dir,
+        limit=history_limit,
+    )
+    payload["sparkle_benchmark_history"] = sparkle_benchmark_history_to_dict(
+        limit=history_limit,
+    )
+    payload["community_validation"] = community_validation_document()
+    return payload
+
+
 def _fmt_bool(value: bool | None) -> str:
     if value is None:
         return t("doctor.perm.unknown")

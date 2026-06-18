@@ -135,6 +135,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Registrato in {path} ({recorded_at})",
         "en": "Recorded in {path} ({recorded_at})",
     },
+    "notarize.history.svg_written": {
+        "it": "Grafico trend notarization scritto in {path}",
+        "en": "Notarization trend SVG written to {path}",
+    },
     "notarize.history.exported": {
         "it": "Storico audit esportato in {path}",
         "en": "Audit history exported to {path}",
@@ -272,6 +276,14 @@ _STRINGS: dict[str, dict[str, str]] = {
     "doctor.json.section": {
         "it": "--- Doctor JSON ---",
         "en": "--- Doctor JSON ---",
+    },
+    "doctor.full.exported": {
+        "it": "Report health completo esportato in {path}",
+        "en": "Full health JSON report exported to {path}",
+    },
+    "doctor.full.json_section": {
+        "it": "--- Full health JSON ---",
+        "en": "--- Full health JSON ---",
     },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",

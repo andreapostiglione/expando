@@ -22,6 +22,9 @@ DEFAULT_INDEX_URL = (
 DEFAULT_FILES_BASE = (
     "https://raw.githubusercontent.com/andreapostiglione/expando/main/default_config/match/packages"
 )
+DEFAULT_COMMUNITY_FILES_BASE = (
+    "https://raw.githubusercontent.com/andreapostiglione/expando/main/packages/community"
+)
 
 
 @dataclass
@@ -61,12 +64,28 @@ def _files_base() -> str:
     return os.environ.get("EXPANDO_HUB_FILES_BASE", DEFAULT_FILES_BASE)
 
 
+def _community_files_base() -> str:
+    return os.environ.get("EXPANDO_HUB_COMMUNITY_FILES_BASE", DEFAULT_COMMUNITY_FILES_BASE)
+
+
 def _local_index_path() -> Path:
     return package_root() / "packages" / "hub" / "index.json"
 
 
 def _local_package_dir(package_id: str) -> Path:
     return package_root() / "default_config" / "match" / "packages" / package_id
+
+
+def _community_package_dir(package_id: str) -> Path:
+    return package_root() / "packages" / "community" / package_id
+
+
+def _local_package_sources(package_id: str) -> list[Path]:
+    return [_local_package_dir(package_id), _community_package_dir(package_id)]
+
+
+def _remote_files_bases() -> list[str]:
+    return [_files_base().rstrip("/"), _community_files_base().rstrip("/")]
 
 
 def _load_index_data(path: Path | None = None) -> list[HubPackage]:
@@ -125,27 +144,34 @@ def search_hub_packages(query: str) -> list[HubPackage]:
 
 
 def _remote_package_files(package_id: str) -> list[str]:
-    base = f"{_files_base().rstrip('/')}/{package_id}/"
     names = ["snippets.yml", "snippets.yaml", "base.yml", "base.yaml"]
-    found: list[str] = []
-    for name in names:
-        try:
-            with urlopen(base + name, timeout=15) as response:
-                if response.status == 200:
-                    found.append(name)
-        except URLError:
-            continue
-    if found:
-        return found
+    for base in _remote_files_bases():
+        package_base = f"{base}/{package_id}/"
+        found: list[str] = []
+        for name in names:
+            try:
+                with urlopen(package_base + name, timeout=15) as response:
+                    if response.status == 200:
+                        found.append(name)
+            except URLError:
+                continue
+        if found:
+            return found
 
-    # Fallback: try to discover any yaml file via common names only.
-    raise FileNotFoundError(f"No package files found for {package_id!r} at {base}")
+    raise FileNotFoundError(f"No package files found for {package_id!r}")
 
 
 def _download_package_file(package_id: str, filename: str) -> str:
-    url = f"{_files_base().rstrip('/')}/{package_id}/{filename}"
-    with urlopen(url, timeout=15) as response:
-        return response.read().decode("utf-8")
+    errors: list[str] = []
+    for base in _remote_files_bases():
+        url = f"{base}/{package_id}/{filename}"
+        try:
+            with urlopen(url, timeout=15) as response:
+                return response.read().decode("utf-8")
+        except URLError as exc:
+            errors.append(f"{url}: {exc}")
+            continue
+    raise FileNotFoundError("; ".join(errors))
 
 
 def install_hub_package(config_dir: Path, package_id: str, *, force: bool = False) -> Path:
@@ -159,8 +185,9 @@ def install_hub_package(config_dir: Path, package_id: str, *, force: bool = Fals
         raise FileExistsError(f"Package already installed: {package_id}")
 
     destination.mkdir(parents=True, exist_ok=True)
-    local_source = _local_package_dir(package_id)
-    if local_source.exists():
+    for local_source in _local_package_sources(package_id):
+        if not local_source.exists():
+            continue
         for path in sorted(local_source.glob("*.yml")) + sorted(local_source.glob("*.yaml")):
             shutil.copy2(path, destination / path.name)
         return destination

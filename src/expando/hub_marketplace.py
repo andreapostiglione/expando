@@ -89,32 +89,38 @@ def _entry_to_package(data: dict[str, Any]) -> HubPackage:
     return HubPackage.from_dict(data)
 
 
+def _approved_packages_from_document(data: dict[str, Any]) -> list[HubPackage]:
+    packages = data.get("packages", data) if isinstance(data, dict) else data
+    if not isinstance(packages, list):
+        raise RuntimeError("Marketplace index must contain a packages array")
+    return [
+        _entry_to_package(item)
+        for item in packages
+        if isinstance(item, dict) and _package_entry_visible(item)
+    ]
+
+
 def fetch_marketplace_packages() -> list[HubPackage]:
+    merged: dict[str, HubPackage] = {}
+    path = marketplace_index_path()
+    if path.exists():
+        data = _load_marketplace_document(path)
+        for package in _approved_packages_from_document(data):
+            merged[package.id] = package
+
     url = marketplace_index_url()
     if url:
         try:
             with urlopen(url, timeout=15) as response:
                 data = json.loads(response.read().decode("utf-8"))
+            for package in _approved_packages_from_document(data):
+                merged[package.id] = package
         except (URLError, json.JSONDecodeError, TimeoutError) as exc:
+            if merged:
+                return sorted(merged.values(), key=lambda item: item.id)
             raise RuntimeError(f"Could not fetch marketplace index: {exc}") from exc
-        packages = data.get("packages", data) if isinstance(data, dict) else data
-        if not isinstance(packages, list):
-            raise RuntimeError("Marketplace index must contain a packages array")
-        return [
-            _entry_to_package(item)
-            for item in packages
-            if isinstance(item, dict) and _package_entry_visible(item)
-        ]
 
-    path = marketplace_index_path()
-    if not path.exists():
-        return []
-    data = _load_marketplace_document(path)
-    return [
-        _entry_to_package(item)
-        for item in data.get("packages", [])
-        if isinstance(item, dict) and _package_entry_visible(item)
-    ]
+    return sorted(merged.values(), key=lambda item: item.id)
 
 
 def list_marketplace_queue(*, status: str | None = None) -> list[HubPackage]:

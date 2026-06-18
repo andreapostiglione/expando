@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.1.0
+**Versione attuale:** v3.2.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.1.0)
+## Stato attuale (baseline v3.2.0)
 
 | Area | Stato |
 |------|--------|
@@ -49,6 +49,9 @@
 | Hub marketplace URL predefinito (Pages) | ✓ v3.1.0 |
 | CI E2E headless-safe (tier integration) | ✓ v3.1.0 |
 | Notarization history JSON + CI cache | ✓ v3.1.0 |
+| Hub community packages su Pages (3 approvati) | ✓ v3.2.0 |
+| Notarization history trend in doctor | ✓ v3.2.0 |
+| Sparkle helper signing audit | ✓ v3.2.0 |
 
 ### Gap noti oggi
 
@@ -239,10 +242,15 @@ flowchart LR
 2. `EXPANDO_HUB_MARKETPLACE_URL` default GitHub Pages (+ `DISABLE`)
 3. `expando notarize-history --json` + weekly audit `--record` con cache
 
-### Backlog (Sprint 11+)
-- Hub marketplace: primi package community approvati su Pages
-- Notarization history trend in dashboard locale / doctor
-- Sparkle helper signing hardening audit automatico
+### Sprint 11 → v3.2.0 ✓
+1. 3 package community approvati (`typing-it`, `meeting-it`, `writing-it`) su Pages
+2. Trend `notarize-audit-history` in `expando doctor`
+3. Audit `sparkle.helper.*` (verify, hardened runtime, team ID, entitlements)
+
+### Backlog (Sprint 12+)
+- Hub marketplace: workflow submit end-to-end con package reali da contributor
+- Doctor: link rapido a `expando notarize-history` quando ultimo audit fallisce
+- Benchmark Sparkle update check in distribution build
 
 ---
 
@@ -251,8 +259,8 @@ flowchart LR
 | Metrica | Target v1.6 | Attuale |
 |---------|-------------|---------|
 | Tempo install → prima espansione | < 5 min | ~ok (wizard) |
-| Test suite | ≥ 120 test, E2E verde su runner dedicato | 190+ test, E2E ✓ runner |
-| Hub packages | ≥ 8 | **8** |
+| Test suite | ≥ 120 test, E2E verde su runner dedicato | 195+ test, E2E ✓ runner |
+| Hub packages | ≥ 8 | **8** ufficiali + **3** community |
 | Download release GitHub | tracking manuale; obiettivo 100+ | manuale |
 | Issue aperte critiche | 0 su permessi / injection | 0 note |
 

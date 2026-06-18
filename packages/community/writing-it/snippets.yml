@@ -1,0 +1,13 @@
+matches:
+  - trigger: ":thanks"
+    replace: "Grazie mille per il supporto."
+
+  - trigger: ":intro"
+    replace: |
+      Buongiorno,
+      come da accordi ti scrivo per condividere un aggiornamento.
+
+  - trigger: ":closing"
+    replace: |
+      Resto a disposizione per qualsiasi chiarimento.
+      Cordiali saluti,

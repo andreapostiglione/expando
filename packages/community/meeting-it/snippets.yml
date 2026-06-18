@@ -1,0 +1,18 @@
+matches:
+  - trigger: ":meet"
+    replace: |
+      Ciao,
+      ti propongo un incontro per allinearci sul progetto.
+      Hai disponibilità questa settimana?
+
+  - trigger: ":agenda"
+    replace: |
+      Agenda:
+      1. Stato attività
+      2. Prossimi passi
+      3. Domande aperte
+
+  - trigger: ":follow"
+    replace: |
+      Grazie per il confronto di oggi.
+      Come concordato, ti aggiorno entro venerdì.

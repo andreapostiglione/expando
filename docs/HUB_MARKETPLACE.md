@@ -60,6 +60,22 @@ expando hub portal sync
 
 `publish-site` writes `docs/hub-marketplace.html` and `docs/hub/marketplace.json` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`).
 
+## Community packages (approved)
+
+Approved community bundles live under `packages/community/` and are listed on GitHub Pages after review:
+
+| ID | Description |
+|----|-------------|
+| `typing-it` | Indirizzo, telefono, P.IVA, CF |
+| `meeting-it` | Inviti, agenda, follow-up |
+| `writing-it` | Saluti e chiusure email |
+
+```bash
+expando hub install typing-it
+expando hub install meeting-it
+expando hub install writing-it
+```
+
 `portal sync` merges the remote index into the local queue file (`packages/hub/marketplace.json` or `EXPANDO_HUB_MARKETPLACE_PATH`).
 
 ## Official index (maintainers)

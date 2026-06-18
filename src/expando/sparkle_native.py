@@ -4,6 +4,7 @@ import logging
 import os
 import platform
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -107,6 +108,30 @@ def format_sparkle_smoke_report(report: SparkleSmokeReport) -> str:
         lines.append(f"  {t('sparkle.smoke.fail')}:")
         lines.extend(f"    - {item}" for item in report.errors)
     return "\n".join(lines)
+
+
+def measure_sparkle_helper_check_ms(*, timeout: float = 90.0) -> float | None:
+    bundle = resolve_distribution_app_bundle()
+    if bundle is None:
+        return None
+    helper = sparkle_helper_path(bundle)
+    if helper is None:
+        return None
+
+    start = time.perf_counter()
+    try:
+        result = subprocess.run(
+            [str(helper), "background"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if result.returncode != 0:
+        return None
+    return (time.perf_counter() - start) * 1000
 
 
 def check_for_updates_via_sparkle(*, background: bool = True) -> bool:

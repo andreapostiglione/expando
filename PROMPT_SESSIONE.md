@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.4.0 | **Release:** v3.4.0 (hub submit init, doctor marketplace, sparkle smoke CI)
+**Versione:** 3.5.0 | **Release:** v3.5.0 (validate-community CI, doctor sync, benchmark helper latency)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.5.0** ✓ Sprint 14
+  - `hub validate-community` in CI
+  - Doctor sync preview marketplace
+  - `benchmark --sparkle` helper latency
 - **v3.4.0** ✓ Sprint 13
   - `hub submit init` template
   - Doctor sezione marketplace remoto
@@ -33,8 +37,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 14)
+## Prossimi item (Sprint 15)
 
-- [ ] Validazione automatica pre-submit in CI
-- [ ] Doctor: sync stato remoto vs locale marketplace
-- [ ] Benchmark latenza helper Sparkle
+- [ ] Lint trigger duplicati cross-package in CI
+- [ ] Doctor: alert package pending non sincronizzati
+- [ ] Release CI benchmark Sparkle helper

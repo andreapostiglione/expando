@@ -13,7 +13,7 @@ from typing import Any, Literal
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from .hub import HubPackage, _local_index_path, validate_hub_package_dir
+from .hub import HubPackage, HubPublishReport, _local_index_path, validate_hub_package_dir
 
 
 MARKETPLACE_DOCS_URL = "https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md"
@@ -266,6 +266,69 @@ def init_contributor_package(
     return package_dir
 
 
+def community_packages_dir(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "packages" / "community"
+
+
+def validate_community_hub_packages(root: Path | None = None) -> list[tuple[str, HubPublishReport]]:
+    community_dir = community_packages_dir(root)
+    if not community_dir.is_dir():
+        return []
+    reports: list[tuple[str, HubPublishReport]] = []
+    for package_dir in sorted(community_dir.iterdir()):
+        if package_dir.is_dir():
+            reports.append((package_dir.name, validate_hub_package_dir(package_dir)))
+    return reports
+
+
+def format_community_validation_report(
+    reports: list[tuple[str, HubPublishReport]],
+) -> tuple[str, bool]:
+    from .i18n import t
+
+    if not reports:
+        return t("hub.validate.community.empty"), True
+
+    lines = [t("hub.validate.community.header").format(count=len(reports))]
+    ok = True
+    for name, report in reports:
+        if report.ok:
+            lines.append(
+                t("hub.validate.community.ok").format(
+                    package_id=report.package_id or name,
+                    matches=report.match_count,
+                )
+            )
+            continue
+        ok = False
+        lines.append(t("hub.validate.community.fail").format(package_id=report.package_id or name))
+        lines.extend(f"    - {error}" for error in report.errors)
+    return "\n".join(lines), ok
+
+
+def marketplace_sync_preview() -> dict[str, Any] | None:
+    if not marketplace_index_url():
+        return None
+    try:
+        sync_stats = sync_remote_marketplace_index(dry_run=True)
+    except RuntimeError:
+        return None
+
+    local = _load_marketplace_document()
+    local_total = len(local.get("packages", []))
+    local_approved = len(_approved_packages_from_document(local))
+    remote_approved = len(_approved_packages_from_document(fetch_remote_marketplace_document()))
+    return {
+        "sync": sync_stats,
+        "local_total": local_total,
+        "local_approved": local_approved,
+        "remote_approved": remote_approved,
+    }
+
+
 def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:
     from .hub import fetch_registry
     from .i18n import t
@@ -306,6 +369,28 @@ def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:
     if len(community) > limit:
         lines.append(t("doctor.marketplace.more").format(count=len(community) - limit))
     lines.append(f"  {t('doctor.marketplace.hint')}")
+
+    preview = marketplace_sync_preview()
+    if preview is not None:
+        sync = preview["sync"]
+        lines.append(t("doctor.marketplace.sync"))
+        lines.append(
+            t("doctor.marketplace.sync_counts").format(
+                local_total=preview["local_total"],
+                local_approved=preview["local_approved"],
+                remote_approved=preview["remote_approved"],
+            )
+        )
+        lines.append(
+            t("doctor.marketplace.sync_stats").format(
+                added=sync["added"],
+                updated=sync["updated"],
+                unchanged=sync["unchanged"],
+            )
+        )
+        if sync["added"] or sync["updated"]:
+            lines.append(f"  {t('doctor.marketplace.sync_hint')}")
+
     return lines
 
 

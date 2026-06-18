@@ -111,6 +111,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           cp appcast.xml /tmp/appcast-release.xml
+          git checkout -- appcast.xml
           git fetch origin main
           git switch -C main origin/main
           cp /tmp/appcast-release.xml appcast.xml

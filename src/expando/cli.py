@@ -1783,6 +1783,16 @@ def notarize_history_cmd(
     type=click.Path(path_type=Path),
     help="Write full health JSON report to this path",
 )
+@click.option(
+    "--full-html",
+    is_flag=True,
+    help="Write full health HTML dashboard (doctor-health.html)",
+)
+@click.option(
+    "--full-html-output",
+    type=click.Path(path_type=Path),
+    help="Override full health HTML output path (implies --full-html)",
+)
 @click.pass_context
 def doctor(
     ctx: click.Context,
@@ -1792,6 +1802,8 @@ def doctor(
     marketplace_output: Path | None,
     full_json: bool,
     full_output: Path | None,
+    full_html: bool,
+    full_html_output: Path | None,
 ) -> None:
     """Validate configuration, permissions, and daemon health."""
     import json
@@ -1800,21 +1812,36 @@ def doctor(
     report = run_doctor(config_dir)
     text_report = format_doctor_report(report)
 
-    if full_json or full_output is not None:
-        from .doctor_checks import doctor_full_document
+    if (
+        full_json
+        or full_output is not None
+        or full_html
+        or full_html_output is not None
+    ):
+        from .doctor_checks import (
+            default_doctor_full_html_path,
+            doctor_full_document,
+            write_doctor_full_html,
+        )
 
         payload = doctor_full_document(config_dir)
-        json_text = json.dumps(payload, indent=2, ensure_ascii=False)
         if full_output is not None:
+            json_text = json.dumps(payload, indent=2, ensure_ascii=False)
             full_output = full_output.expanduser().resolve()
             full_output.parent.mkdir(parents=True, exist_ok=True)
             full_output.write_text(json_text + "\n", encoding="utf-8")
             click.echo(t("doctor.full.exported").format(path=full_output))
+        if full_html or full_html_output is not None:
+            html_path = write_doctor_full_html(
+                config_dir,
+                full_html_output or default_doctor_full_html_path(),
+            )
+            click.echo(t("doctor.full.html_exported").format(path=html_path))
         click.echo(text_report)
         if full_json:
             click.echo("")
             click.echo(t("doctor.full.json_section"))
-            click.echo(json_text)
+            click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
         if not report.ok:
             raise SystemExit(1)
         return

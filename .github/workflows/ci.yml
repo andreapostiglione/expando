@@ -20,5 +20,7 @@ jobs:
         run: pytest -q tests --ignore=tests/e2e
       - name: Validate community hub packages
         run: expando hub validate-community
+      - name: Validate community trigger dashboard HTML
+        run: expando hub validate-community --html -o /tmp/hub-trigger-suggestions.html
       - name: Run E2E tests (headless-safe)
         run: pytest -q tests/e2e -m "not clipboard and not image and not integration"

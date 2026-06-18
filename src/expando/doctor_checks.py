@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -311,6 +312,310 @@ def doctor_full_document(
     )
     payload["community_validation"] = community_validation_document()
     return payload
+
+
+def default_doctor_full_html_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "doctor-health.html"
+
+
+def _html_status_badge(ok: bool) -> tuple[str, str]:
+    if ok:
+        return "OK", "ok"
+    return "Issues", "fail"
+
+
+def _html_list_items(items: list[str]) -> str:
+    if not items:
+        return '<li class="empty">None</li>'
+    return "".join(f"<li>{html.escape(str(item))}</li>" for item in items)
+
+
+def build_doctor_full_html(document: dict[str, Any]) -> str:
+    generated_at = html.escape(str(document.get("generated_at", "")))
+    doctor = document.get("doctor", {})
+    if not isinstance(doctor, dict):
+        doctor = {}
+    doctor_ok = bool(doctor.get("ok"))
+    doctor_label, doctor_class = _html_status_badge(doctor_ok)
+
+    permissions = doctor.get("permissions", {})
+    if not isinstance(permissions, dict):
+        permissions = {}
+    runtime = doctor.get("runtime", {})
+    if not isinstance(runtime, dict):
+        runtime = {}
+
+    marketplace = document.get("marketplace", {})
+    if not isinstance(marketplace, dict):
+        marketplace = {}
+    community_packages = marketplace.get("community_packages", [])
+    if not isinstance(community_packages, list):
+        community_packages = []
+    package_rows = []
+    for item in community_packages[:12]:
+        if not isinstance(item, dict):
+            continue
+        package_rows.append(
+            "<tr>"
+            f"<td><code>{html.escape(str(item.get('id', '')))}</code></td>"
+            f"<td>{html.escape(str(item.get('name', '')))}</td>"
+            "</tr>"
+        )
+    marketplace_table = (
+        "\n".join(package_rows)
+        if package_rows
+        else '<tr><td colspan="2" class="empty">No community packages</td></tr>'
+    )
+
+    notarization = document.get("notarization_history", {})
+    if not isinstance(notarization, dict):
+        notarization = {}
+    notarize_stats = notarization.get("stats", {})
+    if not isinstance(notarize_stats, dict):
+        notarize_stats = {}
+    notarize_entries = notarization.get("entries", [])
+    if not isinstance(notarize_entries, list):
+        notarize_entries = []
+    notarize_rows = []
+    for item in notarize_entries[-8:]:
+        if not isinstance(item, dict):
+            continue
+        summary = item.get("summary", {})
+        if not isinstance(summary, dict):
+            summary = {}
+        status = "OK" if item.get("ok") else "FAIL"
+        row_class = "ok" if item.get("ok") else "fail"
+        notarize_rows.append(
+            f'<tr class="{row_class}">'
+            f"<td>{html.escape(str(item.get('recorded_at', '')))}</td>"
+            f"<td>{status}</td>"
+            f"<td>{summary.get('pass', 0)}</td>"
+            f"<td>{summary.get('warn', 0)}</td>"
+            f"<td>{summary.get('fail', 0)}</td>"
+            "</tr>"
+        )
+    notarize_table = (
+        "\n".join(notarize_rows)
+        if notarize_rows
+        else '<tr><td colspan="5" class="empty">No notarization history</td></tr>'
+    )
+
+    sparkle = document.get("sparkle_benchmark_history", {})
+    if not isinstance(sparkle, dict):
+        sparkle = {}
+    sparkle_stats = sparkle.get("stats", {})
+    if not isinstance(sparkle_stats, dict):
+        sparkle_stats = {}
+    sparkle_entries = sparkle.get("entries", [])
+    if not isinstance(sparkle_entries, list):
+        sparkle_entries = []
+    sparkle_rows = []
+    for item in sparkle_entries[-8:]:
+        if not isinstance(item, dict):
+            continue
+        benchmark = item.get("benchmark", {})
+        if not isinstance(benchmark, dict):
+            benchmark = {}
+        helper_ms = benchmark.get("helper_check_ms")
+        helper_text = f"{helper_ms:.2f}" if isinstance(helper_ms, (int, float)) else "n/a"
+        row_class = "fail" if item.get("failed") else ("warn" if item.get("slow") else "ok")
+        sparkle_rows.append(
+            f'<tr class="{row_class}">'
+            f"<td>{html.escape(str(item.get('recorded_at', '')))}</td>"
+            f"<td>{html.escape(str(item.get('version', '')))}</td>"
+            f"<td>{helper_text}</td>"
+            f"<td>{'yes' if item.get('slow') else 'no'}</td>"
+            "</tr>"
+        )
+    sparkle_table = (
+        "\n".join(sparkle_rows)
+        if sparkle_rows
+        else '<tr><td colspan="4" class="empty">No sparkle benchmark history</td></tr>'
+    )
+
+    validation = document.get("community_validation", {})
+    if not isinstance(validation, dict):
+        validation = {}
+    validation_ok = bool(validation.get("ok"))
+    validation_label, validation_class = _html_status_badge(validation_ok)
+    suggestions = validation.get("trigger_suggestions", [])
+    if not isinstance(suggestions, list):
+        suggestions = []
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expando — Health Dashboard</title>
+  <meta name="description" content="Full Expando health snapshot from expando doctor --full-html." />
+  <style>
+    :root {{
+      --bg: #0b0d12;
+      --panel: #141820;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --accent: #4f8cff;
+      --border: #232a36;
+      --ok: #3ecf8e;
+      --fail: #ff6b6b;
+      --warn: #f5c542;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2240 0%, transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }}
+    a {{ color: var(--accent); text-decoration: none; }}
+    .wrap {{ max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; }}
+    h1, h2 {{ letter-spacing: -0.03em; }}
+    h2 {{ margin-top: 40px; font-size: 1.2rem; }}
+    .lead {{ color: var(--muted); max-width: 760px; }}
+    .meta {{ color: var(--muted); font-size: 0.9rem; margin: 12px 0 24px; }}
+    .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }}
+    .card {{
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }}
+    .card strong {{ display: block; font-size: 1.4rem; margin-bottom: 4px; }}
+    .card span {{ color: var(--muted); font-size: 0.9rem; }}
+    .badge {{
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }}
+    .badge.ok {{ color: var(--ok); border-color: rgba(62, 207, 142, 0.35); }}
+    .badge.fail {{ color: var(--fail); border-color: rgba(255, 107, 107, 0.35); }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 8px;
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.92rem;
+    }}
+    th, td {{ padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }}
+    th {{ color: var(--muted); font-weight: 600; background: var(--panel); }}
+    tr.ok td:nth-child(2) {{ color: var(--ok); }}
+    tr.fail td:nth-child(2) {{ color: var(--fail); }}
+    tr.warn td:nth-child(4) {{ color: var(--warn); }}
+    td.empty {{ color: var(--muted); text-align: center; }}
+    ul {{ margin: 8px 0; padding-left: 20px; }}
+    li.empty {{ color: var(--muted); list-style: none; margin-left: -20px; }}
+    code {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88rem;
+    }}
+    pre {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      font-size: 0.88rem;
+    }}
+    footer {{ margin-top: 48px; color: var(--muted); font-size: 0.9rem; }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Expando Health Dashboard</h1>
+    <p class="lead">Snapshot from <code>expando doctor --full-html</code>: daemon, marketplace, release histories, and community validation.</p>
+    <p class="meta">Generated {generated_at} · Doctor <span class="badge {doctor_class}">{doctor_label}</span> · Community <span class="badge {validation_class}">{validation_label}</span></p>
+
+    <div class="grid">
+      <div class="card"><strong>{'yes' if doctor.get('running') else 'no'}</strong><span>Daemon running</span></div>
+      <div class="card"><strong>{doctor.get('match_count', 0)}</strong><span>Loaded snippets</span></div>
+      <div class="card"><strong>{marketplace.get('community_count', 0)}</strong><span>Community packages</span></div>
+      <div class="card"><strong>{len(suggestions)}</strong><span>Trigger similarity warnings</span></div>
+    </div>
+
+    <h2>Doctor</h2>
+    <table>
+      <tbody>
+        <tr><th>Config dir</th><td><code>{html.escape(str(doctor.get('config_dir', '')))}</code></td></tr>
+        <tr><th>PID</th><td>{html.escape(str(doctor.get('pid', 'n/a')))}</td></tr>
+        <tr><th>Accessibility</th><td>{html.escape(str(permissions.get('accessibility', 'unknown')))}</td></tr>
+        <tr><th>Input monitoring</th><td>{html.escape(str(permissions.get('input_monitoring', 'unknown')))}</td></tr>
+        <tr><th>Injection ready</th><td>{html.escape(str(permissions.get('injection_ready', 'unknown')))}</td></tr>
+        <tr><th>Runtime</th><td>{html.escape(str(runtime.get('mode', 'unknown')))}</td></tr>
+      </tbody>
+    </table>
+    <h3>Warnings</h3>
+    <ul>{_html_list_items([str(item) for item in doctor.get('warnings', []) if isinstance(doctor.get('warnings'), list)])}</ul>
+    <h3>Config errors</h3>
+    <ul>{_html_list_items([str(item) for item in doctor.get('config_errors', []) if isinstance(doctor.get('config_errors'), list)])}</ul>
+
+    <h2>Marketplace</h2>
+    <table>
+      <tbody>
+        <tr><th>Remote URL</th><td>{html.escape(str(marketplace.get('remote_url') or 'disabled'))}</td></tr>
+        <tr><th>Approved</th><td>{marketplace.get('approved_count', 0)}</td></tr>
+        <tr><th>Pending diffs</th><td>{len(marketplace.get('pending_diffs', [])) if isinstance(marketplace.get('pending_diffs'), list) else 0}</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Community package</th><th>Name</th></tr></thead>
+      <tbody>{marketplace_table}</tbody>
+    </table>
+
+    <h2>Notarization history</h2>
+    <p class="meta">Runs: {notarize_stats.get('total', 0)} · OK: {notarize_stats.get('ok', 0)} · Failed: {notarize_stats.get('failed', 0)}</p>
+    <table>
+      <thead><tr><th>Recorded</th><th>Status</th><th>Pass</th><th>Warn</th><th>Fail</th></tr></thead>
+      <tbody>{notarize_table}</tbody>
+    </table>
+
+    <h2>Sparkle benchmark history</h2>
+    <p class="meta">Runs: {sparkle_stats.get('total', 0)} · Trend: <code>{html.escape(str(sparkle_stats.get('trend_sparkline', '')))}</code></p>
+    <table>
+      <thead><tr><th>Recorded</th><th>Version</th><th>Helper ms</th><th>Slow</th></tr></thead>
+      <tbody>{sparkle_table}</tbody>
+    </table>
+
+    <h2>Community validation</h2>
+    <p class="meta">Packages validated: {len(validation.get('packages', [])) if isinstance(validation.get('packages'), list) else 0} · Similarity warnings: {len(suggestions)}</p>
+
+    <h2>Regenerate</h2>
+    <pre>expando doctor --full-html
+expando doctor --full-html --full-html-output doctor-health.html
+expando doctor --full-json --full-output doctor-full.json</pre>
+
+    <footer>
+      <a href="hub-trigger-suggestions.html">Trigger dashboard</a>
+      · <a href="hub-marketplace.html">Hub marketplace</a>
+    </footer>
+  </div>
+</body>
+</html>
+"""
+
+
+def write_doctor_full_html(
+    config_dir: Path,
+    destination: Path | None = None,
+    *,
+    history_limit: int = 10,
+) -> Path:
+    destination = (destination or default_doctor_full_html_path()).expanduser().resolve()
+    document = doctor_full_document(config_dir, history_limit=history_limit)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(build_doctor_full_html(document), encoding="utf-8")
+    return destination
 
 
 def _fmt_bool(value: bool | None) -> str:

@@ -78,7 +78,7 @@ jobs:
           else
             .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg -o notarize-audit.json --record --svg-path notarize-audit-trend.svg
           fi
-          .venv/bin/expando doctor --full-output doctor-full.json
+          .venv/bin/expando doctor --full-output doctor-full.json --full-html-output doctor-health.html
 
       - name: Upload notarization audit report
         if: always()
@@ -89,6 +89,7 @@ jobs:
             notarize-audit.json
             notarize-audit-trend.svg
             doctor-full.json
+            doctor-health.html
           if-no-files-found: ignore
 
       - name: Sparkle helper smoke test

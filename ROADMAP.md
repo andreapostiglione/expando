@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.12.0
+**Versione attuale:** v3.13.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.12.0)
+## Stato attuale (baseline v3.13.0)
 
 | Area | Stato |
 |------|--------|
@@ -82,6 +82,9 @@
 | `expando doctor --full-json` export health completo | ✓ v3.12.0 |
 | Notarization history trend SVG (`notarize-audit --svg`) | ✓ v3.12.0 |
 | Release CI artifact `doctor-full.json` + notarize SVG | ✓ v3.12.0 |
+| `expando doctor --full-html` health dashboard HTML | ✓ v3.13.0 |
+| CI gate `validate-community --html` | ✓ v3.13.0 |
+| Release CI artifact `doctor-health.html` | ✓ v3.13.0 |
 
 ### Gap noti oggi
 
@@ -327,7 +330,12 @@ flowchart LR
 2. `notarize-audit --record --svg` / `notarize-history --svg`: grafico trend pass/fail
 3. Release CI: artifact `doctor-full.json` + `notarize-audit-trend.svg`
 
-### Backlog (Sprint 22+)
+### Sprint 22 → v3.13.0 ✓
+1. `expando doctor --full-html` (+ `--full-html-output`): dashboard HTML health completa
+2. CI: `hub validate-community --html` gate su trigger dashboard
+3. Release CI: artifact `doctor-health.html` insieme a `doctor-full.json`
+
+### Backlog (Sprint 23+)
 - TBD
 
 ---

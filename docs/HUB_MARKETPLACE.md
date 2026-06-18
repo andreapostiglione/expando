@@ -109,13 +109,15 @@ Export structured diagnostics from doctor:
 ```bash
 expando doctor --full-json
 expando doctor --full-json --full-output health.json
+expando doctor --full-html
+expando doctor --full-html --full-html-output doctor-health.html
 expando doctor --doctor-json
 expando doctor --doctor-json --doctor-output doctor-health.json
 expando doctor --marketplace-json
 expando doctor --marketplace-json -o marketplace-health.json
 ```
 
-`--full-json` exports doctor, marketplace, notarization/sparkle histories, and community validation. `--doctor-json` prints the doctor payload only. `--marketplace-json` adds marketplace health (`doctor` + `marketplace`). Use `--full-output`, `--doctor-output`, or `-o` to save JSON to disk without skipping the text report.
+`--full-json` exports doctor, marketplace, notarization/sparkle histories, and community validation. `--full-html` writes the same snapshot as an HTML dashboard. `--doctor-json` prints the doctor payload only. `--marketplace-json` adds marketplace health (`doctor` + `marketplace`). Use `--full-output`, `--full-html-output`, `--doctor-output`, or `-o` to save reports to disk without skipping the text report.
 
 Export pending metadata differences between remote marketplace and local queue:
 

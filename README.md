@@ -10,12 +10,31 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v2.0.0"><img src="https://img.shields.io/badge/version-2.0.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.6.0"><img src="https://img.shields.io/badge/version-3.6.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
 </p>
+
+---
+
+## What's new (v3.6)
+
+Recent releases focused on the **hub marketplace**, **release quality**, and **diagnostics**:
+
+| Version | Highlights |
+|---------|------------|
+| **v3.6** | Cross-package trigger lint in CI · doctor alert for unsynced remote pending submissions · Sparkle benchmark artifact on release |
+| **v3.5** | `hub validate-community` in CI · doctor marketplace sync preview · `benchmark --sparkle` helper latency |
+| **v3.4** | `hub submit init` scaffold · doctor remote marketplace section · `sparkle-smoke` + release CI smoke test |
+| **v3.3** | `hub submit run` / `status` · doctor notarization hint · `benchmark --sparkle` |
+| **v3.2** | 3 approved community packages on Hub Pages · notarization history in doctor · Sparkle helper signing audit |
+| **v3.1** | Default GitHub Pages marketplace URL · headless-safe CI E2E · `notarize-history --json` |
+| **v3.0** | `hub portal publish-site` · `notarize-audit --record` · E2E image trigger (`:img`) |
+
+Community packages (install via `expando hub install`): `typing-it`, `meeting-it`, `writing-it`.  
+Hub marketplace site: [andreapostiglione.github.io/expando/hub-marketplace.html](https://andreapostiglione.github.io/expando/hub-marketplace.html)
 
 ---
 
@@ -42,7 +61,9 @@ Expando:      claude --dangerously-skip-permissions
 | 📝 | **Multi-field forms** | Single-window input for dynamic snippets |
 | 🎯 | **Advanced app rules** | Filter by app name, bundle ID, or window title |
 | 📦 | **Packages** | Organize snippets in reusable bundles |
-| 🩺 | **Built-in doctor** | Permissions, processes, config health |
+| 🩺 | **Built-in doctor** | Permissions, marketplace sync, notarization history |
+| 📡 | **Hub marketplace** | Community packages, submit/review workflow, GitHub Pages |
+| ✨ | **Native Sparkle updates** | Signed DMG, appcast, helper smoke test in release CI |
 | 💾 | **Backup / restore** | One-command config export |
 | 🛡️ | **Shell sandbox** | Whitelist allowed shell commands |
 | 🐍 | **Hackable** | Plain Python + YAML — extend in minutes |
@@ -135,7 +156,13 @@ Or install auto-start at login:
 | `expando new :trigger --template email` | Create snippet from built-in template |
 | `expando templates list` | List available snippet templates |
 | `expando benchmark` | Benchmark trigger buffer under load (1000+ matches) |
+| `expando benchmark --sparkle` | Benchmark appcast fetch + Sparkle helper update-check latency |
+| `expando sparkle-smoke --app Expando.app` | Verify Sparkle helper codesign + framework embed |
+| `expando notarize-audit` | Audit codesign, entitlements, Gatekeeper, notarization staples |
+| `expando notarize-audit --record` | Append audit run to local `notarize-audit-history.json` |
+| `expando notarize-history` | Show recent notarization audit runs |
 | `expando security-audit` | Review shell allowlist, imports, and hub TLS |
+| `expando sync` | Assisted iCloud config linking (see [docs/SYNC.md](docs/SYNC.md)) |
 | Snippet `image:` field | Paste PNG/JPEG from config dir (fallback to `replace` text) |
 | `expando crashes list` | List local crash reports (never uploaded) |
 | `expando logs` | Show recent log lines |
@@ -165,6 +192,25 @@ expando migrate-raycast --source ~/Downloads/snippets.json
 ```
 
 Each `migrate-*` command creates a config backup and prints a report (imported, skipped, warnings).
+
+### Hub & marketplace CLI
+
+| Command | Description |
+|---------|-------------|
+| `expando hub list` | List official + approved community packages |
+| `expando hub install <id>` | Install a hub package into your config |
+| `expando hub publish ./pkg` | Validate, bundle, optionally register a local package |
+| `expando hub validate-community` | Validate `packages/community/` (CI pre-submit gate) |
+| `expando hub submit init <id>` | Scaffold `hub.json` + `snippets.yml` for a new package |
+| `expando hub submit run ./pkg` | Validate, zip, print GitHub issue instructions |
+| `expando hub submit status <id>` | Marketplace review status for a submission |
+| `expando hub portal status` | Local vs remote marketplace index stats |
+| `expando hub portal sync` | Merge remote marketplace JSON into local queue |
+| `expando hub portal publish-site` | Regenerate Hub Pages HTML + JSON |
+| `expando hub review list` | List pending/approved/rejected queue (maintainers) |
+| `expando hub review approve <id>` | Approve a queued package (maintainers) |
+
+`expando doctor` includes: notarization audit history trend, remote marketplace community packages, sync dry-run stats, and pending-submission alerts.
 
 ---
 
@@ -355,22 +401,44 @@ shell_allowlist:
 
 ---
 
-## Packages
+## Packages & hub marketplace
 
 Drop snippet bundles into `match/packages/<name>/`. Expando loads them automatically.
 
 ```bash
-expando packages           # list installed packages
-expando hub list           # browse the online package hub
-expando hub search email   # search hub packages
-expando hub install core      # install a hub package
-expando hub install email-it  # Italian email templates
-expando hub install dev       # dev shortcuts (git, TODO, …)
-expando hub browse         # visual package picker (AppKit on macOS)
+expando packages              # list installed packages
+expando hub list              # official + approved community packages
+expando hub search email      # search hub packages
+expando hub install core      # install an official package
+expando hub install typing-it # community: address, phone, tax IDs (IT)
+expando hub install meeting-it
+expando hub install writing-it
+expando hub browse            # visual package picker (AppKit on macOS)
 expando import ./my-snippets/
 ```
 
-The hub index lives in `packages/hub/index.json`. Override with `EXPANDO_HUB_INDEX_URL` if needed.
+The official index lives in `packages/hub/index.json`. Approved community packages are merged from the remote marketplace (default: [GitHub Pages JSON](https://andreapostiglione.github.io/expando/hub/marketplace.json)). Override with `EXPANDO_HUB_INDEX_URL` or `EXPANDO_HUB_MARKETPLACE_URL`; disable remote with `EXPANDO_HUB_MARKETPLACE_DISABLE=1`.
+
+Full guide: [docs/HUB_MARKETPLACE.md](docs/HUB_MARKETPLACE.md)
+
+### Contribute a community package
+
+```bash
+# 1. Scaffold a new package folder
+expando hub submit init my-package --name "My Package" -o ~/hub-packages
+
+# 2. Edit hub.json + snippets.yml, then validate and bundle
+expando hub validate-community    # CI gate: structure + cross-package trigger lint
+expando hub submit run ~/hub-packages/my-package --queue
+expando hub submit status my-package
+
+# Maintainer review (local queue)
+expando hub review list --status pending
+expando hub review approve my-package --reviewer you
+expando hub portal publish-site   # regenerate docs/hub-marketplace.html + JSON
+```
+
+`expando doctor` shows remote marketplace packages, sync dry-run stats (added/updated/unchanged), and alerts when remote **pending** submissions are missing from the local queue (`expando hub portal sync`).
 
 ---
 
@@ -405,7 +473,13 @@ EXPANDO_NOTARIZE=1 ./scripts/build-dmg.sh           # + Apple notarization (afte
 
 Signing uses your **Developer ID Application** certificate. Notarization and CI secrets: see [docs/RELEASE.md](docs/RELEASE.md).
 
-Pushing a `v*` tag triggers GitHub Actions to build the DMG and attach it to the release.
+Pushing a `v*` tag triggers GitHub Actions to:
+
+1. Build and sign `Expando.dmg` (notarize when secrets are set)
+2. Run `expando notarize-audit` and upload the JSON report
+3. Run `expando sparkle-smoke` and `expando benchmark --sparkle` (benchmark uploaded as artifact)
+4. Generate Sparkle `appcast.xml` and attach both to the GitHub Release
+5. Commit the updated appcast to `main`
 
 ### Homebrew
 
@@ -445,7 +519,11 @@ expando/
 │   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 104 pytest tests (incl. tests/e2e)
+├── tests/                # 227+ pytest tests (incl. tests/e2e)
+├── packages/
+│   ├── hub/              # Official hub index + marketplace queue
+│   └── community/        # Approved community snippet bundles
+├── docs/                 # HUB_MARKETPLACE, RELEASE, PLUGINS, SYNC, …
 ├── scripts/              # Install, build, launch agent
 ├── default_config/       # Default YAML templates
 └── assets/               # Logo and branding
@@ -463,7 +541,8 @@ expando/
 | Config not reloading | Check `auto_restart: true` in `config/default.yml` |
 
 ```bash
-expando doctor    # always start here
+expando doctor              # permissions, config, marketplace, notarization history
+expando notarize-history    # recent signed-build audit runs (maintainers)
 ```
 
 Logs: `~/Library/Application Support/expando/expando.log`
@@ -472,7 +551,7 @@ Logs: `~/Library/Application Support/expando/expando.log`
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for planned features (v1.4 onboarding, v1.5 snippet editor, v1.6 auto-update).
+Current baseline: **v3.6.0**. See [ROADMAP.md](ROADMAP.md) for completed sprints and Sprint 16+ backlog.
 
 ## Contributing
 

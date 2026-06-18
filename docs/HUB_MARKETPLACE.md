@@ -100,7 +100,15 @@ expando hub validate-community
 expando hub validate-community --json
 ```
 
-Checks package structure, snippet validity, **cross-package duplicate literal triggers**, and **collisions with official hub packages** (community trigger already used in `default_config/match/packages/` fails CI).
+Checks package structure, snippet validity, **cross-package duplicate literal triggers**, and **collisions with official hub packages** (community trigger already used in `default_config/match/packages/` fails CI). **Similar triggers** near official ones are reported as warnings only (prefix/Levenshtein) and do not fail CI.
+
+Export pending metadata differences between remote marketplace and local queue:
+
+```bash
+expando hub portal pending-diff
+expando hub portal pending-diff --json
+expando hub portal pending-diff -o pending-diff.json
+```
 
 `expando doctor` shows a **metadata diff** for remote `pending` submissions (missing locally or changed fields) with hint `expando hub portal sync`.
 

@@ -252,6 +252,27 @@ def run_sparkle_update_benchmark(*, feed_url: str | None = None) -> SparkleBench
     )
 
 
+def sparkle_benchmark_result_to_dict(
+    result: SparkleBenchmarkResult,
+    *,
+    warn_ms: int | None = None,
+) -> dict[str, object]:
+    return {
+        "sparkle_available": result.sparkle_available,
+        "app_bundle": result.app_bundle,
+        "helper_path": result.helper_path,
+        "framework_present": result.framework_present,
+        "appcast_fetch_ms": round(result.appcast_fetch_ms, 2),
+        "helper_check_ms": round(result.helper_check_ms, 2) if result.helper_check_ms is not None else None,
+        "appcast_entries": result.appcast_entries,
+        "latest_version": result.latest_version,
+        "current_version": result.current_version,
+        "update_available": result.update_available,
+        "helper_slow": sparkle_helper_latency_slow(result.helper_check_ms, warn_ms),
+        "warn_ms": warn_ms,
+    }
+
+
 def format_sparkle_benchmark_report(
     result: SparkleBenchmarkResult,
     *,

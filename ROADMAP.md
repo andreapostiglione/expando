@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.7.0
+**Versione attuale:** v3.8.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.7.0)
+## Stato attuale (baseline v3.8.0)
 
 | Area | Stato |
 |------|--------|
@@ -67,6 +67,9 @@
 | Validazione trigger community vs package ufficiali | ✓ v3.7.0 |
 | Doctor diff metadata pending marketplace | ✓ v3.7.0 |
 | Release CI soglia warning latenza helper Sparkle | ✓ v3.7.0 |
+| Suggerimenti trigger community vicini a ufficiali (warning) | ✓ v3.8.0 |
+| Export JSON pending diff marketplace (`hub portal pending-diff`) | ✓ v3.8.0 |
+| Storico latenza helper Sparkle multi-versione in release | ✓ v3.8.0 |
 
 ### Gap noti oggi
 
@@ -287,10 +290,15 @@ flowchart LR
 2. Doctor: diff metadata pending remoto (assente/divergente)
 3. Release CI: `SPARKLE_HELPER_SLOW` warning sopra soglia 15s
 
-### Backlog (Sprint 17+)
-- Hub contributor: suggerimenti trigger liberi vicini a quelli ufficiali
-- Doctor: export JSON marketplace pending diff
-- Benchmark: storico latenza helper in artifact release multi-versione
+### Sprint 17 → v3.8.0 ✓
+1. `validate-community`: suggerimenti trigger simili a ufficiali (warning only)
+2. `hub portal pending-diff`: export JSON diff metadata pending
+3. `sparkle-benchmark-history` + artifact release multi-versione su `main`
+
+### Backlog (Sprint 18+)
+- Suggerimenti trigger con scoring più ricco / fuzzy
+- Doctor: comando dedicato `doctor --marketplace-json`
+- Benchmark: trend chart o soglia fail (non solo warn) configurabile
 
 ---
 

@@ -100,6 +100,10 @@ expando hub validate-community
 expando hub validate-community --json
 ```
 
+Checks package structure, snippet validity, and **cross-package duplicate literal triggers** (same `:trigger` in two community packages fails CI).
+
+`expando doctor` also warns when remote **pending** submissions are missing from the local marketplace queue (`expando hub portal sync`).
+
 ## Official index (maintainers)
 
 ```bash

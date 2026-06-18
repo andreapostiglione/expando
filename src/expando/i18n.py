@@ -233,6 +233,22 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "→ expando hub portal sync",
         "en": "→ expando hub portal sync",
     },
+    "doctor.marketplace.pending_unsynced": {
+        "it": "  Pending remoti non in coda locale:",
+        "en": "  Remote pending not in local queue:",
+    },
+    "doctor.marketplace.pending_item": {
+        "it": "    - {package_id}",
+        "en": "    - {package_id}",
+    },
+    "doctor.marketplace.pending_more": {
+        "it": "    … e altri {count}",
+        "en": "    … and {count} more",
+    },
+    "doctor.marketplace.pending_hint": {
+        "it": "→ expando hub portal sync",
+        "en": "→ expando hub portal sync",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
@@ -474,6 +490,14 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.validate.community.empty": {
         "it": "Nessun package community da validare.",
         "en": "No community packages to validate.",
+    },
+    "hub.validate.community.duplicates.header": {
+        "it": "Trigger duplicati cross-package ({count}):",
+        "en": "Cross-package duplicate triggers ({count}):",
+    },
+    "hub.validate.community.duplicates.item": {
+        "it": "  ✗ {trigger} → {packages}",
+        "en": "  ✗ {trigger} → {packages}",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",

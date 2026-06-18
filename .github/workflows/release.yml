@@ -90,6 +90,17 @@ jobs:
       - name: Sparkle helper smoke test
         run: .venv/bin/expando sparkle-smoke --app Expando.app
 
+      - name: Sparkle helper benchmark
+        run: .venv/bin/expando benchmark --sparkle | tee sparkle-benchmark.txt
+
+      - name: Upload Sparkle benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sparkle-benchmark-${{ github.ref_name }}
+          path: sparkle-benchmark.txt
+          if-no-files-found: ignore
+
       - name: Generate Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}

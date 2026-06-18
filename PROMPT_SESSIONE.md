@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.5.0 | **Release:** v3.5.0 (validate-community CI, doctor sync, benchmark helper latency)
+**Versione:** 3.6.0 | **Release:** v3.6.0 (cross-package lint, doctor pending alert, release benchmark)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.6.0** ✓ Sprint 15
+  - Lint trigger cross-package in CI
+  - Doctor alert pending non sincronizzati
+  - Release CI benchmark Sparkle artifact
 - **v3.5.0** ✓ Sprint 14
   - `hub validate-community` in CI
   - Doctor sync preview marketplace
@@ -37,8 +41,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 15)
+## Prossimi item (Sprint 16)
 
-- [ ] Lint trigger duplicati cross-package in CI
-- [ ] Doctor: alert package pending non sincronizzati
-- [ ] Release CI benchmark Sparkle helper
+- [ ] Validazione trigger vs package ufficiali
+- [ ] Doctor diff metadata pending
+- [ ] Soglia warning latenza helper in CI

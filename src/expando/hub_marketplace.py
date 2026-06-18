@@ -13,7 +13,16 @@ from typing import Any, Literal
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from .hub import HubPackage, HubPublishReport, _local_index_path, validate_hub_package_dir
+import yaml
+
+from .hub import (
+    HubPackage,
+    HubPublishReport,
+    _local_index_path,
+    _package_yaml_files,
+    validate_hub_package_dir,
+)
+from .match_utils import extract_triggers
 
 
 MARKETPLACE_DOCS_URL = "https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md"
@@ -284,29 +293,112 @@ def validate_community_hub_packages(root: Path | None = None) -> list[tuple[str,
     return reports
 
 
+def find_cross_package_trigger_duplicates(root: Path | None = None) -> dict[str, list[str]]:
+    community_dir = community_packages_dir(root)
+    if not community_dir.is_dir():
+        return {}
+
+    trigger_packages: dict[str, list[str]] = {}
+    for package_dir in sorted(community_dir.iterdir()):
+        if not package_dir.is_dir():
+            continue
+        manifest_path = package_dir / "hub.json"
+        if manifest_path.exists():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                package_id = str(manifest.get("id", package_dir.name))
+            except json.JSONDecodeError:
+                package_id = package_dir.name
+        else:
+            package_id = package_dir.name
+
+        for yaml_path in _package_yaml_files(package_dir):
+            try:
+                data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+            except yaml.YAMLError:
+                continue
+            matches = data.get("matches", []) or []
+            for raw in matches:
+                if not isinstance(raw, dict) or raw.get("regex"):
+                    continue
+                for trigger in extract_triggers(raw):
+                    packages = trigger_packages.setdefault(trigger, [])
+                    if package_id not in packages:
+                        packages.append(package_id)
+
+    return {
+        trigger: packages
+        for trigger, packages in sorted(trigger_packages.items())
+        if len(packages) > 1
+    }
+
+
 def format_community_validation_report(
     reports: list[tuple[str, HubPublishReport]],
+    *,
+    trigger_duplicates: dict[str, list[str]] | None = None,
 ) -> tuple[str, bool]:
     from .i18n import t
 
-    if not reports:
+    if not reports and not trigger_duplicates:
         return t("hub.validate.community.empty"), True
 
-    lines = [t("hub.validate.community.header").format(count=len(reports))]
+    lines: list[str] = []
     ok = True
-    for name, report in reports:
-        if report.ok:
+    if reports:
+        lines.append(t("hub.validate.community.header").format(count=len(reports)))
+        for name, report in reports:
+            if report.ok:
+                lines.append(
+                    t("hub.validate.community.ok").format(
+                        package_id=report.package_id or name,
+                        matches=report.match_count,
+                    )
+                )
+                continue
+            ok = False
+            lines.append(t("hub.validate.community.fail").format(package_id=report.package_id or name))
+            lines.extend(f"    - {error}" for error in report.errors)
+
+    duplicates = trigger_duplicates or {}
+    if duplicates:
+        ok = False
+        lines.append(t("hub.validate.community.duplicates.header").format(count=len(duplicates)))
+        for trigger, packages in duplicates.items():
             lines.append(
-                t("hub.validate.community.ok").format(
-                    package_id=report.package_id or name,
-                    matches=report.match_count,
+                t("hub.validate.community.duplicates.item").format(
+                    trigger=trigger,
+                    packages=", ".join(packages),
                 )
             )
-            continue
-        ok = False
-        lines.append(t("hub.validate.community.fail").format(package_id=report.package_id or name))
-        lines.extend(f"    - {error}" for error in report.errors)
     return "\n".join(lines), ok
+
+
+def marketplace_pending_sync_gaps() -> list[str]:
+    if not marketplace_index_url():
+        return []
+    try:
+        remote = fetch_remote_marketplace_document()
+        local = _load_marketplace_document()
+    except RuntimeError:
+        return []
+
+    local_ids = {
+        str(item.get("id"))
+        for item in local.get("packages", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    gaps: list[str] = []
+    for item in remote.get("packages", []):
+        if not isinstance(item, dict):
+            continue
+        package_id = str(item.get("id", "")).strip()
+        if not package_id:
+            continue
+        status = str(item.get("status", "approved")).lower()
+        if status == "pending" and package_id not in local_ids:
+            gaps.append(package_id)
+    return sorted(gaps)
 
 
 def marketplace_sync_preview() -> dict[str, Any] | None:
@@ -356,19 +448,18 @@ def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:
     )
     if not community:
         lines.append(f"  {t('doctor.marketplace.empty')}")
-        return lines
-
-    lines.append(t("doctor.marketplace.community"))
-    for package in community[:limit]:
-        lines.append(
-            t("doctor.marketplace.package").format(
-                package_id=package.id,
-                name=package.name,
+    else:
+        lines.append(t("doctor.marketplace.community"))
+        for package in community[:limit]:
+            lines.append(
+                t("doctor.marketplace.package").format(
+                    package_id=package.id,
+                    name=package.name,
+                )
             )
-        )
-    if len(community) > limit:
-        lines.append(t("doctor.marketplace.more").format(count=len(community) - limit))
-    lines.append(f"  {t('doctor.marketplace.hint')}")
+        if len(community) > limit:
+            lines.append(t("doctor.marketplace.more").format(count=len(community) - limit))
+        lines.append(f"  {t('doctor.marketplace.hint')}")
 
     preview = marketplace_sync_preview()
     if preview is not None:
@@ -390,6 +481,15 @@ def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:
         )
         if sync["added"] or sync["updated"]:
             lines.append(f"  {t('doctor.marketplace.sync_hint')}")
+
+    pending_gaps = marketplace_pending_sync_gaps()
+    if pending_gaps:
+        lines.append(t("doctor.marketplace.pending_unsynced"))
+        for package_id in pending_gaps[:limit]:
+            lines.append(t("doctor.marketplace.pending_item").format(package_id=package_id))
+        if len(pending_gaps) > limit:
+            lines.append(t("doctor.marketplace.pending_more").format(count=len(pending_gaps) - limit))
+        lines.append(f"  {t('doctor.marketplace.pending_hint')}")
 
     return lines
 

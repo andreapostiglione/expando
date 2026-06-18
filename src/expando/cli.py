@@ -727,26 +727,38 @@ def hub_validate_community(as_json: bool) -> None:
     """Validate all packages under packages/community (CI pre-submit gate)."""
     import json
 
-    from .hub_marketplace import format_community_validation_report, validate_community_hub_packages
+    from .hub_marketplace import (
+        find_cross_package_trigger_duplicates,
+        format_community_validation_report,
+        validate_community_hub_packages,
+    )
 
     reports = validate_community_hub_packages()
+    trigger_duplicates = find_cross_package_trigger_duplicates()
     if as_json:
-        payload = [
-            {
-                "package_id": report.package_id or name,
-                "ok": report.ok,
-                "match_count": report.match_count,
-                "errors": report.errors,
-                "warnings": report.warnings,
-            }
-            for name, report in reports
-        ]
+        payload = {
+            "packages": [
+                {
+                    "package_id": report.package_id or name,
+                    "ok": report.ok,
+                    "match_count": report.match_count,
+                    "errors": report.errors,
+                    "warnings": report.warnings,
+                }
+                for name, report in reports
+            ],
+            "trigger_duplicates": trigger_duplicates,
+            "ok": all(report.ok for _, report in reports) and not trigger_duplicates,
+        }
         click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
-        if not all(report.ok for _, report in reports):
+        if not payload["ok"]:
             raise SystemExit(1)
         return
 
-    text, ok = format_community_validation_report(reports)
+    text, ok = format_community_validation_report(
+        reports,
+        trigger_duplicates=trigger_duplicates,
+    )
     click.echo(text)
     if not ok:
         raise SystemExit(1)

@@ -80,3 +80,24 @@ def test_doctor_marketplace_includes_sync_preview():
     assert "sync" in text.lower() or "merge" in text.lower()
     assert "aggiunti=1" in text or "added=1" in text
     assert "hub portal sync" in text
+
+
+def test_doctor_marketplace_alerts_pending_not_in_local_queue():
+    official = [_package("dev", "Dev")]
+
+    with patch("expando.hub_marketplace.marketplace_index_url", return_value="https://example.com/hub.json"), patch(
+        "expando.hub_marketplace.fetch_marketplace_packages",
+        return_value=official,
+    ), patch("expando.hub.fetch_registry", return_value=official), patch(
+        "expando.hub_marketplace.marketplace_sync_preview",
+        return_value=None,
+    ), patch(
+        "expando.hub_marketplace.marketplace_pending_sync_gaps",
+        return_value=["new-submit", "another-pack"],
+    ):
+        lines = doctor_marketplace_lines(limit=5)
+
+    text = "\n".join(lines)
+    assert "new-submit" in text
+    assert "another-pack" in text
+    assert "pending" in text.lower() or "Pending" in text

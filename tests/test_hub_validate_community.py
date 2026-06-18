@@ -1,9 +1,11 @@
+import json
 from pathlib import Path
 
 from click.testing import CliRunner
 
 from expando.cli import main
 from expando.hub_marketplace import (
+    find_cross_package_trigger_duplicates,
     format_community_validation_report,
     validate_community_hub_packages,
 )
@@ -36,3 +38,41 @@ def test_hub_validate_community_cli():
     result = runner.invoke(main, ["hub", "validate-community"])
     assert result.exit_code == 0, result.output
     assert "typing-it" in result.output
+
+
+def test_find_cross_package_trigger_duplicates_detects_conflict(tmp_path: Path):
+    community = tmp_path / "packages" / "community"
+    for package_id in ("pack-a", "pack-b"):
+        package_dir = community / package_id
+        package_dir.mkdir(parents=True)
+        (package_dir / "hub.json").write_text(
+            json.dumps({"id": package_id, "name": package_id, "description": "d"}),
+            encoding="utf-8",
+        )
+        (package_dir / "snippets.yml").write_text(
+            "matches:\n  - trigger: ':shared'\n    replace: 'x'\n",
+            encoding="utf-8",
+        )
+
+    duplicates = find_cross_package_trigger_duplicates(root=tmp_path)
+    assert duplicates == {":shared": ["pack-a", "pack-b"]}
+    text, ok = format_community_validation_report([], trigger_duplicates=duplicates)
+    assert ok is False
+    assert ":shared" in text
+
+
+def test_find_cross_package_trigger_duplicates_ignores_regex(tmp_path: Path):
+    community = tmp_path / "packages" / "community"
+    for package_id in ("pack-a", "pack-b"):
+        package_dir = community / package_id
+        package_dir.mkdir(parents=True)
+        (package_dir / "hub.json").write_text(
+            json.dumps({"id": package_id, "name": package_id, "description": "d"}),
+            encoding="utf-8",
+        )
+        (package_dir / "snippets.yml").write_text(
+            "matches:\n  - trigger: ':shared'\n    regex: true\n    replace: 'x'\n",
+            encoding="utf-8",
+        )
+
+    assert find_cross_package_trigger_duplicates(root=tmp_path) == {}

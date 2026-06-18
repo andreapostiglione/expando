@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.5.0
+**Versione attuale:** v3.6.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.5.0)
+## Stato attuale (baseline v3.6.0)
 
 | Area | Stato |
 |------|--------|
@@ -61,6 +61,9 @@
 | CI `hub validate-community` pre-submit gate | ✓ v3.5.0 |
 | Doctor marketplace sync preview (remoto vs locale) | ✓ v3.5.0 |
 | Benchmark Sparkle helper update-check latency | ✓ v3.5.0 |
+| CI lint trigger duplicati cross-package community | ✓ v3.6.0 |
+| Doctor alert pending remoti non sincronizzati | ✓ v3.6.0 |
+| Release CI artifact benchmark Sparkle helper | ✓ v3.6.0 |
 
 ### Gap noti oggi
 
@@ -271,10 +274,15 @@ flowchart LR
 2. Doctor: preview sync remoto → locale (dry-run stats + hint)
 3. `benchmark --sparkle`: latenza helper update check
 
-### Backlog (Sprint 15+)
-- Hub contributor: lint trigger duplicati cross-package in CI
-- Doctor: alert package pending non sincronizzati da remoto
-- Release CI: benchmark Sparkle helper su runner release
+### Sprint 15 → v3.6.0 ✓
+1. CI lint trigger duplicati cross-package in `validate-community`
+2. Doctor: alert pending remoti assenti dalla coda locale
+3. Release CI: `benchmark --sparkle` + artifact
+
+### Backlog (Sprint 16+)
+- Hub contributor: validazione trigger vs package ufficiali
+- Doctor: diff dettagliato metadata package pending
+- Benchmark: soglia warning latenza helper in CI
 
 ---
 

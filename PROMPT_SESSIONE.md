@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.12.0 | **Release:** v3.12.0 (doctor full JSON, notarize SVG trend, release artifacts)
+**Versione:** 3.13.0 | **Release:** v3.13.0 (doctor full HTML dashboard, CI html gate, release health artifact)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.13.0** ✓ Sprint 22
+  - `doctor --full-html` dashboard
+  - CI `validate-community --html`
+  - Release artifact `doctor-health.html`
 - **v3.12.0** ✓ Sprint 21
   - `doctor --full-json`
   - Notarization trend SVG
@@ -65,6 +69,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 22)
+## Prossimi item (Sprint 23)
 
 - [ ] TBD — vedi ROADMAP.md

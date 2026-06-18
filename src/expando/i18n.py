@@ -285,6 +285,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "--- Full health JSON ---",
         "en": "--- Full health JSON ---",
     },
+    "doctor.full.html_exported": {
+        "it": "Dashboard health HTML scritta in {path}",
+        "en": "Health HTML dashboard written to {path}",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",

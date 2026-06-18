@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.0.0 | **Release:** v3.0.0 (hub publish-site, audit history, E2E engine image)
+**Versione:** 3.1.0 | **Release:** v3.1.0 (CI E2E tiers, marketplace default URL, audit history JSON)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.1.0** ✓ Sprint 10
+  - CI E2E headless-safe (`integration` tier)
+  - Marketplace URL default GitHub Pages
+  - `notarize-history --json` + weekly CI cache
 - **v3.0.0** ✓ Sprint 9
   - `expando hub portal publish-site` + Pages
   - `expando notarize-audit --record` + `notarize-history`
@@ -17,6 +21,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Backlog
+## Prossimi item (Sprint 11)
 
-- [ ] Fix test flaky clipboard E2E headless su macOS-latest
+- [ ] Primi package community approvati su Hub Pages
+- [ ] Trend notarization history in doctor
+- [ ] Sparkle helper signing audit automatico

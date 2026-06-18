@@ -1214,12 +1214,43 @@ def notarize_audit_cmd(
 
 @main.command("notarize-history")
 @click.option("--limit", default=10, show_default=True, help="Recent entries to show")
+@click.option("--json", "as_json", is_flag=True, help="Print history as JSON")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write JSON history export to this file",
+)
 @click.pass_context
-def notarize_history_cmd(ctx: click.Context, limit: int) -> None:
+def notarize_history_cmd(
+    ctx: click.Context,
+    limit: int,
+    as_json: bool,
+    output: Path | None,
+) -> None:
     """Show local notarization audit history and trend."""
-    from .notarization_history import format_notarization_history_report
+    import json
 
-    click.echo(format_notarization_history_report(ctx.obj["config_dir"], limit=limit))
+    from .notarization_history import (
+        format_notarization_history_report,
+        notarization_history_to_dict,
+    )
+
+    config_dir: Path = ctx.obj["config_dir"]
+    if as_json or output is not None:
+        payload = notarization_history_to_dict(config_dir, limit=limit)
+        text = json.dumps(payload, indent=2, ensure_ascii=False)
+        if output is not None:
+            output = output.expanduser().resolve()
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(text + "\n", encoding="utf-8")
+            if not as_json:
+                click.echo(t("notarize.history.exported").format(path=output))
+        if as_json:
+            click.echo(text)
+        return
+
+    click.echo(format_notarization_history_report(config_dir, limit=limit))
 
 
 @main.command()

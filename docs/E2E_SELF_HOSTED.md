@@ -31,6 +31,8 @@ pytest -q tests/e2e -ra
 Injection tests (TextEdit) need Accessibility. The global listener test also needs Input Monitoring.
 The clipboard test is marked `@pytest.mark.clipboard` and skips when TCC is incomplete.
 Image snippet tests use `@pytest.mark.image` and verify PNG clipboard paste into TextEdit.
+Live TextEdit injection tests use `@pytest.mark.integration` and are excluded from headless
+`macos-latest` CI (`pytest -m "not clipboard and not image and not integration"`).
 
 ## Notarization audit (weekly)
 

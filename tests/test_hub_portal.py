@@ -4,9 +4,11 @@ from pathlib import Path
 import pytest
 
 from expando.hub_marketplace import (
+    DEFAULT_MARKETPLACE_URL,
     build_portal_site_html,
     build_publishable_portal_index,
     export_portal_index,
+    marketplace_index_url,
     marketplace_portal_stats,
     publish_portal_site,
     sync_remote_marketplace_index,
@@ -18,6 +20,7 @@ def marketplace_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     path = tmp_path / "marketplace.json"
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_PATH", str(path))
     monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_URL", raising=False)
+    monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
     return path
 
 
@@ -163,6 +166,18 @@ def test_build_portal_site_html_escapes_markup():
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
     assert "A &amp; B" in html
+
+
+def test_marketplace_index_url_defaults_to_github_pages(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_URL", raising=False)
+    monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_DISABLE", raising=False)
+    assert marketplace_index_url() == DEFAULT_MARKETPLACE_URL
+
+
+def test_marketplace_index_url_can_be_disabled(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_URL", raising=False)
+    monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
+    assert marketplace_index_url() is None
 
 
 def test_marketplace_portal_stats_counts(marketplace_file: Path):

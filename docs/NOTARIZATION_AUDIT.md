@@ -12,9 +12,11 @@ expando notarize-audit -o notarize-audit.json
 expando notarize-audit --record
 expando notarize-history
 expando notarize-history --limit 20
+expando notarize-history --json
+expando notarize-history -o audit-history.json
 ```
 
-`--record` appends each run to `~/Library/Application Support/expando/notarize-audit-history.json` (last 100 entries). `notarize-history` shows pass/warn/fail trends over recent runs.
+`--record` appends each run to `~/Library/Application Support/expando/notarize-audit-history.json` (last 100 entries). `notarize-history` shows pass/warn/fail trends over recent runs. The weekly self-hosted workflow caches history across runs and uploads it as an artifact.
 
 Default targets:
 

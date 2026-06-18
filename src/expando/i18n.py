@@ -135,6 +135,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Registrato in {path} ({recorded_at})",
         "en": "Recorded in {path} ({recorded_at})",
     },
+    "notarize.history.exported": {
+        "it": "Storico audit esportato in {path}",
+        "en": "Audit history exported to {path}",
+    },
     "notarize.title.issues": {
         "it": "PROBLEMI NOTARIZZAZIONE",
         "en": "NOTARIZATION ISSUES",

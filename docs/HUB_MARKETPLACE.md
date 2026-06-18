@@ -51,7 +51,9 @@ Publish an approved-only JSON index for `EXPANDO_HUB_MARKETPLACE_URL`:
 expando hub portal status
 expando hub portal export -o ./marketplace-published.json
 expando hub portal publish-site
-export EXPANDO_HUB_MARKETPLACE_URL=https://andreapostiglione.github.io/expando/hub/marketplace.json
+# Default remote index (GitHub Pages); override or disable:
+# export EXPANDO_HUB_MARKETPLACE_URL=https://example.com/marketplace.json
+# export EXPANDO_HUB_MARKETPLACE_DISABLE=1
 expando hub portal sync --dry-run
 expando hub portal sync
 ```

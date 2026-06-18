@@ -104,6 +104,21 @@ def notarization_history_stats(entries: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def notarization_history_to_dict(
+    config_dir: Path,
+    *,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    entries = load_notarization_history(config_dir)
+    stats = notarization_history_stats(entries)
+    recent = entries[-limit:] if limit is not None else entries
+    return {
+        "path": str(history_file(config_dir)),
+        "stats": stats,
+        "entries": recent,
+    }
+
+
 def format_notarization_history_report(
     config_dir: Path,
     *,

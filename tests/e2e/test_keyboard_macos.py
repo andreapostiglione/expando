@@ -13,7 +13,8 @@ from tests.e2e.helpers import get_textedit_content, type_text_via_subprocess
 pytestmark = [pytest.mark.e2e, pytest.mark.skipif(platform.system() != "Darwin", reason="macOS only")]
 
 
-def test_textinjector_types_into_textedit(textedit_document):
+@pytest.mark.integration
+def test_textinjector_types_into_textedit(require_live_injection_e2e, textedit_document):
     injector = TextInjector(InjectorSettings(backend="inject", clipboard_threshold=9999))
     payload = "hello expando typing"
     injector.inject(payload)
@@ -31,8 +32,10 @@ def test_textinjector_clipboard_paste_into_textedit(require_clipboard_e2e, texte
     assert "hello e2e clipboard" in content, content
 
 
+@pytest.mark.integration
 def test_global_listener_captures_keystrokes(
     require_full_e2e,
+    require_live_injection_e2e,
     textedit_document,
     e2e_config_dir,
 ):

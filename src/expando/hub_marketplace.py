@@ -18,6 +18,9 @@ from .hub import HubPackage, _local_index_path, validate_hub_package_dir
 
 MARKETPLACE_DOCS_URL = "https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md"
 SUBMIT_ISSUE_URL = "https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml"
+DEFAULT_MARKETPLACE_URL = (
+    "https://andreapostiglione.github.io/expando/hub/marketplace.json"
+)
 MARKETPLACE_STATUSES = ("pending", "approved", "rejected")
 ReviewAction = Literal["approve", "reject"]
 
@@ -31,7 +34,13 @@ class HubSubmission:
 
 
 def marketplace_index_url() -> str | None:
-    return os.environ.get("EXPANDO_HUB_MARKETPLACE_URL") or None
+    override = os.environ.get("EXPANDO_HUB_MARKETPLACE_URL", "").strip()
+    if override:
+        return override
+    disabled = os.environ.get("EXPANDO_HUB_MARKETPLACE_DISABLE", "").strip().lower()
+    if disabled in {"1", "true", "yes"}:
+        return None
+    return DEFAULT_MARKETPLACE_URL
 
 
 def marketplace_index_path() -> Path:
@@ -357,7 +366,10 @@ def export_portal_index(destination: Path) -> Path:
 def fetch_remote_marketplace_document() -> dict[str, Any]:
     url = marketplace_index_url()
     if not url:
-        raise RuntimeError("EXPANDO_HUB_MARKETPLACE_URL is not set")
+        raise RuntimeError(
+            "Remote marketplace index is disabled — unset EXPANDO_HUB_MARKETPLACE_DISABLE "
+            "or set EXPANDO_HUB_MARKETPLACE_URL"
+        )
     try:
         with urlopen(url, timeout=15) as response:
             data = json.loads(response.read().decode("utf-8"))

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.9.0
+**Versione attuale:** v3.1.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.9.0)
+## Stato attuale (baseline v3.1.0)
 
 | Area | Stato |
 |------|--------|
@@ -43,12 +43,17 @@
 | Hub portal export/sync remoto | ✓ v2.9.0 |
 | Notarization audit JSON artifact | ✓ v2.9.0 |
 | E2E image clipboard su runner | ✓ v2.9.0 |
+| Hub marketplace GitHub Pages | ✓ v3.0.0 |
+| Notarization audit history locale | ✓ v3.0.0 |
+| E2E engine image trigger | ✓ v3.0.0 |
+| Hub marketplace URL predefinito (Pages) | ✓ v3.1.0 |
+| CI E2E headless-safe (tier integration) | ✓ v3.1.0 |
+| Notarization history JSON + CI cache | ✓ v3.1.0 |
 
 ### Gap noti oggi
 
 - **Updater:** Sparkle nativo solo in build `EXPANDO_DISTRIBUTION=1`; fallback Python appcast in dev
-- **Hub marketplace:** portal JSON export/sync; nessun hosting web integrato
-- **Test:** E2E clipboard skipped in CI headless (richiede runner self-hosted + TCC)
+- **Test:** clipboard/integration E2E solo su runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`)
 - **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC sul servizio launchd
 
 ---
@@ -229,8 +234,15 @@ flowchart LR
 2. `expando notarize-audit --record` + `expando notarize-history`
 3. E2E pipeline image trigger (`:img` → `inject_image`)
 
-### Backlog
-- Fix test flaky clipboard E2E headless su macOS-latest
+### Sprint 10 → v3.1.0 ✓
+1. CI E2E headless-safe (`integration`/`clipboard`/`image` tier su self-hosted)
+2. `EXPANDO_HUB_MARKETPLACE_URL` default GitHub Pages (+ `DISABLE`)
+3. `expando notarize-history --json` + weekly audit `--record` con cache
+
+### Backlog (Sprint 11+)
+- Hub marketplace: primi package community approvati su Pages
+- Notarization history trend in dashboard locale / doctor
+- Sparkle helper signing hardening audit automatico
 
 ---
 
@@ -239,7 +251,7 @@ flowchart LR
 | Metrica | Target v1.6 | Attuale |
 |---------|-------------|---------|
 | Tempo install → prima espansione | < 5 min | ~ok (wizard) |
-| Test suite | ≥ 120 test, E2E verde su runner dedicato | 150+ test, E2E ✓ runner |
+| Test suite | ≥ 120 test, E2E verde su runner dedicato | 190+ test, E2E ✓ runner |
 | Hub packages | ≥ 8 | **8** |
 | Download release GitHub | tracking manuale; obiettivo 100+ | manuale |
 | Issue aperte critiche | 0 su permessi / injection | 0 note |
@@ -255,4 +267,4 @@ flowchart LR
 
 ---
 
-*Ultimo aggiornamento: 17 giugno 2026*
+*Ultimo aggiornamento: 18 giugno 2026*

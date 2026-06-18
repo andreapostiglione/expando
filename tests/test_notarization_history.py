@@ -9,6 +9,7 @@ from expando.notarization_history import (
     history_file,
     load_notarization_history,
     notarization_history_stats,
+    notarization_history_to_dict,
     record_notarization_audit,
 )
 
@@ -55,6 +56,20 @@ def test_notarization_history_stats_and_report(tmp_path: Path):
     report_text = format_notarization_history_report(config_dir, limit=2)
     assert "Runs: 3" in report_text or "Esecuzioni: 3" in report_text
     assert "codesign.verify" not in report_text
+
+
+def test_notarization_history_to_dict_limits_entries(tmp_path: Path):
+    config_dir = tmp_path / "expando"
+    config_dir.mkdir()
+    for index in range(3):
+        report = NotarizationAuditReport(ok=index % 2 == 0)
+        report.add("codesign.verify", "pass", f"run-{index}")
+        record_notarization_audit(config_dir, report)
+
+    payload = notarization_history_to_dict(config_dir, limit=2)
+    assert payload["stats"]["total"] == 3
+    assert len(payload["entries"]) == 2
+    assert payload["entries"][0]["report"]["findings"][0]["message"] == "run-1"
 
 
 def test_notarization_history_caps_entries(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

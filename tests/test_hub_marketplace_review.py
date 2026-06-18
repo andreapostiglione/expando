@@ -18,6 +18,7 @@ def marketplace_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     path = tmp_path / "marketplace.json"
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_PATH", str(path))
     monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_URL", raising=False)
+    monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
     return path
 
 

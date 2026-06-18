@@ -35,16 +35,29 @@ jobs:
           cp -R "/Volumes/Expando/Expando.app" ./Expando.app
           hdiutil detach "/Volumes/Expando" -quiet || true
 
+      - name: Restore audit history cache
+        uses: actions/cache@v4
+        with:
+          path: .ci-audit-history/notarize-audit-history.json
+          key: notarize-audit-history-v1-${{ runner.os }}
+          restore-keys: |
+            notarize-audit-history-v1-${{ runner.os }}-
+
       - name: Run notarization audit
         run: |
-          expando notarize-audit --app Expando.app --dmg Expando.dmg --strict -o notarize-audit.json
+          mkdir -p .ci-audit-history
+          expando --config-dir .ci-audit-history notarize-audit \
+            --app Expando.app --dmg Expando.dmg --strict \
+            -o notarize-audit.json --record
 
       - name: Upload audit JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: notarize-audit-weekly
-          path: notarize-audit.json
+          path: |
+            notarize-audit.json
+            .ci-audit-history/notarize-audit-history.json
           if-no-files-found: ignore
 
   audit-skipped:

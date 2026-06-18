@@ -24,6 +24,17 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "image: image clipboard injection E2E; needs Accessibility and PNG paste support",
     )
+    config.addinivalue_line(
+        "markers",
+        "integration: live macOS injection into TextEdit; skipped on headless GitHub Actions",
+    )
+
+
+def _github_actions_headless() -> bool:
+    return (
+        os.environ.get("GITHUB_ACTIONS") == "true"
+        and os.environ.get("EXPANDO_E2E_FULL") != "1"
+    )
 
 
 @pytest.fixture
@@ -38,7 +49,21 @@ def require_accessibility() -> None:
 
 
 @pytest.fixture
+def require_live_injection_e2e(require_textedit_e2e) -> None:
+    if _github_actions_headless():
+        pytest.skip(
+            "Live injection E2E disabled on headless GitHub Actions — "
+            "set EXPANDO_E2E_FULL=1 on a self-hosted runner"
+        )
+
+
+@pytest.fixture
 def require_clipboard_e2e(require_textedit_e2e) -> None:
+    if _github_actions_headless():
+        pytest.skip(
+            "Clipboard E2E disabled on headless GitHub Actions — "
+            "set EXPANDO_E2E_CLIPBOARD=1 on a self-hosted runner"
+        )
     if os.environ.get("EXPANDO_E2E_CLIPBOARD") != "1" and os.environ.get("EXPANDO_E2E_FULL") != "1":
         pytest.skip(
             "Clipboard E2E disabled — set EXPANDO_E2E_CLIPBOARD=1 on a runner with full TCC"

@@ -192,6 +192,16 @@ def resolve_sparkle_helper_fail_ms(override: int | None = None) -> int | None:
     )
 
 
+def sparkle_helper_strict_fail_enabled() -> bool:
+    import os
+
+    return os.environ.get("EXPANDO_SPARKLE_HELPER_STRICT", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
 def sparkle_helper_latency_slow(
     helper_check_ms: float | None,
     warn_ms: int | None,

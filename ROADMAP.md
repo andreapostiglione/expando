@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.9.0
+**Versione attuale:** v3.10.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.9.0)
+## Stato attuale (baseline v3.10.0)
 
 | Area | Stato |
 |------|--------|
@@ -73,6 +73,9 @@
 | Scoring fuzzy trigger community vs ufficiali (score + reason) | ✓ v3.9.0 |
 | `expando doctor --marketplace-json` export diagnostico | ✓ v3.9.0 |
 | Benchmark Sparkle fail threshold + trend sparkline in history | ✓ v3.9.0 |
+| Dashboard HTML suggerimenti trigger (`validate-community --html`) | ✓ v3.10.0 |
+| Doctor report completo + marketplace JSON (`doctor --marketplace-json`) | ✓ v3.10.0 |
+| Release CI strict fail Sparkle helper (`EXPANDO_SPARKLE_HELPER_STRICT`) | ✓ v3.10.0 |
 
 ### Gap noti oggi
 
@@ -303,10 +306,15 @@ flowchart LR
 2. `expando doctor --marketplace-json` (+ `-o`) export marketplace
 3. `benchmark --sparkle-fail-ms` + trend sparkline in `sparkle-benchmark-history`
 
-### Backlog (Sprint 19+)
-- Hub contributor: dashboard HTML suggerimenti trigger
-- Doctor: merge `--marketplace-json` nel report doctor completo
-- Benchmark: soglia fail che blocca release CI (opt-in strict)
+### Sprint 19 → v3.10.0 ✓
+1. `validate-community --html`: dashboard trigger community vs ufficiali
+2. `doctor --marketplace-json`: report testuale + JSON doctor+marketplace
+3. `EXPANDO_SPARKLE_HELPER_STRICT=1`: fail release CI su `SPARKLE_HELPER_FAIL`
+
+### Backlog (Sprint 20+)
+- Pubblicare dashboard trigger su GitHub Pages
+- Doctor: `--doctor-json` export strutturato completo
+- Benchmark: grafico SVG trend in artifact release
 
 ---
 

@@ -723,17 +723,27 @@ def hub_publish(
 
 @hub.command("validate-community")
 @click.option("--json", "as_json", is_flag=True, help="Print validation report as JSON")
-def hub_validate_community(as_json: bool) -> None:
+@click.option("--html", "as_html", is_flag=True, help="Write trigger suggestions HTML dashboard")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="HTML output path for --html (defaults to docs/hub-trigger-suggestions.html)",
+)
+def hub_validate_community(as_json: bool, as_html: bool, output: Path | None) -> None:
     """Validate all packages under packages/community (CI pre-submit gate)."""
     import json
 
     from .hub_marketplace import (
+        community_validation_document,
+        default_trigger_suggestions_html_path,
         find_community_official_trigger_collisions,
         find_community_official_trigger_similarities,
         find_cross_package_trigger_duplicates,
         format_community_validation_report,
         trigger_similarity_suggestion_to_dict,
         validate_community_hub_packages,
+        write_trigger_suggestions_html,
     )
 
     reports = validate_community_hub_packages()
@@ -745,28 +755,16 @@ def hub_validate_community(as_json: bool) -> None:
         and not trigger_duplicates
         and not official_collisions
     )
+    if as_html or output is not None:
+        destination = output or default_trigger_suggestions_html_path()
+        path = write_trigger_suggestions_html(destination)
+        click.echo(t("hub.validate.community.html_exported").format(path=path))
+        if not as_json:
+            if not validation_ok:
+                raise SystemExit(1)
+            return
     if as_json:
-        payload = {
-            "packages": [
-                {
-                    "package_id": report.package_id or name,
-                    "ok": report.ok,
-                    "match_count": report.match_count,
-                    "errors": report.errors,
-                    "warnings": report.warnings,
-                }
-                for name, report in reports
-            ],
-            "trigger_duplicates": trigger_duplicates,
-            "official_collisions": {
-                trigger: [{"community": c, "official": o} for c, o in pairs]
-                for trigger, pairs in official_collisions.items()
-            },
-            "trigger_suggestions": [
-                trigger_similarity_suggestion_to_dict(item) for item in trigger_suggestions
-            ],
-            "ok": validation_ok,
-        }
+        payload = community_validation_document()
         click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
         if not validation_ok:
             raise SystemExit(1)
@@ -1699,25 +1697,32 @@ def doctor(
     marketplace_output: Path | None,
 ) -> None:
     """Validate configuration, permissions, and daemon health."""
+    import json
+
+    config_dir: Path = ctx.obj["config_dir"]
+    report = run_doctor(config_dir)
+    text_report = format_doctor_report(report)
+
     if marketplace_json or marketplace_output is not None:
-        import json
+        from .doctor_checks import doctor_combined_document
 
-        from .hub_marketplace import doctor_marketplace_document
-
-        payload = doctor_marketplace_document()
-        text = json.dumps(payload, indent=2, ensure_ascii=False)
+        payload = doctor_combined_document(config_dir)
+        json_text = json.dumps(payload, indent=2, ensure_ascii=False)
         if marketplace_output is not None:
             marketplace_output = marketplace_output.expanduser().resolve()
             marketplace_output.parent.mkdir(parents=True, exist_ok=True)
-            marketplace_output.write_text(text + "\n", encoding="utf-8")
-            if not marketplace_json:
-                click.echo(t("doctor.marketplace.exported").format(path=marketplace_output))
+            marketplace_output.write_text(json_text + "\n", encoding="utf-8")
+            click.echo(t("doctor.marketplace.exported").format(path=marketplace_output))
+        click.echo(text_report)
         if marketplace_json:
-            click.echo(text)
+            click.echo("")
+            click.echo(t("doctor.marketplace.json_section"))
+            click.echo(json_text)
+        if not report.ok:
+            raise SystemExit(1)
         return
 
-    report = run_doctor(ctx.obj["config_dir"])
-    click.echo(format_doctor_report(report))
+    click.echo(text_report)
     if not report.ok:
         raise SystemExit(1)
 

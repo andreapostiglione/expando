@@ -3,7 +3,9 @@ from __future__ import annotations
 import re
 import subprocess
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -241,6 +243,48 @@ def format_doctor_report(report: DoctorReport) -> str:
         lines.extend(marketplace_lines)
 
     return "\n".join(lines)
+
+
+def doctor_report_to_dict(report: DoctorReport) -> dict[str, Any]:
+    permissions: dict[str, Any] | None = None
+    if report.permissions is not None:
+        permissions = {
+            "accessibility": report.permissions.accessibility,
+            "input_monitoring": report.permissions.input_monitoring,
+            "injection_ready": report.permissions.injection_ready,
+        }
+    runtime: dict[str, Any] | None = None
+    if report.runtime is not None:
+        runtime = {
+            "mode": report.runtime.mode,
+            "grant_label": report.runtime.grant_label,
+            "grant_hint": report.runtime.grant_hint,
+        }
+    return {
+        "ok": report.ok,
+        "config_dir": str(report.config_dir),
+        "running": report.running,
+        "pid": report.pid,
+        "process_count": report.process_count,
+        "match_count": report.match_count,
+        "duplicate_triggers": report.duplicate_triggers,
+        "config_errors": report.config_errors,
+        "warnings": report.warnings,
+        "permissions": permissions,
+        "runtime": runtime,
+    }
+
+
+def doctor_combined_document(config_dir: Path) -> dict[str, Any]:
+    from .hub_marketplace import doctor_marketplace_document
+
+    report = run_doctor(config_dir)
+    return {
+        "version": 1,
+        "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "doctor": doctor_report_to_dict(report),
+        "marketplace": doctor_marketplace_document(),
+    }
 
 
 def _fmt_bool(value: bool | None) -> str:

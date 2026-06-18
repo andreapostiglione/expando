@@ -258,8 +258,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "→ expando hub portal sync",
     },
     "doctor.marketplace.exported": {
-        "it": "Report marketplace esportato in {path}",
-        "en": "Marketplace report exported to {path}",
+        "it": "Report doctor+marketplace JSON esportato in {path}",
+        "en": "Doctor+marketplace JSON report exported to {path}",
+    },
+    "doctor.marketplace.json_section": {
+        "it": "--- Marketplace JSON ---",
+        "en": "--- Marketplace JSON ---",
     },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
@@ -534,6 +538,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.validate.community.similar.item": {
         "it": "  ! {community_trigger} ≈ {official_trigger} ({score}, {reason}) → community:{community} / official:{official}",
         "en": "  ! {community_trigger} ≈ {official_trigger} ({score}, {reason}) → community:{community} / official:{official}",
+    },
+    "hub.validate.community.html_exported": {
+        "it": "Dashboard trigger HTML scritta in {path}",
+        "en": "Trigger dashboard HTML written to {path}",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",

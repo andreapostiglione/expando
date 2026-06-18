@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.9.0 | **Release:** v3.9.0 (fuzzy trigger score, doctor marketplace JSON, sparkle fail + trend)
+**Versione:** 3.10.0 | **Release:** v3.10.0 (trigger HTML dashboard, doctor merge JSON, sparkle strict CI)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.10.0** ✓ Sprint 19
+  - Dashboard HTML trigger suggestions
+  - Doctor + marketplace JSON merge
+  - `EXPANDO_SPARKLE_HELPER_STRICT` CI
 - **v3.9.0** ✓ Sprint 18
   - Scoring fuzzy trigger (score/reason)
   - `doctor --marketplace-json`
@@ -53,8 +57,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 19)
+## Prossimi item (Sprint 20)
 
-- [ ] Dashboard HTML suggerimenti trigger
-- [ ] Doctor merge marketplace JSON nel report completo
-- [ ] Release CI strict fail su soglia helper
+- [ ] Dashboard trigger su GitHub Pages
+- [ ] `doctor --doctor-json`
+- [ ] Benchmark SVG trend in artifact

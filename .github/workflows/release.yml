@@ -107,6 +107,10 @@ jobs:
             echo "::warning title=Sparkle helper slow::Helper update check exceeded ${WARN_MS} ms (see sparkle-benchmark artifact)"
           fi
           if grep -Fq "SPARKLE_HELPER_FAIL" sparkle-benchmark.txt; then
+            if [[ "${EXPANDO_SPARKLE_HELPER_STRICT:-0}" == "1" ]]; then
+              echo "::error title=Sparkle helper fail::Helper update check exceeded ${FAIL_MS} ms (EXPANDO_SPARKLE_HELPER_STRICT=1)"
+              exit 1
+            fi
             echo "::warning title=Sparkle helper fail threshold::Helper update check exceeded ${FAIL_MS} ms (see sparkle-benchmark artifact)"
           fi
 

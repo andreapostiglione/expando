@@ -685,6 +685,265 @@ def format_community_validation_report(
     return "\n".join(lines), ok
 
 
+def community_validation_document(root: Path | None = None) -> dict[str, Any]:
+    reports = validate_community_hub_packages(root)
+    trigger_duplicates = find_cross_package_trigger_duplicates(root)
+    official_collisions = find_community_official_trigger_collisions(root)
+    trigger_suggestions = find_community_official_trigger_similarities(root)
+    validation_ok = (
+        all(report.ok for _, report in reports)
+        and not trigger_duplicates
+        and not official_collisions
+    )
+    return {
+        "version": 1,
+        "generated_at": _utc_now(),
+        "ok": validation_ok,
+        "packages": [
+            {
+                "package_id": report.package_id or name,
+                "ok": report.ok,
+                "match_count": report.match_count,
+                "errors": report.errors,
+                "warnings": report.warnings,
+            }
+            for name, report in reports
+        ],
+        "trigger_duplicates": trigger_duplicates,
+        "official_collisions": {
+            trigger: [{"community": c, "official": o} for c, o in pairs]
+            for trigger, pairs in official_collisions.items()
+        },
+        "trigger_suggestions": [
+            trigger_similarity_suggestion_to_dict(item) for item in trigger_suggestions
+        ],
+    }
+
+
+def default_trigger_suggestions_html_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "docs" / "hub-trigger-suggestions.html"
+
+
+def build_trigger_suggestions_html(document: dict[str, Any]) -> str:
+    generated_at = html.escape(str(document.get("generated_at", "")))
+    ok = bool(document.get("ok"))
+    status_label = "OK" if ok else "Issues found"
+    status_class = "ok" if ok else "fail"
+
+    packages = document.get("packages", [])
+    if not isinstance(packages, list):
+        packages = []
+    package_rows: list[str] = []
+    for item in packages:
+        if not isinstance(item, dict):
+            continue
+        package_id = html.escape(str(item.get("package_id", "")))
+        row_class = "ok" if item.get("ok") else "fail"
+        match_count = int(item.get("match_count", 0))
+        package_rows.append(
+            f'<tr class="{row_class}"><td><code>{package_id}</code></td>'
+            f"<td>{match_count}</td>"
+            f'<td>{"✓" if item.get("ok") else "✗"}</td></tr>'
+        )
+    packages_table = (
+        "\n".join(package_rows)
+        if package_rows
+        else '<tr><td colspan="3" class="empty">No community packages</td></tr>'
+    )
+
+    duplicates = document.get("trigger_duplicates", {})
+    duplicate_rows: list[str] = []
+    if isinstance(duplicates, dict):
+        for trigger, packages_list in sorted(duplicates.items()):
+            if not isinstance(packages_list, list):
+                continue
+            duplicate_rows.append(
+                "<tr>"
+                f"<td><code>{html.escape(str(trigger))}</code></td>"
+                f"<td>{html.escape(', '.join(str(item) for item in packages_list))}</td>"
+                "</tr>"
+            )
+    duplicates_table = (
+        "\n".join(duplicate_rows)
+        if duplicate_rows
+        else '<tr><td colspan="2" class="empty">No cross-package duplicates</td></tr>'
+    )
+
+    collisions = document.get("official_collisions", {})
+    collision_rows: list[str] = []
+    if isinstance(collisions, dict):
+        for trigger, pairs in sorted(collisions.items()):
+            if not isinstance(pairs, list):
+                continue
+            for pair in pairs:
+                if not isinstance(pair, dict):
+                    continue
+                collision_rows.append(
+                    "<tr>"
+                    f"<td><code>{html.escape(str(trigger))}</code></td>"
+                    f"<td><code>{html.escape(str(pair.get('community', '')))}</code></td>"
+                    f"<td><code>{html.escape(str(pair.get('official', '')))}</code></td>"
+                    "</tr>"
+                )
+    collisions_table = (
+        "\n".join(collision_rows)
+        if collision_rows
+        else '<tr><td colspan="3" class="empty">No official collisions</td></tr>'
+    )
+
+    suggestions = document.get("trigger_suggestions", [])
+    suggestion_rows: list[str] = []
+    if isinstance(suggestions, list):
+        for item in suggestions:
+            if not isinstance(item, dict):
+                continue
+            score = item.get("score", 0)
+            score_pct = f"{float(score) * 100:.0f}%" if isinstance(score, (int, float)) else ""
+            suggestion_rows.append(
+                "<tr>"
+                f"<td><code>{html.escape(str(item.get('community_trigger', '')))}</code></td>"
+                f"<td><code>{html.escape(str(item.get('official_trigger', '')))}</code></td>"
+                f"<td>{score_pct}</td>"
+                f"<td>{html.escape(str(item.get('reason', '')))}</td>"
+                f"<td><code>{html.escape(str(item.get('community_package', '')))}</code></td>"
+                f"<td><code>{html.escape(str(item.get('official_package', '')))}</code></td>"
+                "</tr>"
+            )
+    suggestions_table = (
+        "\n".join(suggestion_rows)
+        if suggestion_rows
+        else '<tr><td colspan="6" class="empty">No similarity warnings</td></tr>'
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expando Hub — Trigger Suggestions</title>
+  <meta name="description" content="Community package validation and trigger similarity dashboard." />
+  <style>
+    :root {{
+      --bg: #0b0d12;
+      --panel: #141820;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --accent: #4f8cff;
+      --border: #232a36;
+      --ok: #3ecf8e;
+      --fail: #ff6b6b;
+      --warn: #f5c542;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2240 0%, transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }}
+    a {{ color: var(--accent); text-decoration: none; }}
+    .wrap {{ max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; }}
+    h1, h2 {{ letter-spacing: -0.03em; }}
+    h2 {{ margin-top: 40px; font-size: 1.2rem; }}
+    .lead {{ color: var(--muted); max-width: 760px; }}
+    .meta {{ color: var(--muted); font-size: 0.9rem; margin: 12px 0 24px; }}
+    .badge {{
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }}
+    .badge.ok {{ color: var(--ok); border-color: rgba(62, 207, 142, 0.35); }}
+    .badge.fail {{ color: var(--fail); border-color: rgba(255, 107, 107, 0.35); }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 8px;
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.92rem;
+    }}
+    th, td {{ padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }}
+    th {{ color: var(--muted); font-weight: 600; background: var(--panel); }}
+    tr.ok td:last-child {{ color: var(--ok); }}
+    tr.fail td:last-child {{ color: var(--fail); }}
+    td.empty {{ color: var(--muted); text-align: center; }}
+    code {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88rem;
+    }}
+    pre {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      font-size: 0.88rem;
+    }}
+    footer {{ margin-top: 48px; color: var(--muted); font-size: 0.9rem; }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="hub-marketplace.html">← Hub Marketplace</a></p>
+    <h1>Community Trigger Dashboard</h1>
+    <p class="lead">Validation status for <code>packages/community/</code> plus fuzzy similarity warnings against official hub triggers.</p>
+    <p class="meta">Generated {generated_at} · <span class="badge {status_class}">{status_label}</span></p>
+
+    <h2>Packages</h2>
+    <table>
+      <thead><tr><th>Package</th><th>Snippets</th><th>Status</th></tr></thead>
+      <tbody>{packages_table}</tbody>
+    </table>
+
+    <h2>Cross-package duplicates (fail CI)</h2>
+    <table>
+      <thead><tr><th>Trigger</th><th>Packages</th></tr></thead>
+      <tbody>{duplicates_table}</tbody>
+    </table>
+
+    <h2>Official collisions (fail CI)</h2>
+    <table>
+      <thead><tr><th>Trigger</th><th>Community</th><th>Official</th></tr></thead>
+      <tbody>{collisions_table}</tbody>
+    </table>
+
+    <h2>Similarity suggestions (warning only)</h2>
+    <table>
+      <thead><tr><th>Community</th><th>Official</th><th>Score</th><th>Reason</th><th>Community pkg</th><th>Official pkg</th></tr></thead>
+      <tbody>{suggestions_table}</tbody>
+    </table>
+
+    <h2>Regenerate</h2>
+    <pre>expando hub validate-community --html
+expando hub validate-community --html -o docs/hub-trigger-suggestions.html</pre>
+
+    <footer>
+      <a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs</a>
+    </footer>
+  </div>
+</body>
+</html>
+"""
+
+
+def write_trigger_suggestions_html(destination: Path, root: Path | None = None) -> Path:
+    destination = destination.expanduser().resolve()
+    document = community_validation_document(root)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(build_trigger_suggestions_html(document), encoding="utf-8")
+    return destination
+
+
 def marketplace_pending_metadata_diffs() -> list[PendingMetadataDiff]:
     if not marketplace_index_url():
         return []

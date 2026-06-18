@@ -25,6 +25,7 @@ Recent releases focused on the **hub marketplace**, **release quality**, and **d
 
 | Version | Highlights |
 |---------|------------|
+| **v3.10** | Trigger suggestions HTML dashboard · doctor text + marketplace JSON · `EXPANDO_SPARKLE_HELPER_STRICT` release CI |
 | **v3.9** | Fuzzy trigger score/reason in `validate-community` · `doctor --marketplace-json` · `--sparkle-fail-ms` + sparkline trend |
 | **v3.8** | Trigger similarity warnings in `validate-community` · `hub portal pending-diff` JSON export · `sparkle-benchmark-history` release artifact |
 | **v3.7** | Community vs official trigger lint · doctor pending metadata diff · `SPARKLE_HELPER_SLOW` warning in release CI (15s threshold) |
@@ -208,6 +209,7 @@ Each `migrate-*` command creates a config backup and prints a report (imported, 
 | `expando hub install <id>` | Install a hub package into your config |
 | `expando hub publish ./pkg` | Validate, bundle, optionally register a local package |
 | `expando hub validate-community` | Validate `packages/community/` (CI pre-submit gate) |
+| `expando hub validate-community --html` | Write trigger similarity dashboard HTML |
 | `expando hub submit init <id>` | Scaffold `hub.json` + `snippets.yml` for a new package |
 | `expando hub submit run ./pkg` | Validate, zip, print GitHub issue instructions |
 | `expando hub submit status <id>` | Marketplace review status for a submission |

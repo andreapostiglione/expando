@@ -91,6 +91,15 @@ expando hub install writing-it
 
 `portal sync` merges the remote index into the local queue file (`packages/hub/marketplace.json` or `EXPANDO_HUB_MARKETPLACE_PATH`).
 
+## CI validation (maintainers)
+
+Community packages under `packages/community/` are validated on every CI run:
+
+```bash
+expando hub validate-community
+expando hub validate-community --json
+```
+
 ## Official index (maintainers)
 
 ```bash

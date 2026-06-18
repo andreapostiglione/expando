@@ -721,6 +721,37 @@ def hub_publish(
         click.echo(t("cli.hub.publish.registered"))
 
 
+@hub.command("validate-community")
+@click.option("--json", "as_json", is_flag=True, help="Print validation report as JSON")
+def hub_validate_community(as_json: bool) -> None:
+    """Validate all packages under packages/community (CI pre-submit gate)."""
+    import json
+
+    from .hub_marketplace import format_community_validation_report, validate_community_hub_packages
+
+    reports = validate_community_hub_packages()
+    if as_json:
+        payload = [
+            {
+                "package_id": report.package_id or name,
+                "ok": report.ok,
+                "match_count": report.match_count,
+                "errors": report.errors,
+                "warnings": report.warnings,
+            }
+            for name, report in reports
+        ]
+        click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
+        if not all(report.ok for _, report in reports):
+            raise SystemExit(1)
+        return
+
+    text, ok = format_community_validation_report(reports)
+    click.echo(text)
+    if not ok:
+        raise SystemExit(1)
+
+
 @hub.group("submit", invoke_without_command=True)
 @click.option(
     "-o",

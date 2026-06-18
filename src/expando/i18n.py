@@ -217,6 +217,22 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "  → expando hub install <id>",
         "en": "  → expando hub install <id>",
     },
+    "doctor.marketplace.sync": {
+        "it": "  Sync remoto → locale (dry-run):",
+        "en": "  Remote → local sync (dry-run):",
+    },
+    "doctor.marketplace.sync_counts": {
+        "it": "    locale: {local_total} voci, {local_approved} approvati · remoto: {remote_approved} approvati",
+        "en": "    local: {local_total} entries, {local_approved} approved · remote: {remote_approved} approved",
+    },
+    "doctor.marketplace.sync_stats": {
+        "it": "    merge: aggiunti={added}, aggiornati={updated}, invariati={unchanged}",
+        "en": "    merge: added={added}, updated={updated}, unchanged={unchanged}",
+    },
+    "doctor.marketplace.sync_hint": {
+        "it": "→ expando hub portal sync",
+        "en": "→ expando hub portal sync",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
@@ -293,6 +309,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "benchmark.sparkle.helper": {"it": "Helper", "en": "Helper"},
     "benchmark.sparkle.framework": {"it": "Sparkle.framework", "en": "Sparkle.framework"},
     "benchmark.sparkle.appcast_fetch": {"it": "Fetch appcast", "en": "Appcast fetch"},
+    "benchmark.sparkle.helper_check": {
+        "it": "Helper update check",
+        "en": "Helper update check",
+    },
     "benchmark.sparkle.entries": {"it": "release", "en": "releases"},
     "benchmark.sparkle.versions": {"it": "Versioni", "en": "Versions"},
     "benchmark.sparkle.none": {"it": "n/d", "en": "n/a"},
@@ -438,6 +458,22 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.submit.init.next": {
         "it": "Modifica hub.json e snippets.yml, poi: expando hub submit run {path}",
         "en": "Edit hub.json and snippets.yml, then: expando hub submit run {path}",
+    },
+    "hub.validate.community.header": {
+        "it": "Validazione package community ({count}):",
+        "en": "Community package validation ({count}):",
+    },
+    "hub.validate.community.ok": {
+        "it": "  ✓ {package_id} ({matches} snippet)",
+        "en": "  ✓ {package_id} ({matches} snippet(s))",
+    },
+    "hub.validate.community.fail": {
+        "it": "  ✗ {package_id}",
+        "en": "  ✗ {package_id}",
+    },
+    "hub.validate.community.empty": {
+        "it": "Nessun package community da validare.",
+        "en": "No community packages to validate.",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",

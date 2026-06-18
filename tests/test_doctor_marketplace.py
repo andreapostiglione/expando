@@ -56,3 +56,27 @@ def test_doctor_marketplace_empty_community():
 
     text = "\n".join(lines)
     assert "community" in text.lower() or "nessun package" in text.lower()
+
+
+def test_doctor_marketplace_includes_sync_preview():
+    official = [_package("dev", "Dev")]
+    community = [_package("typing-it", "Typing IT")]
+
+    with patch("expando.hub_marketplace.marketplace_index_url", return_value="https://example.com/hub.json"), patch(
+        "expando.hub_marketplace.fetch_marketplace_packages",
+        return_value=official + community,
+    ), patch("expando.hub.fetch_registry", return_value=official), patch(
+        "expando.hub_marketplace.marketplace_sync_preview",
+        return_value={
+            "sync": {"added": 1, "updated": 0, "unchanged": 2},
+            "local_total": 3,
+            "local_approved": 2,
+            "remote_approved": 3,
+        },
+    ):
+        lines = doctor_marketplace_lines(limit=5)
+
+    text = "\n".join(lines)
+    assert "sync" in text.lower() or "merge" in text.lower()
+    assert "aggiunti=1" in text or "added=1" in text
+    assert "hub portal sync" in text

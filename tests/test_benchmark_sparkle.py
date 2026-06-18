@@ -16,7 +16,10 @@ def test_run_sparkle_update_benchmark_parses_appcast():
     with patch("expando.sparkle_native.sparkle_available", return_value=False), patch(
         "expando.sparkle_native.resolve_distribution_app_bundle",
         return_value=None,
-    ), patch("expando.updater.fetch_appcast", return_value="<rss></rss>"), patch(
+    ), patch("expando.sparkle_native.measure_sparkle_helper_check_ms", return_value=None), patch(
+        "expando.updater.fetch_appcast",
+        return_value="<rss></rss>",
+    ), patch(
         "expando.updater.parse_appcast",
         return_value=updates,
     ):
@@ -25,5 +28,27 @@ def test_run_sparkle_update_benchmark_parses_appcast():
     assert result.appcast_entries == 2
     assert result.latest_version == "9.9.9"
     assert result.update_available is True
+    assert result.helper_check_ms is None
     text = format_sparkle_benchmark_report(result)
     assert "Sparkle" in text or "appcast" in text
+    assert "Helper update check" in text or "Helper" in text
+
+
+def test_run_sparkle_update_benchmark_reports_helper_latency():
+    updates = [UpdateInfo(version="3.0.0", download_url="https://example.com/Expando.dmg")]
+
+    with patch("expando.sparkle_native.sparkle_available", return_value=True), patch(
+        "expando.sparkle_native.resolve_distribution_app_bundle",
+        return_value=None,
+    ), patch(
+        "expando.sparkle_native.measure_sparkle_helper_check_ms",
+        return_value=42.5,
+    ), patch("expando.updater.fetch_appcast", return_value="<rss></rss>"), patch(
+        "expando.updater.parse_appcast",
+        return_value=updates,
+    ):
+        result = run_sparkle_update_benchmark()
+
+    assert result.helper_check_ms == 42.5
+    text = format_sparkle_benchmark_report(result)
+    assert "42.50 ms" in text

@@ -164,6 +164,7 @@ class SparkleBenchmarkResult:
     helper_path: str | None
     framework_present: bool
     appcast_fetch_ms: float
+    helper_check_ms: float | None
     appcast_entries: int
     latest_version: str | None
     current_version: str
@@ -172,6 +173,7 @@ class SparkleBenchmarkResult:
 
 def run_sparkle_update_benchmark(*, feed_url: str | None = None) -> SparkleBenchmarkResult:
     from .sparkle_native import (
+        measure_sparkle_helper_check_ms,
         resolve_distribution_app_bundle,
         sparkle_available,
         sparkle_framework_path,
@@ -204,12 +206,17 @@ def run_sparkle_update_benchmark(*, feed_url: str | None = None) -> SparkleBench
     except Exception:
         fetch_ms = fetch_ms or 0.0
 
+    helper_check_ms: float | None = None
+    if sparkle_available():
+        helper_check_ms = measure_sparkle_helper_check_ms()
+
     return SparkleBenchmarkResult(
         sparkle_available=sparkle_available(),
         app_bundle=str(bundle) if bundle is not None else None,
         helper_path=str(helper) if helper is not None else None,
         framework_present=framework_present,
         appcast_fetch_ms=fetch_ms,
+        helper_check_ms=helper_check_ms,
         appcast_entries=entries,
         latest_version=latest_version,
         current_version=current,
@@ -234,6 +241,14 @@ def format_sparkle_benchmark_report(result: SparkleBenchmarkResult) -> str:
         f"{t('benchmark.sparkle.appcast_fetch')}: {result.appcast_fetch_ms:.2f} ms "
         f"({result.appcast_entries} {t('benchmark.sparkle.entries')})"
     )
+    if result.helper_check_ms is not None:
+        lines.append(
+            f"{t('benchmark.sparkle.helper_check')}: {result.helper_check_ms:.2f} ms"
+        )
+    else:
+        lines.append(
+            f"{t('benchmark.sparkle.helper_check')}: {t('benchmark.sparkle.none')}"
+        )
     lines.append(
         f"{t('benchmark.sparkle.versions')}: "
         f"{result.current_version} → {result.latest_version or t('benchmark.sparkle.none')}"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -179,6 +180,111 @@ def sparkle_benchmark_history_to_dict(
         "stats": stats,
         "entries": recent,
     }
+
+
+def default_trend_svg_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "sparkle-benchmark-trend.svg"
+
+
+def sparkle_benchmark_trend_svg(
+    entries: list[dict[str, Any]],
+    *,
+    width: int = 480,
+    height: int = 160,
+    padding: int = 28,
+) -> str:
+    values = [
+        (index, value)
+        for index, value in enumerate(
+            (_helper_check_ms_from_entry(item) for item in entries)
+        )
+        if value is not None
+    ]
+    if not values:
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}">'
+            f'<text x="{width // 2}" y="{height // 2}" text-anchor="middle" '
+            f'fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="12">'
+            "No benchmark data</text></svg>"
+        )
+
+    plot_width = max(1, width - padding * 2)
+    plot_height = max(1, height - padding * 2)
+    latencies = [value for _, value in values]
+    minimum = min(latencies)
+    maximum = max(latencies)
+    span = maximum - minimum or 1.0
+    last = entries[-1] if entries else {}
+    warn_ms = last.get("warn_ms") if isinstance(last.get("warn_ms"), (int, float)) else None
+    fail_ms = last.get("fail_ms") if isinstance(last.get("fail_ms"), (int, float)) else None
+
+    def y_for(value: float) -> float:
+        ratio = (value - minimum) / span
+        return padding + plot_height - ratio * plot_height
+
+    def x_for(position: int) -> float:
+        if len(values) == 1:
+            return padding + plot_width / 2
+        return padding + (position / (len(values) - 1)) * plot_width
+
+    points = " ".join(
+        f"{x_for(position):.1f},{y_for(value):.1f}"
+        for position, (_, value) in enumerate(values)
+    )
+    labels = [
+        f'<text x="{x_for(position):.1f}" y="{height - 6}" text-anchor="middle" '
+        f'fill="#9aa3b2" font-family="ui-monospace,Menlo,monospace" font-size="9">'
+        f"{html.escape(str(entries[entry_index].get('version', entry_index + 1)))}</text>"
+        for position, (entry_index, _) in enumerate(values)
+        if entry_index < len(entries)
+    ]
+    threshold_lines: list[str] = []
+    for ms, color, label in (
+        (warn_ms, "#f5c542", "warn"),
+        (fail_ms, "#ff6b6b", "fail"),
+    ):
+        if not isinstance(ms, (int, float)):
+            continue
+        y = y_for(float(ms))
+        if padding <= y <= padding + plot_height:
+            threshold_lines.append(
+                f'<line x1="{padding}" y1="{y:.1f}" x2="{width - padding}" y2="{y:.1f}" '
+                f'stroke="{color}" stroke-width="1" stroke-dasharray="4 3" opacity="0.8"/>'
+            )
+            threshold_lines.append(
+                f'<text x="{width - padding + 2}" y="{y + 4:.1f}" fill="{color}" '
+                f'font-family="system-ui,sans-serif" font-size="9">{label} {ms:.0f}ms</text>'
+            )
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="Sparkle helper latency trend">
+  <rect width="{width}" height="{height}" fill="#0b0d12" rx="8"/>
+  <line x1="{padding}" y1="{padding + plot_height}" x2="{width - padding}" y2="{padding + plot_height}" stroke="#232a36"/>
+  <line x1="{padding}" y1="{padding}" x2="{padding}" y2="{padding + plot_height}" stroke="#232a36"/>
+  <text x="{padding}" y="{padding - 8}" fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="10">helper_check_ms ({minimum:.0f}–{maximum:.0f})</text>
+  {''.join(threshold_lines)}
+  <polyline fill="none" stroke="#4f8cff" stroke-width="2" points="{points}"/>
+  {''.join(f'<circle cx="{x_for(position):.1f}" cy="{y_for(value):.1f}" r="3" fill="#7c5cff"/>' for position, (_, value) in enumerate(values))}
+  {''.join(labels)}
+</svg>"""
+
+
+def write_sparkle_benchmark_trend_svg(
+    path: Path | None = None,
+    *,
+    history_path: Path | None = None,
+) -> Path:
+    destination = (path or default_trend_svg_path()).expanduser().resolve()
+    entries = load_sparkle_benchmark_history(history_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        sparkle_benchmark_trend_svg(entries) + "\n",
+        encoding="utf-8",
+    )
+    return destination
 
 
 def format_sparkle_benchmark_history_report(

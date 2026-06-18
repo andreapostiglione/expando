@@ -102,7 +102,8 @@ jobs:
             --version "$TAG" \
             --tag "${GITHUB_REF_NAME}" \
             --sparkle-warn-ms "$WARN_MS" \
-            --sparkle-fail-ms "$FAIL_MS" | tee sparkle-benchmark.txt
+            --sparkle-fail-ms "$FAIL_MS" \
+            --svg | tee sparkle-benchmark.txt
           if grep -Fq "SPARKLE_HELPER_SLOW" sparkle-benchmark.txt; then
             echo "::warning title=Sparkle helper slow::Helper update check exceeded ${WARN_MS} ms (see sparkle-benchmark artifact)"
           fi
@@ -122,6 +123,7 @@ jobs:
           path: |
             sparkle-benchmark.txt
             sparkle-benchmark-history.json
+            sparkle-benchmark-trend.svg
           if-no-files-found: ignore
 
       - name: Update Sparkle benchmark history on main

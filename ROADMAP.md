@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.10.0
+**Versione attuale:** v3.11.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.10.0)
+## Stato attuale (baseline v3.11.0)
 
 | Area | Stato |
 |------|--------|
@@ -76,6 +76,9 @@
 | Dashboard HTML suggerimenti trigger (`validate-community --html`) | ✓ v3.10.0 |
 | Doctor report completo + marketplace JSON (`doctor --marketplace-json`) | ✓ v3.10.0 |
 | Release CI strict fail Sparkle helper (`EXPANDO_SPARKLE_HELPER_STRICT`) | ✓ v3.10.0 |
+| Dashboard trigger su GitHub Pages (`publish-site` + link) | ✓ v3.11.0 |
+| `expando doctor --doctor-json` export strutturato | ✓ v3.11.0 |
+| Benchmark SVG trend in artifact release (`--svg`) | ✓ v3.11.0 |
 
 ### Gap noti oggi
 
@@ -311,10 +314,13 @@ flowchart LR
 2. `doctor --marketplace-json`: report testuale + JSON doctor+marketplace
 3. `EXPANDO_SPARKLE_HELPER_STRICT=1`: fail release CI su `SPARKLE_HELPER_FAIL`
 
-### Backlog (Sprint 20+)
-- Pubblicare dashboard trigger su GitHub Pages
-- Doctor: `--doctor-json` export strutturato completo
-- Benchmark: grafico SVG trend in artifact release
+### Sprint 20 → v3.11.0 ✓
+1. `hub portal publish-site`: include `docs/hub-trigger-suggestions.html` + link da marketplace/home
+2. `expando doctor --doctor-json` (+ `--doctor-output`) export doctor strutturato
+3. `sparkle-benchmark-history record --svg`: grafico trend SVG in artifact release
+
+### Backlog (Sprint 21+)
+- TBD
 
 ---
 

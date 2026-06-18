@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.10.0 | **Release:** v3.10.0 (trigger HTML dashboard, doctor merge JSON, sparkle strict CI)
+**Versione:** 3.11.0 | **Release:** v3.11.0 (trigger dashboard Pages, doctor JSON, sparkle SVG trend)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.11.0** ✓ Sprint 20
+  - Trigger dashboard su GitHub Pages (`publish-site`)
+  - `doctor --doctor-json`
+  - Sparkle benchmark SVG trend (`--svg`)
 - **v3.10.0** ✓ Sprint 19
   - Dashboard HTML trigger suggestions
   - Doctor + marketplace JSON merge
@@ -57,8 +61,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 20)
+## Prossimi item (Sprint 21)
 
-- [ ] Dashboard trigger su GitHub Pages
-- [ ] `doctor --doctor-json`
-- [ ] Benchmark SVG trend in artifact
+- [ ] TBD — vedi ROADMAP.md

@@ -1132,6 +1132,7 @@ def hub_portal_publish_site(html_path: Path | None, json_path: Path | None) -> N
         t("hub.portal.published").format(
             html=paths["html"],
             json=paths["json"],
+            suggestions=paths["suggestions_html"],
             count=len(payload.get("packages", [])),
         )
     )
@@ -1595,6 +1596,17 @@ def sparkle_benchmark_history_group(
     type=click.Path(path_type=Path),
     help="Sparkle benchmark history file (defaults to repo sparkle-benchmark-history.json)",
 )
+@click.option(
+    "--svg",
+    is_flag=True,
+    help="Write latency trend SVG (sparkle-benchmark-trend.svg)",
+)
+@click.option(
+    "--svg-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override SVG output path (implies --svg)",
+)
 def sparkle_benchmark_history_record(
     version: str,
     tag: str | None,
@@ -1602,6 +1614,8 @@ def sparkle_benchmark_history_record(
     sparkle_fail_ms: int | None,
     feed_url: str | None,
     history_path: Path | None,
+    svg: bool,
+    svg_path: Path | None,
 ) -> None:
     """Run Sparkle benchmark and append result to release history."""
     from .benchmark import (
@@ -1610,7 +1624,12 @@ def sparkle_benchmark_history_record(
         resolve_sparkle_helper_warn_ms,
         run_sparkle_update_benchmark,
     )
-    from .sparkle_benchmark_history import default_history_path, record_sparkle_benchmark
+    from .sparkle_benchmark_history import (
+        default_history_path,
+        default_trend_svg_path,
+        record_sparkle_benchmark,
+        write_sparkle_benchmark_trend_svg,
+    )
 
     warn_ms = sparkle_warn_ms
     if warn_ms is None:
@@ -1635,6 +1654,12 @@ def sparkle_benchmark_history_record(
             recorded_at=entry.get("recorded_at", "?"),
         )
     )
+    if svg or svg_path is not None:
+        svg_destination = write_sparkle_benchmark_trend_svg(
+            svg_path or default_trend_svg_path(),
+            history_path=path,
+        )
+        click.echo(t("sparkle.benchmark.history.svg_written").format(path=svg_destination))
 
 
 @main.command("notarize-history")
@@ -1680,6 +1705,16 @@ def notarize_history_cmd(
 
 @main.command()
 @click.option(
+    "--doctor-json",
+    is_flag=True,
+    help="Export full doctor diagnostics as structured JSON",
+)
+@click.option(
+    "--doctor-output",
+    type=click.Path(path_type=Path),
+    help="Write doctor JSON report to this path",
+)
+@click.option(
     "--marketplace-json",
     is_flag=True,
     help="Export marketplace health (remote stats, sync preview, pending diff) as JSON",
@@ -1693,6 +1728,8 @@ def notarize_history_cmd(
 @click.pass_context
 def doctor(
     ctx: click.Context,
+    doctor_json: bool,
+    doctor_output: Path | None,
     marketplace_json: bool,
     marketplace_output: Path | None,
 ) -> None:
@@ -1717,6 +1754,25 @@ def doctor(
         if marketplace_json:
             click.echo("")
             click.echo(t("doctor.marketplace.json_section"))
+            click.echo(json_text)
+        if not report.ok:
+            raise SystemExit(1)
+        return
+
+    if doctor_json or doctor_output is not None:
+        from .doctor_checks import doctor_document
+
+        payload = doctor_document(config_dir)
+        json_text = json.dumps(payload, indent=2, ensure_ascii=False)
+        if doctor_output is not None:
+            doctor_output = doctor_output.expanduser().resolve()
+            doctor_output.parent.mkdir(parents=True, exist_ok=True)
+            doctor_output.write_text(json_text + "\n", encoding="utf-8")
+            click.echo(t("doctor.json.exported").format(path=doctor_output))
+        click.echo(text_report)
+        if doctor_json:
+            click.echo("")
+            click.echo(t("doctor.json.section"))
             click.echo(json_text)
         if not report.ok:
             raise SystemExit(1)

@@ -11,6 +11,8 @@ from expando.sparkle_benchmark_history import (
     record_sparkle_benchmark,
     sparkle_benchmark_history_to_dict,
     sparkle_benchmark_sparkline,
+    sparkle_benchmark_trend_svg,
+    write_sparkle_benchmark_trend_svg,
 )
 
 
@@ -106,3 +108,40 @@ def test_sparkle_benchmark_sparkline_and_report_trend(tmp_path: Path):
     report = format_sparkle_benchmark_history_report(history_path, limit=5)
     assert sparkline in report
     assert "min=" in report
+
+
+def test_sparkle_benchmark_trend_svg_includes_points_and_labels():
+    entries = [
+        {
+            "version": "3.9.0",
+            "warn_ms": 15000,
+            "fail_ms": 30000,
+            "benchmark": {"helper_check_ms": 1200.0},
+        },
+        {
+            "version": "3.10.0",
+            "warn_ms": 15000,
+            "fail_ms": 30000,
+            "benchmark": {"helper_check_ms": 2400.0},
+        },
+    ]
+    svg = sparkle_benchmark_trend_svg(entries)
+    assert "<svg" in svg
+    assert "polyline" in svg
+    assert "3.9.0" in svg
+    assert "3.10.0" in svg
+
+
+def test_write_sparkle_benchmark_trend_svg(tmp_path: Path):
+    history_path = tmp_path / "sparkle-benchmark-history.json"
+    record_sparkle_benchmark(
+        _sample_result(helper_ms=1500.0),
+        history_path,
+        version="3.11.0",
+        warn_ms=15000,
+    )
+    svg_path = tmp_path / "trend.svg"
+    written = write_sparkle_benchmark_trend_svg(svg_path, history_path=history_path)
+    assert written == svg_path
+    content = svg_path.read_text(encoding="utf-8")
+    assert "3.11.0" in content

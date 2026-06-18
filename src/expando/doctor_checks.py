@@ -275,16 +275,21 @@ def doctor_report_to_dict(report: DoctorReport) -> dict[str, Any]:
     }
 
 
-def doctor_combined_document(config_dir: Path) -> dict[str, Any]:
-    from .hub_marketplace import doctor_marketplace_document
-
+def doctor_document(config_dir: Path) -> dict[str, Any]:
     report = run_doctor(config_dir)
     return {
         "version": 1,
         "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "doctor": doctor_report_to_dict(report),
-        "marketplace": doctor_marketplace_document(),
     }
+
+
+def doctor_combined_document(config_dir: Path) -> dict[str, Any]:
+    from .hub_marketplace import doctor_marketplace_document
+
+    payload = doctor_document(config_dir)
+    payload["marketplace"] = doctor_marketplace_document()
+    return payload
 
 
 def _fmt_bool(value: bool | None) -> str:

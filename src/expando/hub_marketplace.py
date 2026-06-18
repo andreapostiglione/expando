@@ -1655,11 +1655,15 @@ def build_portal_site_html(payload: dict[str, Any]) -> str:
     <p><a href="index.html">← Expando home</a></p>
     <h1>Hub Marketplace</h1>
     <p class="lead">Approved community snippet packages for <code>expando hub install</code>.</p>
-    <p class="meta">Updated {updated_at} · <a href="hub/marketplace.json">marketplace.json</a></p>
+    <p class="meta">Updated {updated_at} · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
 
     <div class="grid">
       {packages_html}
     </div>
+
+    <h2>Community validation</h2>
+    <p class="lead">Fuzzy trigger similarity warnings, cross-package duplicates, and official collision checks for <code>packages/community/</code>.</p>
+    <p><a href="hub-trigger-suggestions.html">Open trigger dashboard →</a></p>
 
     <h2>Submit a package</h2>
     <pre>expando hub submit ./my-package
@@ -1680,10 +1684,14 @@ def publish_portal_site(
     *,
     html_path: Path | None = None,
     json_path: Path | None = None,
+    suggestions_html_path: Path | None = None,
 ) -> dict[str, Path]:
     default_html, default_json = default_portal_site_paths()
     html_destination = (html_path or default_html).expanduser().resolve()
     json_destination = (json_path or default_json).expanduser().resolve()
+    suggestions_destination = (
+        suggestions_html_path or default_trigger_suggestions_html_path()
+    ).expanduser().resolve()
     payload = build_publishable_portal_index()
     json_destination.parent.mkdir(parents=True, exist_ok=True)
     json_destination.write_text(
@@ -1692,7 +1700,12 @@ def publish_portal_site(
     )
     html_destination.parent.mkdir(parents=True, exist_ok=True)
     html_destination.write_text(build_portal_site_html(payload), encoding="utf-8")
-    return {"html": html_destination, "json": json_destination}
+    write_trigger_suggestions_html(suggestions_destination)
+    return {
+        "html": html_destination,
+        "json": json_destination,
+        "suggestions_html": suggestions_destination,
+    }
 
 
 def format_portal_status_report(stats: dict[str, Any]) -> str:

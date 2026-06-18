@@ -144,6 +144,7 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     assert paths["json"] == json_path
     assert "suggestions_html" in paths
     assert "maintainer_html" in paths
+    assert "validation_json" in paths
     html = html_path.read_text(encoding="utf-8")
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     suggestions = paths["suggestions_html"].read_text(encoding="utf-8")
@@ -157,13 +158,27 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     maintainer = paths["maintainer_html"].read_text(encoding="utf-8")
     assert "Maintainer Portal" in maintainer
     assert "hub-marketplace.html" in maintainer
+    validation = json.loads(paths["validation_json"].read_text(encoding="utf-8"))
+    assert "packages" in validation
+    assert "trigger_suggestions" in validation
 
 
 def test_build_maintainer_hub_html_links_portal_pages():
-    html = build_maintainer_hub_html(updated_at="2026-06-18T10:00:00+00:00")
+    html = build_maintainer_hub_html(
+        updated_at="2026-06-18T10:00:00+00:00",
+        validation={
+            "ok": True,
+            "packages": [{"package_id": "typing-it", "ok": True}],
+            "trigger_suggestions": [{"community_trigger": ":x", "official_trigger": ":y"}],
+            "trigger_duplicates": {},
+            "official_collisions": {},
+        },
+    )
     assert "Maintainer Portal" in html
     assert "hub-marketplace.html" in html
     assert "hub-trigger-suggestions.html" in html
+    assert "community-validation.json" in html
+    assert "similarity warnings=1" in html
     assert "publish-site" in html
 
 

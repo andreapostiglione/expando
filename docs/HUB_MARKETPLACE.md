@@ -71,7 +71,7 @@ expando hub portal sync --dry-run
 expando hub portal sync
 ```
 
-`publish-site` writes `docs/hub-marketplace.html`, `docs/hub/marketplace.json`, `docs/hub-trigger-suggestions.html`, and `docs/hub-maintainer.html` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`). The marketplace page links to the maintainer portal and trigger dashboard.
+`publish-site` writes `docs/hub-marketplace.html`, `docs/hub/marketplace.json`, `docs/hub-trigger-suggestions.html`, `docs/hub-maintainer.html`, and `docs/hub/community-validation.json` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`). The marketplace page links to the maintainer portal and trigger dashboard.
 
 ## Community packages (approved)
 

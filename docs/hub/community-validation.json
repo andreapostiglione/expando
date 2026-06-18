@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "generated_at": "2026-06-18T10:53:17+00:00",
+  "ok": true,
+  "packages": [
+    {
+      "package_id": "meeting-it",
+      "ok": true,
+      "match_count": 3,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "typing-it",
+      "ok": true,
+      "match_count": 4,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "writing-it",
+      "ok": true,
+      "match_count": 3,
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "trigger_duplicates": {},
+  "official_collisions": {},
+  "trigger_suggestions": [
+    {
+      "community_trigger": ":follow",
+      "official_trigger": ":followup",
+      "community_package": "meeting-it",
+      "official_package": "email-it",
+      "score": 0.94,
+      "reason": "prefix"
+    },
+    {
+      "community_trigger": ":follow",
+      "official_trigger": ":followup",
+      "community_package": "meeting-it",
+      "official_package": "sales-it",
+      "score": 0.94,
+      "reason": "prefix"
+    }
+  ]
+}

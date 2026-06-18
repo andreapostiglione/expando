@@ -52,6 +52,16 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.9rem;
     }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .badge.ok { color: #3ecf8e; border-color: rgba(62, 207, 142, 0.35); }
+    .badge.fail { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.35); }
     footer { margin-top: 56px; color: var(--muted); font-size: 0.9rem; }
   </style>
 </head>
@@ -60,7 +70,7 @@
     <p><a href="index.html">← Expando home</a></p>
     <h1>Maintainer Portal</h1>
     <p class="lead">Tools for reviewing community packages, publishing the hub index, and monitoring release health.</p>
-    <p class="meta">Updated 2026-06-18T10:42:09+00:00</p>
+    <p class="meta">Updated 2026-06-18T10:53:17+00:00 · Community validation <span class="badge ok">OK</span> · packages=3 · similarity warnings=2</p>
 
     <div class="grid">
       <div class="card">
@@ -71,6 +81,7 @@
       <div class="card">
         <h3>Trigger Dashboard</h3>
         <p>Community validation, duplicate lint, and fuzzy similarity warnings.</p>
+        <p>Duplicates: 0 · official collisions: 0</p>
         <p><a href="hub-trigger-suggestions.html">Open trigger dashboard →</a></p>
       </div>
       <div class="card">
@@ -91,6 +102,7 @@ expando doctor --full-html</pre>
 
     <footer>
       <a href="hub/marketplace.json">marketplace.json</a>
+      · <a href="hub/community-validation.json">community-validation.json</a>
       · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit package</a>
     </footer>
   </div>

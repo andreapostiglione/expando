@@ -1134,6 +1134,7 @@ def hub_portal_publish_site(html_path: Path | None, json_path: Path | None) -> N
             json=paths["json"],
             suggestions=paths["suggestions_html"],
             maintainer=paths["maintainer_html"],
+            validation=paths["validation_json"],
             count=len(payload.get("packages", [])),
         )
     )

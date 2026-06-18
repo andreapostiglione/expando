@@ -1687,9 +1687,45 @@ def default_maintainer_hub_html_path(root: Path | None = None) -> Path:
     return base / "docs" / "hub-maintainer.html"
 
 
-def build_maintainer_hub_html(*, updated_at: str | None = None) -> str:
+def default_community_validation_json_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "docs" / "hub" / "community-validation.json"
+
+
+def export_community_validation_json(destination: Path, root: Path | None = None) -> Path:
+    destination = destination.expanduser().resolve()
+    document = community_validation_document(root)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return destination
+
+
+def build_maintainer_hub_html(
+    *,
+    updated_at: str | None = None,
+    validation: dict[str, Any] | None = None,
+) -> str:
     timestamp = updated_at or _utc_now()
     escaped_updated = html.escape(timestamp)
+    validation_doc = validation or {}
+    validation_ok = bool(validation_doc.get("ok"))
+    validation_label = "OK" if validation_ok else "Issues"
+    validation_class = "ok" if validation_ok else "fail"
+    packages = validation_doc.get("packages", [])
+    package_count = len(packages) if isinstance(packages, list) else 0
+    suggestions = validation_doc.get("trigger_suggestions", [])
+    suggestion_count = len(suggestions) if isinstance(suggestions, list) else 0
+    duplicate_count = len(validation_doc.get("trigger_duplicates", {}) or {})
+    collision_count = sum(
+        len(items)
+        for items in (validation_doc.get("official_collisions", {}) or {}).values()
+        if isinstance(items, list)
+    )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1744,6 +1780,16 @@ def build_maintainer_hub_html(*, updated_at: str | None = None) -> str:
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.9rem;
     }}
+    .badge {{
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }}
+    .badge.ok {{ color: #3ecf8e; border-color: rgba(62, 207, 142, 0.35); }}
+    .badge.fail {{ color: #ff6b6b; border-color: rgba(255, 107, 107, 0.35); }}
     footer {{ margin-top: 56px; color: var(--muted); font-size: 0.9rem; }}
   </style>
 </head>
@@ -1752,7 +1798,7 @@ def build_maintainer_hub_html(*, updated_at: str | None = None) -> str:
     <p><a href="index.html">← Expando home</a></p>
     <h1>Maintainer Portal</h1>
     <p class="lead">Tools for reviewing community packages, publishing the hub index, and monitoring release health.</p>
-    <p class="meta">Updated {escaped_updated}</p>
+    <p class="meta">Updated {escaped_updated} · Community validation <span class="badge {validation_class}">{validation_label}</span> · packages={package_count} · similarity warnings={suggestion_count}</p>
 
     <div class="grid">
       <div class="card">
@@ -1763,6 +1809,7 @@ def build_maintainer_hub_html(*, updated_at: str | None = None) -> str:
       <div class="card">
         <h3>Trigger Dashboard</h3>
         <p>Community validation, duplicate lint, and fuzzy similarity warnings.</p>
+        <p>Duplicates: {duplicate_count} · official collisions: {collision_count}</p>
         <p><a href="hub-trigger-suggestions.html">Open trigger dashboard →</a></p>
       </div>
       <div class="card">
@@ -1783,6 +1830,7 @@ expando doctor --full-html</pre>
 
     <footer>
       <a href="hub/marketplace.json">marketplace.json</a>
+      · <a href="hub/community-validation.json">community-validation.json</a>
       · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit package</a>
     </footer>
   </div>
@@ -1797,6 +1845,7 @@ def publish_portal_site(
     json_path: Path | None = None,
     suggestions_html_path: Path | None = None,
     maintainer_html_path: Path | None = None,
+    validation_json_path: Path | None = None,
 ) -> dict[str, Path]:
     default_html, default_json = default_portal_site_paths()
     html_destination = (html_path or default_html).expanduser().resolve()
@@ -1807,7 +1856,11 @@ def publish_portal_site(
     maintainer_destination = (
         maintainer_html_path or default_maintainer_hub_html_path()
     ).expanduser().resolve()
+    validation_destination = (
+        validation_json_path or default_community_validation_json_path()
+    ).expanduser().resolve()
     payload = build_publishable_portal_index()
+    validation_document = community_validation_document()
     json_destination.parent.mkdir(parents=True, exist_ok=True)
     json_destination.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
@@ -1818,14 +1871,19 @@ def publish_portal_site(
     write_trigger_suggestions_html(suggestions_destination)
     maintainer_destination.parent.mkdir(parents=True, exist_ok=True)
     maintainer_destination.write_text(
-        build_maintainer_hub_html(updated_at=str(payload.get("updated_at", ""))),
+        build_maintainer_hub_html(
+            updated_at=str(payload.get("updated_at", "")),
+            validation=validation_document,
+        ),
         encoding="utf-8",
     )
+    export_community_validation_json(validation_destination)
     return {
         "html": html_destination,
         "json": json_destination,
         "suggestions_html": suggestions_destination,
         "maintainer_html": maintainer_destination,
+        "validation_json": validation_destination,
     }
 
 

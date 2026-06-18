@@ -606,7 +606,8 @@ expando doctor --full-html --full-html-output doctor-health.html
 expando doctor --full-json --full-output doctor-full.json</pre>
 
     <footer>
-      <a href="hub-trigger-suggestions.html">Trigger dashboard</a>
+      <a href="hub-maintainer.html">Maintainer portal</a>
+      · <a href="hub-trigger-suggestions.html">Trigger dashboard</a>
       · <a href="hub-marketplace.html">Hub marketplace</a>
     </footer>
   </div>

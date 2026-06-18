@@ -614,8 +614,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "added={added}, updated={updated}, unchanged={unchanged}",
     },
     "hub.portal.published": {
-        "it": "Sito marketplace pubblicato: {html} · JSON: {json} · trigger dashboard: {suggestions} · maintainer portal: {maintainer} · package approvati: {count}",
-        "en": "Marketplace site published: {html} · JSON: {json} · trigger dashboard: {suggestions} · maintainer portal: {maintainer} · approved packages: {count}",
+        "it": "Sito marketplace pubblicato: {html} · JSON: {json} · trigger dashboard: {suggestions} · maintainer portal: {maintainer} · community validation: {validation} · package approvati: {count}",
+        "en": "Marketplace site published: {html} · JSON: {json} · trigger dashboard: {suggestions} · maintainer portal: {maintainer} · community validation: {validation} · approved packages: {count}",
     },
     "hub.portal.pending_diff.title": {
         "it": "Diff metadata pending marketplace ({count}):",

@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.14.0 | **Release:** v3.14.0 (health SVG inline, maintainer portal Pages, CI smoke)
+**Versione:** 3.15.0 | **Release:** v3.15.0 (community-validation.json Pages, release-health artifact)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.15.0** ✓ Sprint 24
+  - `hub/community-validation.json` su Pages
+  - Maintainer portal validation badge
+  - Release artifact `release-health` unificato
 - **v3.14.0** ✓ Sprint 23
   - SVG inline in doctor full HTML
   - `hub-maintainer.html` su Pages
@@ -73,6 +77,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 24)
+## Prossimi item (Sprint 25)
 
 - [ ] TBD — vedi ROADMAP.md

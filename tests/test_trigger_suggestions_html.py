@@ -4,6 +4,7 @@ from pathlib import Path
 from expando.hub_marketplace import (
     build_trigger_suggestions_html,
     community_validation_document,
+    export_community_validation_json,
     write_trigger_suggestions_html,
 )
 
@@ -40,6 +41,15 @@ def test_build_trigger_suggestions_html_includes_tables():
     assert ":emails" in html_text
     assert "prefix" in html_text
     assert "typing-it" in html_text
+
+
+def test_export_community_validation_json(tmp_path: Path):
+    destination = tmp_path / "community-validation.json"
+    path = export_community_validation_json(destination, root=tmp_path / "empty-root")
+    assert path == destination
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+    assert payload["version"] == 1
+    assert "packages" in payload
 
 
 def test_write_trigger_suggestions_html(tmp_path: Path):

@@ -6,12 +6,12 @@
     <description>Expando macOS updates (Sparkle appcast)</description>
     <language>en</language>
     <item>
-      <title>Version 3.10.0</title>
-      <sparkle:version>3.10.0</sparkle:version>
-      <sparkle:shortVersionString>3.10.0</sparkle:shortVersionString>
-      <description><![CDATA[Expando 3.10.0 — see GitHub release notes for details.]]></description>
-      <pubDate>Thu, 18 Jun 2026 08:31:46 +0000</pubDate>
-      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v3.10.0/Expando.dmg" length="32944957" type="application/octet-stream"/>
+      <title>Version 3.11.0</title>
+      <sparkle:version>3.11.0</sparkle:version>
+      <sparkle:shortVersionString>3.11.0</sparkle:shortVersionString>
+      <description><![CDATA[Expando 3.11.0 — see GitHub release notes for details.]]></description>
+      <pubDate>Thu, 18 Jun 2026 08:59:39 +0000</pubDate>
+      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v3.11.0/Expando.dmg" length="33169630" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>

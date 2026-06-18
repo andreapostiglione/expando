@@ -119,6 +119,44 @@ def notarization_history_to_dict(
     }
 
 
+def doctor_notarization_lines(config_dir: Path) -> list[str]:
+    from .i18n import t
+
+    entries = load_notarization_history(config_dir)
+    if not entries:
+        return []
+
+    stats = notarization_history_stats(entries)
+    last = entries[-1]
+    summary = last.get("summary", {})
+    if not isinstance(summary, dict):
+        summary = {}
+    recent_rate = (
+        f"{int(stats['recent_ok_rate'] * 100)}%"
+        if stats["recent_ok_rate"] is not None
+        else t("notarize.history.na")
+    )
+    last_status = (
+        t("notarize.history.ok") if last.get("ok") else t("notarize.history.fail")
+    )
+    return [
+        t("doctor.notarize_history.title"),
+        t("doctor.notarize_history.stats").format(
+            total=stats["total"],
+            ok=stats["ok"],
+            failed=stats["failed"],
+            recent_rate=recent_rate,
+        ),
+        t("doctor.notarize_history.last").format(
+            recorded_at=last.get("recorded_at", "?"),
+            status=last_status,
+            pass_count=summary.get("pass", 0),
+            warn_count=summary.get("warn", 0),
+            fail_count=summary.get("fail", 0),
+        ),
+    ]
+
+
 def format_notarization_history_report(
     config_dir: Path,
     *,

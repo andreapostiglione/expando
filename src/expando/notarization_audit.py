@@ -326,6 +326,94 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
                     message="Partial Sparkle embed (helper or framework missing)",
                 )
             )
+        if sparkle_helper.exists():
+            findings.extend(
+                audit_sparkle_helper_signing(sparkle_helper, expected=expected)
+            )
+    return findings
+
+
+def audit_sparkle_helper_signing(
+    sparkle_helper: Path,
+    *,
+    expected: dict[str, object],
+) -> list[NotarizationFinding]:
+    findings: list[NotarizationFinding] = []
+    label = sparkle_helper.name
+
+    verify = _run_command(["codesign", "--verify", "--verbose=2", str(sparkle_helper)])
+    if verify.returncode == 0:
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.verify",
+                status="pass",
+                message=f"{label} codesign verification succeeded",
+            )
+        )
+    else:
+        details = (verify.stderr or verify.stdout or "codesign verify failed").strip()
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.verify",
+                status="fail",
+                message=details.splitlines()[-1] if details else f"{label} codesign verify failed",
+            )
+        )
+
+    details = _codesign_details(sparkle_helper)
+    if HARDENED_RUNTIME_FLAG.search(details):
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.hardened_runtime",
+                status="pass",
+                message=f"{label} has hardened runtime",
+            )
+        )
+    else:
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.hardened_runtime",
+                status="fail",
+                message=f"{label} missing hardened runtime flag",
+            )
+        )
+
+    if TEAM_ID in details:
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.team_id",
+                status="pass",
+                message=f"{label} signed with Team ID {TEAM_ID}",
+            )
+        )
+    else:
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.team_id",
+                status="warn",
+                message=f"Team ID {TEAM_ID} not found on {label}",
+            )
+        )
+
+    actual = _read_codesign_entitlements(sparkle_helper)
+    if actual is None:
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.entitlements",
+                status="warn",
+                message=f"Could not read entitlements from {label}",
+            )
+        )
+    elif expected:
+        ok, message = _entitlements_match(actual, expected)
+        findings.append(
+            NotarizationFinding(
+                check_id="sparkle.helper.entitlements",
+                status="pass" if ok else "fail",
+                message=f"{message} ({label})",
+            )
+        )
+
     return findings
 
 

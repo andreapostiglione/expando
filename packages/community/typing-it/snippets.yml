@@ -1,0 +1,12 @@
+matches:
+  - trigger: ":addr"
+    replace: "Via Example 1, 20100 Milano (MI)"
+
+  - trigger: ":tel"
+    replace: "+39 02 0000 0000"
+
+  - trigger: ":piva"
+    replace: "IT00000000000"
+
+  - trigger: ":cf"
+    replace: "RSSMRA80A01H501U"

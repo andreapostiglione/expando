@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.1.0 | **Release:** v3.1.0 (CI E2E tiers, marketplace default URL, audit history JSON)
+**Versione:** 3.2.0 | **Release:** v3.2.0 (community hub, doctor audit trend, Sparkle helper audit)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.2.0** ✓ Sprint 11
+  - 3 package community su Hub Pages
+  - Trend notarization history in doctor
+  - Audit firma `expando-sparkle`
 - **v3.1.0** ✓ Sprint 10
   - CI E2E headless-safe (`integration` tier)
   - Marketplace URL default GitHub Pages
@@ -21,8 +25,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 11)
+## Prossimi item (Sprint 12)
 
-- [ ] Primi package community approvati su Hub Pages
-- [ ] Trend notarization history in doctor
-- [ ] Sparkle helper signing audit automatico
+- [ ] Hub submit workflow end-to-end per contributor
+- [ ] Doctor: hint `notarize-history` su ultimo audit fail
+- [ ] Benchmark Sparkle update check in distribution build

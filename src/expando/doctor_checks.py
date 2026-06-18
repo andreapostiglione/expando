@@ -226,6 +226,13 @@ def format_doctor_report(report: DoctorReport) -> str:
         lines.append(f"{t('doctor.warnings')}:")
         lines.extend(f"  - {item}" for item in report.warnings)
 
+    from .notarization_history import doctor_notarization_lines
+
+    notarize_lines = doctor_notarization_lines(report.config_dir)
+    if notarize_lines:
+        lines.append("")
+        lines.extend(notarize_lines)
+
     return "\n".join(lines)
 
 

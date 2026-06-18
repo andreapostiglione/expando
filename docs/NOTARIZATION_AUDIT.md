@@ -34,6 +34,10 @@ Default targets:
 | `gatekeeper.assess` | `spctl` acceptance |
 | `notary.staple` | `stapler validate` on DMG |
 | `sparkle.embedded` | Sparkle helper/framework in distribution builds |
+| `sparkle.helper.verify` | `codesign --verify` on `expando-sparkle` |
+| `sparkle.helper.hardened_runtime` | Hardened runtime on Sparkle helper |
+| `sparkle.helper.team_id` | Developer Team ID on Sparkle helper |
+| `sparkle.helper.entitlements` | Helper entitlements match baseline |
 
 ## CI
 

@@ -168,6 +168,18 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Controllo aggiornamenti fallito: {error}",
         "en": "Update check failed: {error}",
     },
+    "doctor.notarize_history.title": {
+        "it": "Audit notarizzazione (storico locale)",
+        "en": "Notarization audit (local history)",
+    },
+    "doctor.notarize_history.stats": {
+        "it": "  Esecuzioni: {total} (ok={ok}, fail={failed}) · ultimi 10: {recent_rate} ok",
+        "en": "  Runs: {total} (ok={ok}, fail={failed}) · last 10: {recent_rate} ok",
+    },
+    "doctor.notarize_history.last": {
+        "it": "  Ultima: {recorded_at} {status} · pass={pass_count} warn={warn_count} fail={fail_count}",
+        "en": "  Last: {recorded_at} {status} · pass={pass_count} warn={warn_count} fail={fail_count}",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",

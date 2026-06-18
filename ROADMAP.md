@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.13.0
+**Versione attuale:** v3.14.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.13.0)
+## Stato attuale (baseline v3.14.0)
 
 | Area | Stato |
 |------|--------|
@@ -85,6 +85,9 @@
 | `expando doctor --full-html` health dashboard HTML | ✓ v3.13.0 |
 | CI gate `validate-community --html` | ✓ v3.13.0 |
 | Release CI artifact `doctor-health.html` | ✓ v3.13.0 |
+| Health dashboard con SVG trend inline (notarize + sparkle) | ✓ v3.14.0 |
+| `hub-maintainer.html` su GitHub Pages (`publish-site`) | ✓ v3.14.0 |
+| CI smoke `doctor --full-html` + `sparkle-benchmark-history --svg` | ✓ v3.14.0 |
 
 ### Gap noti oggi
 
@@ -335,7 +338,12 @@ flowchart LR
 2. CI: `hub validate-community --html` gate su trigger dashboard
 3. Release CI: artifact `doctor-health.html` insieme a `doctor-full.json`
 
-### Backlog (Sprint 23+)
+### Sprint 23 → v3.14.0 ✓
+1. `doctor --full-html`: grafici SVG notarization/sparkle inline nella dashboard
+2. `hub portal publish-site`: genera `docs/hub-maintainer.html` + link da marketplace/home
+3. CI smoke `doctor --full-html`; `sparkle-benchmark-history --svg` sul comando show
+
+### Backlog (Sprint 24+)
 - TBD
 
 ---

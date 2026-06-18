@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.13.0 | **Release:** v3.13.0 (doctor full HTML dashboard, CI html gate, release health artifact)
+**Versione:** 3.14.0 | **Release:** v3.14.0 (health SVG inline, maintainer portal Pages, CI smoke)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.14.0** ✓ Sprint 23
+  - SVG inline in doctor full HTML
+  - `hub-maintainer.html` su Pages
+  - CI smoke doctor HTML + sparkle history --svg
 - **v3.13.0** ✓ Sprint 22
   - `doctor --full-html` dashboard
   - CI `validate-community --html`
@@ -69,6 +73,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 23)
+## Prossimi item (Sprint 24)
 
 - [ ] TBD — vedi ROADMAP.md

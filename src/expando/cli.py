@@ -1133,6 +1133,7 @@ def hub_portal_publish_site(html_path: Path | None, json_path: Path | None) -> N
             html=paths["html"],
             json=paths["json"],
             suggestions=paths["suggestions_html"],
+            maintainer=paths["maintainer_html"],
             count=len(payload.get("packages", [])),
         )
     )
@@ -1565,6 +1566,17 @@ def notarize_audit_cmd(
     type=click.Path(path_type=Path),
     help="Sparkle benchmark history file (defaults to repo sparkle-benchmark-history.json)",
 )
+@click.option(
+    "--svg",
+    is_flag=True,
+    help="Write latency trend SVG (sparkle-benchmark-trend.svg)",
+)
+@click.option(
+    "--svg-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override SVG output path (implies --svg)",
+)
 @click.pass_context
 def sparkle_benchmark_history_group(
     ctx: click.Context,
@@ -1572,6 +1584,8 @@ def sparkle_benchmark_history_group(
     as_json: bool,
     output: Path | None,
     history_path: Path | None,
+    svg: bool,
+    svg_path: Path | None,
 ) -> None:
     """Show or record Sparkle helper benchmark history across releases."""
     if ctx.invoked_subcommand is not None:
@@ -1580,9 +1594,18 @@ def sparkle_benchmark_history_group(
     import json
 
     from .sparkle_benchmark_history import (
+        default_trend_svg_path,
         format_sparkle_benchmark_history_report,
         sparkle_benchmark_history_to_dict,
+        write_sparkle_benchmark_trend_svg,
     )
+
+    if svg or svg_path is not None:
+        svg_destination = write_sparkle_benchmark_trend_svg(
+            svg_path or default_trend_svg_path(),
+            history_path=history_path,
+        )
+        click.echo(t("sparkle.benchmark.history.svg_written").format(path=svg_destination))
 
     if as_json or output is not None:
         payload = sparkle_benchmark_history_to_dict(history_path, limit=limit)

@@ -301,6 +301,14 @@ class PendingMetadataDiff:
     changed_fields: list[tuple[str, str, str]]
 
 
+@dataclass
+class TriggerSimilaritySuggestion:
+    community_trigger: str
+    official_trigger: str
+    community_package: str
+    official_package: str
+
+
 def _package_id_from_dir(package_dir: Path) -> str:
     manifest_path = package_dir / "hub.json"
     if manifest_path.exists():
@@ -325,6 +333,46 @@ def _literal_triggers_for_package_dir(package_dir: Path) -> set[str]:
                 continue
             triggers.update(extract_triggers(raw))
     return triggers
+
+
+def _normalize_trigger_body(trigger: str) -> str:
+    return trigger.lstrip(":").casefold()
+
+
+def _levenshtein_distance(left: str, right: str) -> int:
+    if left == right:
+        return 0
+    if not left:
+        return len(right)
+    if not right:
+        return len(left)
+    previous = list(range(len(right) + 1))
+    for row_index, left_char in enumerate(left, start=1):
+        current = [row_index]
+        for col_index, right_char in enumerate(right, start=1):
+            insert_cost = current[col_index - 1] + 1
+            delete_cost = previous[col_index] + 1
+            replace_cost = previous[col_index - 1] + (left_char != right_char)
+            current.append(min(insert_cost, delete_cost, replace_cost))
+        previous = current
+    return previous[-1]
+
+
+def _triggers_are_similar(community_trigger: str, official_trigger: str) -> bool:
+    if community_trigger == official_trigger:
+        return False
+    community_body = _normalize_trigger_body(community_trigger)
+    official_body = _normalize_trigger_body(official_trigger)
+    if not community_body or not official_body or community_body == official_body:
+        return False
+    min_len = min(len(community_body), len(official_body))
+    if min_len >= 3 and (
+        community_body.startswith(official_body) or official_body.startswith(community_body)
+    ):
+        return True
+    distance = _levenshtein_distance(community_body, official_body)
+    max_len = max(len(community_body), len(official_body))
+    return distance <= 2 or (distance / max_len) <= 0.34
 
 
 def _format_metadata_value(value: Any) -> str:
@@ -406,15 +454,143 @@ def find_community_official_trigger_collisions(
     }
 
 
+def find_community_official_trigger_similarities(
+    root: Path | None = None,
+) -> list[TriggerSimilaritySuggestion]:
+    from .hub import fetch_registry
+
+    official_dir = official_packages_dir(root)
+    official_entries: list[tuple[str, str]] = []
+    for package in fetch_registry(include_marketplace=False):
+        package_dir = official_dir / package.id
+        if not package_dir.is_dir():
+            continue
+        for trigger in _literal_triggers_for_package_dir(package_dir):
+            official_entries.append((trigger, package.id))
+
+    community_dir = community_packages_dir(root)
+    if not community_dir.is_dir():
+        return []
+
+    suggestions: list[TriggerSimilaritySuggestion] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    for package_dir in sorted(community_dir.iterdir()):
+        if not package_dir.is_dir():
+            continue
+        community_id = _package_id_from_dir(package_dir)
+        for community_trigger in _literal_triggers_for_package_dir(package_dir):
+            for official_trigger, official_id in official_entries:
+                if not _triggers_are_similar(community_trigger, official_trigger):
+                    continue
+                key = (community_trigger, official_trigger, community_id, official_id)
+                if key in seen:
+                    continue
+                seen.add(key)
+                suggestions.append(
+                    TriggerSimilaritySuggestion(
+                        community_trigger=community_trigger,
+                        official_trigger=official_trigger,
+                        community_package=community_id,
+                        official_package=official_id,
+                    )
+                )
+    suggestions.sort(
+        key=lambda item: (
+            item.community_package,
+            item.community_trigger,
+            item.official_trigger,
+        )
+    )
+    return suggestions
+
+
+def trigger_similarity_suggestion_to_dict(item: TriggerSimilaritySuggestion) -> dict[str, str]:
+    return {
+        "community_trigger": item.community_trigger,
+        "official_trigger": item.official_trigger,
+        "community_package": item.community_package,
+        "official_package": item.official_package,
+    }
+
+
+def format_marketplace_pending_diff_report() -> str:
+    from .i18n import t
+
+    diffs = marketplace_pending_metadata_diffs()
+    if not diffs:
+        return t("hub.portal.pending_diff.empty")
+    lines = [t("hub.portal.pending_diff.title").format(count=len(diffs))]
+    for diff in diffs[:20]:
+        if diff.missing_local:
+            lines.append(
+                t("doctor.marketplace.pending_remote").format(
+                    package_id=diff.package_id,
+                    name=diff.remote_name,
+                    author=diff.remote_author or t("benchmark.sparkle.none"),
+                )
+            )
+            continue
+        lines.append(t("doctor.marketplace.pending_changed").format(package_id=diff.package_id))
+        for field, local_value, remote_value in diff.changed_fields[:3]:
+            lines.append(
+                t("doctor.marketplace.pending_field").format(
+                    field=field,
+                    local=local_value or t("benchmark.sparkle.none"),
+                    remote=remote_value or t("benchmark.sparkle.none"),
+                )
+            )
+    if len(diffs) > 20:
+        lines.append(t("doctor.marketplace.pending_more").format(count=len(diffs) - 20))
+    lines.append(t("doctor.marketplace.pending_hint"))
+    return "\n".join(lines)
+
+
+def pending_metadata_diff_to_dict(diff: PendingMetadataDiff) -> dict[str, Any]:
+    return {
+        "package_id": diff.package_id,
+        "missing_local": diff.missing_local,
+        "remote_name": diff.remote_name,
+        "remote_author": diff.remote_author,
+        "changed_fields": [
+            {"field": field, "local": local_value, "remote": remote_value}
+            for field, local_value, remote_value in diff.changed_fields
+        ],
+    }
+
+
+def marketplace_pending_metadata_diff_document() -> dict[str, Any]:
+    return {
+        "version": 1,
+        "generated_at": _utc_now(),
+        "diffs": [pending_metadata_diff_to_dict(item) for item in marketplace_pending_metadata_diffs()],
+    }
+
+
+def write_marketplace_pending_diff_json(destination: Path) -> Path:
+    destination = destination.expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps(marketplace_pending_metadata_diff_document(), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return destination
+
+
 def format_community_validation_report(
     reports: list[tuple[str, HubPublishReport]],
     *,
     trigger_duplicates: dict[str, list[str]] | None = None,
     official_collisions: dict[str, list[tuple[str, str]]] | None = None,
+    trigger_suggestions: list[TriggerSimilaritySuggestion] | None = None,
 ) -> tuple[str, bool]:
     from .i18n import t
 
-    if not reports and not trigger_duplicates:
+    if (
+        not reports
+        and not trigger_duplicates
+        and not official_collisions
+        and not trigger_suggestions
+    ):
         return t("hub.validate.community.empty"), True
 
     lines: list[str] = []
@@ -459,6 +635,19 @@ def format_community_validation_report(
                         official=official_id,
                     )
                 )
+
+    suggestions = trigger_suggestions or []
+    if suggestions:
+        lines.append(t("hub.validate.community.similar.header").format(count=len(suggestions)))
+        for item in suggestions:
+            lines.append(
+                t("hub.validate.community.similar.item").format(
+                    community_trigger=item.community_trigger,
+                    official_trigger=item.official_trigger,
+                    community=item.community_package,
+                    official=item.official_package,
+                )
+            )
     return "\n".join(lines), ok
 
 

@@ -729,14 +729,17 @@ def hub_validate_community(as_json: bool) -> None:
 
     from .hub_marketplace import (
         find_community_official_trigger_collisions,
+        find_community_official_trigger_similarities,
         find_cross_package_trigger_duplicates,
         format_community_validation_report,
+        trigger_similarity_suggestion_to_dict,
         validate_community_hub_packages,
     )
 
     reports = validate_community_hub_packages()
     trigger_duplicates = find_cross_package_trigger_duplicates()
     official_collisions = find_community_official_trigger_collisions()
+    trigger_suggestions = find_community_official_trigger_similarities()
     validation_ok = (
         all(report.ok for _, report in reports)
         and not trigger_duplicates
@@ -759,6 +762,9 @@ def hub_validate_community(as_json: bool) -> None:
                 trigger: [{"community": c, "official": o} for c, o in pairs]
                 for trigger, pairs in official_collisions.items()
             },
+            "trigger_suggestions": [
+                trigger_similarity_suggestion_to_dict(item) for item in trigger_suggestions
+            ],
             "ok": validation_ok,
         }
         click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
@@ -770,6 +776,7 @@ def hub_validate_community(as_json: bool) -> None:
         reports,
         trigger_duplicates=trigger_duplicates,
         official_collisions=official_collisions,
+        trigger_suggestions=trigger_suggestions,
     )
     click.echo(text)
     if not ok:
@@ -1070,6 +1077,38 @@ def hub_portal_sync(dry_run: bool) -> None:
             unchanged=stats["unchanged"],
         )
     )
+
+
+@hub_portal.command("pending-diff")
+@click.option("--json", "as_json", is_flag=True, help="Print pending metadata diff as JSON")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write pending metadata diff JSON to this path",
+)
+def hub_portal_pending_diff(as_json: bool, output: Path | None) -> None:
+    """Export remote vs local pending metadata differences as JSON."""
+    import json
+
+    from .hub_marketplace import (
+        format_marketplace_pending_diff_report,
+        marketplace_pending_metadata_diff_document,
+        write_marketplace_pending_diff_json,
+    )
+
+    if as_json or output is not None:
+        payload = marketplace_pending_metadata_diff_document()
+        text = json.dumps(payload, indent=2, ensure_ascii=False)
+        if output is not None:
+            write_marketplace_pending_diff_json(output)
+            if not as_json:
+                click.echo(t("hub.portal.pending_diff.exported").format(path=output))
+        if as_json:
+            click.echo(text)
+        return
+
+    click.echo(format_marketplace_pending_diff_report())
 
 
 @hub_portal.command("publish-site")
@@ -1468,6 +1507,106 @@ def notarize_audit_cmd(
         click.echo(format_notarization_audit_report(report))
     if not report.ok:
         raise SystemExit(1)
+
+
+@main.group("sparkle-benchmark-history", invoke_without_command=True)
+@click.option("--limit", default=10, show_default=True, help="Recent entries to show")
+@click.option("--json", "as_json", is_flag=True, help="Print history as JSON")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write JSON history export to this file",
+)
+@click.option(
+    "--history-path",
+    type=click.Path(path_type=Path),
+    help="Sparkle benchmark history file (defaults to repo sparkle-benchmark-history.json)",
+)
+@click.pass_context
+def sparkle_benchmark_history_group(
+    ctx: click.Context,
+    limit: int,
+    as_json: bool,
+    output: Path | None,
+    history_path: Path | None,
+) -> None:
+    """Show or record Sparkle helper benchmark history across releases."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    import json
+
+    from .sparkle_benchmark_history import (
+        format_sparkle_benchmark_history_report,
+        sparkle_benchmark_history_to_dict,
+    )
+
+    if as_json or output is not None:
+        payload = sparkle_benchmark_history_to_dict(history_path, limit=limit)
+        text = json.dumps(payload, indent=2, ensure_ascii=False)
+        if output is not None:
+            output = output.expanduser().resolve()
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(text + "\n", encoding="utf-8")
+            if not as_json:
+                click.echo(t("sparkle.benchmark.history.exported").format(path=output))
+        if as_json:
+            click.echo(text)
+        return
+
+    click.echo(format_sparkle_benchmark_history_report(history_path, limit=limit))
+
+
+@sparkle_benchmark_history_group.command("record")
+@click.option("--version", required=True, help="Expando version recorded with this benchmark")
+@click.option("--tag", default=None, help="Release tag (defaults to v{version})")
+@click.option(
+    "--sparkle-warn-ms",
+    type=int,
+    default=None,
+    help="Slow-helper warning threshold in milliseconds",
+)
+@click.option("--feed-url", default=None, help="Override Sparkle appcast URL")
+@click.option(
+    "--history-path",
+    type=click.Path(path_type=Path),
+    help="Sparkle benchmark history file (defaults to repo sparkle-benchmark-history.json)",
+)
+def sparkle_benchmark_history_record(
+    version: str,
+    tag: str | None,
+    sparkle_warn_ms: int | None,
+    feed_url: str | None,
+    history_path: Path | None,
+) -> None:
+    """Run Sparkle benchmark and append result to release history."""
+    from .benchmark import (
+        format_sparkle_benchmark_report,
+        resolve_sparkle_helper_warn_ms,
+        run_sparkle_update_benchmark,
+    )
+    from .sparkle_benchmark_history import default_history_path, record_sparkle_benchmark
+
+    warn_ms = sparkle_warn_ms
+    if warn_ms is None:
+        warn_ms = resolve_sparkle_helper_warn_ms()
+    result = run_sparkle_update_benchmark(feed_url=feed_url)
+    click.echo(format_sparkle_benchmark_report(result, warn_ms=warn_ms))
+    path = history_path or default_history_path()
+    entry = record_sparkle_benchmark(
+        result,
+        path,
+        version=version,
+        warn_ms=warn_ms,
+        tag=tag,
+    )
+    click.echo(
+        t("sparkle.benchmark.history.recorded").format(
+            path=path,
+            recorded_at=entry.get("recorded_at", "?"),
+        )
+    )
 
 
 @main.command("notarize-history")

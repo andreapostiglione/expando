@@ -519,6 +519,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "  ✗ {trigger} → community:{community} / official:{official}",
         "en": "  ✗ {trigger} → community:{community} / official:{official}",
     },
+    "hub.validate.community.similar.header": {
+        "it": "Trigger simili a package ufficiali ({count}, solo avviso):",
+        "en": "Triggers similar to official packages ({count}, warning only):",
+    },
+    "hub.validate.community.similar.item": {
+        "it": "  ! {community_trigger} ≈ {official_trigger} → community:{community} / official:{official}",
+        "en": "  ! {community_trigger} ≈ {official_trigger} → community:{community} / official:{official}",
+    },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",
         "en": "No packages with status {status}.",
@@ -568,6 +576,48 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.portal.published": {
         "it": "Sito marketplace pubblicato: {html} · JSON: {json} · package approvati: {count}",
         "en": "Marketplace site published: {html} · JSON: {json} · approved packages: {count}",
+    },
+    "hub.portal.pending_diff.title": {
+        "it": "Diff metadata pending marketplace ({count}):",
+        "en": "Marketplace pending metadata diff ({count}):",
+    },
+    "hub.portal.pending_diff.empty": {
+        "it": "Nessuna differenza pending tra remoto e coda locale.",
+        "en": "No pending metadata differences between remote and local queue.",
+    },
+    "hub.portal.pending_diff.exported": {
+        "it": "Diff pending esportato in {path}",
+        "en": "Pending diff exported to {path}",
+    },
+    "sparkle.benchmark.history.title": {
+        "it": "Storico benchmark Sparkle helper",
+        "en": "Sparkle helper benchmark history",
+    },
+    "sparkle.benchmark.history.path": {"it": "File", "en": "File"},
+    "sparkle.benchmark.history.stats": {
+        "it": "Esecuzioni: {total} (lente={slow}) · ultima: {last_ms} ms",
+        "en": "Runs: {total} (slow={slow}) · last: {last_ms} ms",
+    },
+    "sparkle.benchmark.history.na": {"it": "n/d", "en": "n/a"},
+    "sparkle.benchmark.history.empty": {
+        "it": "Nessuna esecuzione registrata — usa expando sparkle-benchmark-history record",
+        "en": "No recorded runs — use expando sparkle-benchmark-history record",
+    },
+    "sparkle.benchmark.history.recent": {
+        "it": "Ultime {limit} esecuzioni:",
+        "en": "Last {limit} runs:",
+    },
+    "sparkle.benchmark.history.entry": {
+        "it": "  {recorded_at}  v{version}  helper={helper_ms} ms  slow={slow}",
+        "en": "  {recorded_at}  v{version}  helper={helper_ms} ms  slow={slow}",
+    },
+    "sparkle.benchmark.history.recorded": {
+        "it": "Registrato in {path} ({recorded_at})",
+        "en": "Recorded in {path} ({recorded_at})",
+    },
+    "sparkle.benchmark.history.exported": {
+        "it": "Storico benchmark esportato in {path}",
+        "en": "Benchmark history exported to {path}",
     },
     "cli.update.available": {
         "it": "Aggiornamento disponibile: v{version}",

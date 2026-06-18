@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.7.0 | **Release:** v3.7.0 (official trigger lint, pending diff, sparkle slow warn)
+**Versione:** 3.8.0 | **Release:** v3.8.0 (trigger similarity warnings, pending-diff export, sparkle history)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.8.0** ✓ Sprint 17
+  - Suggerimenti trigger simili (warning)
+  - `hub portal pending-diff` JSON export
+  - `sparkle-benchmark-history` + CI artifact
 - **v3.7.0** ✓ Sprint 16
   - Lint trigger vs package ufficiali
   - Doctor diff metadata pending
@@ -45,8 +49,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 17)
+## Prossimi item (Sprint 18)
 
-- [ ] Suggerimenti trigger vicini a quelli ufficiali
-- [ ] Doctor export JSON pending diff
-- [ ] Storico latenza helper in release artifact
+- [ ] Suggerimenti trigger con scoring più ricco
+- [ ] `doctor --marketplace-json`
+- [ ] Benchmark trend chart / soglia fail configurabile

@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.6.0 | **Release:** v3.6.0 (cross-package lint, doctor pending alert, release benchmark)
+**Versione:** 3.7.0 | **Release:** v3.7.0 (official trigger lint, pending diff, sparkle slow warn)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.7.0** ✓ Sprint 16
+  - Lint trigger vs package ufficiali
+  - Doctor diff metadata pending
+  - Soglia warning latenza helper CI
 - **v3.6.0** ✓ Sprint 15
   - Lint trigger cross-package in CI
   - Doctor alert pending non sincronizzati
@@ -41,8 +45,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 16)
+## Prossimi item (Sprint 17)
 
-- [ ] Validazione trigger vs package ufficiali
-- [ ] Doctor diff metadata pending
-- [ ] Soglia warning latenza helper in CI
+- [ ] Suggerimenti trigger vicini a quelli ufficiali
+- [ ] Doctor export JSON pending diff
+- [ ] Storico latenza helper in release artifact

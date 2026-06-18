@@ -233,13 +233,21 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "→ expando hub portal sync",
         "en": "→ expando hub portal sync",
     },
-    "doctor.marketplace.pending_unsynced": {
-        "it": "  Pending remoti non in coda locale:",
-        "en": "  Remote pending not in local queue:",
+    "doctor.marketplace.pending_diff": {
+        "it": "  Pending marketplace (diff remoto):",
+        "en": "  Marketplace pending (remote diff):",
     },
-    "doctor.marketplace.pending_item": {
-        "it": "    - {package_id}",
-        "en": "    - {package_id}",
+    "doctor.marketplace.pending_remote": {
+        "it": "    - {package_id}: {name} ({author}) — assente in coda locale",
+        "en": "    - {package_id}: {name} ({author}) — missing from local queue",
+    },
+    "doctor.marketplace.pending_changed": {
+        "it": "    - {package_id}: metadata divergente",
+        "en": "    - {package_id}: metadata differs",
+    },
+    "doctor.marketplace.pending_field": {
+        "it": "        {field}: locale={local} · remoto={remote}",
+        "en": "        {field}: local={local} · remote={remote}",
     },
     "doctor.marketplace.pending_more": {
         "it": "    … e altri {count}",
@@ -328,6 +336,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "benchmark.sparkle.helper_check": {
         "it": "Helper update check",
         "en": "Helper update check",
+    },
+    "benchmark.sparkle.helper_slow": {
+        "it": "SPARKLE_HELPER_SLOW: {ms} ms (soglia {threshold} ms)",
+        "en": "SPARKLE_HELPER_SLOW: {ms} ms (threshold {threshold} ms)",
     },
     "benchmark.sparkle.entries": {"it": "release", "en": "releases"},
     "benchmark.sparkle.versions": {"it": "Versioni", "en": "Versions"},
@@ -498,6 +510,14 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.validate.community.duplicates.item": {
         "it": "  ✗ {trigger} → {packages}",
         "en": "  ✗ {trigger} → {packages}",
+    },
+    "hub.validate.community.official.header": {
+        "it": "Trigger in conflitto con package ufficiali ({count}):",
+        "en": "Triggers conflicting with official packages ({count}):",
+    },
+    "hub.validate.community.official.item": {
+        "it": "  ✗ {trigger} → community:{community} / official:{official}",
+        "en": "  ✗ {trigger} → community:{community} / official:{official}",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",

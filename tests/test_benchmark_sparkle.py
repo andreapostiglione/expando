@@ -1,8 +1,10 @@
 from unittest.mock import patch
 
 from expando.benchmark import (
+    DEFAULT_SPARKLE_HELPER_WARN_MS,
     format_sparkle_benchmark_report,
     run_sparkle_update_benchmark,
+    sparkle_helper_latency_slow,
 )
 from expando.updater import UpdateInfo
 
@@ -52,3 +54,23 @@ def test_run_sparkle_update_benchmark_reports_helper_latency():
     assert result.helper_check_ms == 42.5
     text = format_sparkle_benchmark_report(result)
     assert "42.50 ms" in text
+
+
+def test_format_sparkle_benchmark_report_marks_slow_helper():
+    updates = [UpdateInfo(version="3.0.0", download_url="https://example.com/Expando.dmg")]
+
+    with patch("expando.sparkle_native.sparkle_available", return_value=True), patch(
+        "expando.sparkle_native.resolve_distribution_app_bundle",
+        return_value=None,
+    ), patch(
+        "expando.sparkle_native.measure_sparkle_helper_check_ms",
+        return_value=float(DEFAULT_SPARKLE_HELPER_WARN_MS + 100),
+    ), patch("expando.updater.fetch_appcast", return_value="<rss></rss>"), patch(
+        "expando.updater.parse_appcast",
+        return_value=updates,
+    ):
+        result = run_sparkle_update_benchmark()
+
+    assert sparkle_helper_latency_slow(result.helper_check_ms, DEFAULT_SPARKLE_HELPER_WARN_MS)
+    text = format_sparkle_benchmark_report(result, warn_ms=DEFAULT_SPARKLE_HELPER_WARN_MS)
+    assert "SPARKLE_HELPER_SLOW" in text

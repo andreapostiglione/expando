@@ -91,7 +91,14 @@ jobs:
         run: .venv/bin/expando sparkle-smoke --app Expando.app
 
       - name: Sparkle helper benchmark
-        run: .venv/bin/expando benchmark --sparkle | tee sparkle-benchmark.txt
+        env:
+          EXPANDO_SPARKLE_HELPER_WARN_MS: "15000"
+        run: |
+          WARN_MS="${EXPANDO_SPARKLE_HELPER_WARN_MS:-15000}"
+          .venv/bin/expando benchmark --sparkle --sparkle-warn-ms "$WARN_MS" | tee sparkle-benchmark.txt
+          if grep -Fq "SPARKLE_HELPER_SLOW" sparkle-benchmark.txt; then
+            echo "::warning title=Sparkle helper slow::Helper update check exceeded ${WARN_MS} ms (see sparkle-benchmark artifact)"
+          fi
 
       - name: Upload Sparkle benchmark report
         if: always()

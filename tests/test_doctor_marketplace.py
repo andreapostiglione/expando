@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from expando.hub import HubPackage
-from expando.hub_marketplace import doctor_marketplace_lines
+from expando.hub_marketplace import PendingMetadataDiff, doctor_marketplace_lines
 
 
 def _package(package_id: str, name: str) -> HubPackage:
@@ -82,7 +82,7 @@ def test_doctor_marketplace_includes_sync_preview():
     assert "hub portal sync" in text
 
 
-def test_doctor_marketplace_alerts_pending_not_in_local_queue():
+def test_doctor_marketplace_shows_pending_metadata_diff():
     official = [_package("dev", "Dev")]
 
     with patch("expando.hub_marketplace.marketplace_index_url", return_value="https://example.com/hub.json"), patch(
@@ -92,12 +92,28 @@ def test_doctor_marketplace_alerts_pending_not_in_local_queue():
         "expando.hub_marketplace.marketplace_sync_preview",
         return_value=None,
     ), patch(
-        "expando.hub_marketplace.marketplace_pending_sync_gaps",
-        return_value=["new-submit", "another-pack"],
+        "expando.hub_marketplace.marketplace_pending_metadata_diffs",
+        return_value=[
+            PendingMetadataDiff(
+                package_id="new-submit",
+                missing_local=True,
+                remote_name="New Submit",
+                remote_author="Contributor",
+                changed_fields=[],
+            ),
+            PendingMetadataDiff(
+                package_id="changed-pack",
+                missing_local=False,
+                remote_name="Changed",
+                remote_author="Contributor",
+                changed_fields=[("name", "Old", "New")],
+            ),
+        ],
     ):
         lines = doctor_marketplace_lines(limit=5)
 
     text = "\n".join(lines)
     assert "new-submit" in text
-    assert "another-pack" in text
+    assert "changed-pack" in text
+    assert "name" in text
     assert "pending" in text.lower() or "Pending" in text

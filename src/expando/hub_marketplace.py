@@ -282,6 +282,59 @@ def community_packages_dir(root: Path | None = None) -> Path:
     return base / "packages" / "community"
 
 
+def official_packages_dir(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "default_config" / "match" / "packages"
+
+
+PENDING_METADATA_FIELDS = ("name", "description", "author", "tags", "status", "submitted_at")
+
+
+@dataclass
+class PendingMetadataDiff:
+    package_id: str
+    missing_local: bool
+    remote_name: str
+    remote_author: str
+    changed_fields: list[tuple[str, str, str]]
+
+
+def _package_id_from_dir(package_dir: Path) -> str:
+    manifest_path = package_dir / "hub.json"
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            return str(manifest.get("id", package_dir.name))
+        except json.JSONDecodeError:
+            pass
+    return package_dir.name
+
+
+def _literal_triggers_for_package_dir(package_dir: Path) -> set[str]:
+    triggers: set[str] = set()
+    for yaml_path in _package_yaml_files(package_dir):
+        try:
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            continue
+        matches = data.get("matches", []) or []
+        for raw in matches:
+            if not isinstance(raw, dict) or raw.get("regex"):
+                continue
+            triggers.update(extract_triggers(raw))
+    return triggers
+
+
+def _format_metadata_value(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return ", ".join(str(item) for item in value)
+    return str(value)
+
+
 def validate_community_hub_packages(root: Path | None = None) -> list[tuple[str, HubPublishReport]]:
     community_dir = community_packages_dir(root)
     if not community_dir.is_dir():
@@ -302,29 +355,11 @@ def find_cross_package_trigger_duplicates(root: Path | None = None) -> dict[str,
     for package_dir in sorted(community_dir.iterdir()):
         if not package_dir.is_dir():
             continue
-        manifest_path = package_dir / "hub.json"
-        if manifest_path.exists():
-            try:
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                package_id = str(manifest.get("id", package_dir.name))
-            except json.JSONDecodeError:
-                package_id = package_dir.name
-        else:
-            package_id = package_dir.name
-
-        for yaml_path in _package_yaml_files(package_dir):
-            try:
-                data = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
-            except yaml.YAMLError:
-                continue
-            matches = data.get("matches", []) or []
-            for raw in matches:
-                if not isinstance(raw, dict) or raw.get("regex"):
-                    continue
-                for trigger in extract_triggers(raw):
-                    packages = trigger_packages.setdefault(trigger, [])
-                    if package_id not in packages:
-                        packages.append(package_id)
+        package_id = _package_id_from_dir(package_dir)
+        for trigger in _literal_triggers_for_package_dir(package_dir):
+            packages = trigger_packages.setdefault(trigger, [])
+            if package_id not in packages:
+                packages.append(package_id)
 
     return {
         trigger: packages
@@ -333,10 +368,49 @@ def find_cross_package_trigger_duplicates(root: Path | None = None) -> dict[str,
     }
 
 
+def find_community_official_trigger_collisions(
+    root: Path | None = None,
+) -> dict[str, list[tuple[str, str]]]:
+    from .hub import fetch_registry
+
+    official_dir = official_packages_dir(root)
+    official_triggers: dict[str, str] = {}
+    for package in fetch_registry(include_marketplace=False):
+        package_dir = official_dir / package.id
+        if not package_dir.is_dir():
+            continue
+        for trigger in _literal_triggers_for_package_dir(package_dir):
+            official_triggers.setdefault(trigger, package.id)
+
+    community_dir = community_packages_dir(root)
+    if not community_dir.is_dir():
+        return {}
+
+    collisions: dict[str, list[tuple[str, str]]] = {}
+    for package_dir in sorted(community_dir.iterdir()):
+        if not package_dir.is_dir():
+            continue
+        community_id = _package_id_from_dir(package_dir)
+        for trigger in _literal_triggers_for_package_dir(package_dir):
+            official_id = official_triggers.get(trigger)
+            if official_id is None:
+                continue
+            pairs = collisions.setdefault(trigger, [])
+            pair = (community_id, official_id)
+            if pair not in pairs:
+                pairs.append(pair)
+
+    return {
+        trigger: pairs
+        for trigger, pairs in sorted(collisions.items())
+    }
+
+
 def format_community_validation_report(
     reports: list[tuple[str, HubPublishReport]],
     *,
     trigger_duplicates: dict[str, list[str]] | None = None,
+    official_collisions: dict[str, list[tuple[str, str]]] | None = None,
 ) -> tuple[str, bool]:
     from .i18n import t
 
@@ -371,7 +445,77 @@ def format_community_validation_report(
                     packages=", ".join(packages),
                 )
             )
+
+    collisions = official_collisions or {}
+    if collisions:
+        ok = False
+        lines.append(t("hub.validate.community.official.header").format(count=len(collisions)))
+        for trigger, pairs in collisions.items():
+            for community_id, official_id in pairs:
+                lines.append(
+                    t("hub.validate.community.official.item").format(
+                        trigger=trigger,
+                        community=community_id,
+                        official=official_id,
+                    )
+                )
     return "\n".join(lines), ok
+
+
+def marketplace_pending_metadata_diffs() -> list[PendingMetadataDiff]:
+    if not marketplace_index_url():
+        return []
+    try:
+        remote = fetch_remote_marketplace_document()
+        local = _load_marketplace_document()
+    except RuntimeError:
+        return []
+
+    local_by_id = {
+        str(item.get("id")): item
+        for item in local.get("packages", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    diffs: list[PendingMetadataDiff] = []
+    for item in remote.get("packages", []):
+        if not isinstance(item, dict) or not item.get("id"):
+            continue
+        package_id = str(item["id"])
+        status = str(item.get("status", "approved")).lower()
+        if status != "pending":
+            continue
+
+        local_item = local_by_id.get(package_id)
+        if local_item is None:
+            diffs.append(
+                PendingMetadataDiff(
+                    package_id=package_id,
+                    missing_local=True,
+                    remote_name=str(item.get("name", package_id)),
+                    remote_author=str(item.get("author", "")),
+                    changed_fields=[],
+                )
+            )
+            continue
+
+        changed: list[tuple[str, str, str]] = []
+        for field in PENDING_METADATA_FIELDS:
+            remote_value = _format_metadata_value(item.get(field))
+            local_value = _format_metadata_value(local_item.get(field))
+            if remote_value != local_value:
+                changed.append((field, local_value, remote_value))
+        if changed:
+            diffs.append(
+                PendingMetadataDiff(
+                    package_id=package_id,
+                    missing_local=False,
+                    remote_name=str(item.get("name", package_id)),
+                    remote_author=str(item.get("author", "")),
+                    changed_fields=changed,
+                )
+            )
+    diffs.sort(key=lambda entry: entry.package_id)
+    return diffs
 
 
 def marketplace_pending_sync_gaps() -> list[str]:
@@ -482,13 +626,30 @@ def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:
         if sync["added"] or sync["updated"]:
             lines.append(f"  {t('doctor.marketplace.sync_hint')}")
 
-    pending_gaps = marketplace_pending_sync_gaps()
-    if pending_gaps:
-        lines.append(t("doctor.marketplace.pending_unsynced"))
-        for package_id in pending_gaps[:limit]:
-            lines.append(t("doctor.marketplace.pending_item").format(package_id=package_id))
-        if len(pending_gaps) > limit:
-            lines.append(t("doctor.marketplace.pending_more").format(count=len(pending_gaps) - limit))
+    pending_diffs = marketplace_pending_metadata_diffs()
+    if pending_diffs:
+        lines.append(t("doctor.marketplace.pending_diff"))
+        for diff in pending_diffs[:limit]:
+            if diff.missing_local:
+                lines.append(
+                    t("doctor.marketplace.pending_remote").format(
+                        package_id=diff.package_id,
+                        name=diff.remote_name,
+                        author=diff.remote_author or t("benchmark.sparkle.none"),
+                    )
+                )
+                continue
+            lines.append(t("doctor.marketplace.pending_changed").format(package_id=diff.package_id))
+            for field, local_value, remote_value in diff.changed_fields[:4]:
+                lines.append(
+                    t("doctor.marketplace.pending_field").format(
+                        field=field,
+                        local=local_value or t("benchmark.sparkle.none"),
+                        remote=remote_value or t("benchmark.sparkle.none"),
+                    )
+                )
+        if len(pending_diffs) > limit:
+            lines.append(t("doctor.marketplace.pending_more").format(count=len(pending_diffs) - limit))
         lines.append(f"  {t('doctor.marketplace.pending_hint')}")
 
     return lines

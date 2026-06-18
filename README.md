@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.6.0"><img src="https://img.shields.io/badge/version-3.6.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.7.0"><img src="https://img.shields.io/badge/version-3.7.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -19,12 +19,13 @@
 
 ---
 
-## What's new (v3.6)
+## What's new (v3.7)
 
 Recent releases focused on the **hub marketplace**, **release quality**, and **diagnostics**:
 
 | Version | Highlights |
 |---------|------------|
+| **v3.7** | Community vs official trigger lint · doctor pending metadata diff · `SPARKLE_HELPER_SLOW` warning in release CI (15s threshold) |
 | **v3.6** | Cross-package trigger lint in CI · doctor alert for unsynced remote pending submissions · Sparkle benchmark artifact on release |
 | **v3.5** | `hub validate-community` in CI · doctor marketplace sync preview · `benchmark --sparkle` helper latency |
 | **v3.4** | `hub submit init` scaffold · doctor remote marketplace section · `sparkle-smoke` + release CI smoke test |
@@ -157,6 +158,7 @@ Or install auto-start at login:
 | `expando templates list` | List available snippet templates |
 | `expando benchmark` | Benchmark trigger buffer under load (1000+ matches) |
 | `expando benchmark --sparkle` | Benchmark appcast fetch + Sparkle helper update-check latency |
+| `expando benchmark --sparkle --sparkle-warn-ms 15000` | Same + `SPARKLE_HELPER_SLOW` when helper exceeds threshold |
 | `expando sparkle-smoke --app Expando.app` | Verify Sparkle helper codesign + framework embed |
 | `expando notarize-audit` | Audit codesign, entitlements, Gatekeeper, notarization staples |
 | `expando notarize-audit --record` | Append audit run to local `notarize-audit-history.json` |
@@ -551,7 +553,7 @@ Logs: `~/Library/Application Support/expando/expando.log`
 
 ## Roadmap
 
-Current baseline: **v3.6.0**. See [ROADMAP.md](ROADMAP.md) for completed sprints and Sprint 16+ backlog.
+Current baseline: **v3.7.0**. See [ROADMAP.md](ROADMAP.md) for completed sprints and Sprint 17+ backlog.
 
 ## Contributing
 

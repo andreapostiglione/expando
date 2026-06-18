@@ -1,5 +1,5 @@
 matches:
-  - trigger: ":thanks"
+  - trigger: ":grazie-it"
     replace: "Grazie mille per il supporto."
 
   - trigger: ":intro"

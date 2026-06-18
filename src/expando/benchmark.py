@@ -157,6 +157,34 @@ def format_benchmark_report(result: BenchmarkResult) -> str:
     return "\n".join(lines)
 
 
+DEFAULT_SPARKLE_HELPER_WARN_MS = 15_000
+
+
+def resolve_sparkle_helper_warn_ms(override: int | None = None) -> int | None:
+    import os
+
+    if override is not None:
+        return override
+    raw = os.environ.get("EXPANDO_SPARKLE_HELPER_WARN_MS", "").strip()
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def sparkle_helper_latency_slow(
+    helper_check_ms: float | None,
+    warn_ms: int | None,
+) -> bool:
+    return (
+        helper_check_ms is not None
+        and warn_ms is not None
+        and helper_check_ms > warn_ms
+    )
+
+
 @dataclass
 class SparkleBenchmarkResult:
     sparkle_available: bool
@@ -224,7 +252,11 @@ def run_sparkle_update_benchmark(*, feed_url: str | None = None) -> SparkleBench
     )
 
 
-def format_sparkle_benchmark_report(result: SparkleBenchmarkResult) -> str:
+def format_sparkle_benchmark_report(
+    result: SparkleBenchmarkResult,
+    *,
+    warn_ms: int | None = None,
+) -> str:
     lines = [
         t("benchmark.sparkle.title"),
         f"{t('benchmark.sparkle.available')}: {t('doctor.yes') if result.sparkle_available else t('doctor.no')}",
@@ -245,6 +277,13 @@ def format_sparkle_benchmark_report(result: SparkleBenchmarkResult) -> str:
         lines.append(
             f"{t('benchmark.sparkle.helper_check')}: {result.helper_check_ms:.2f} ms"
         )
+        if sparkle_helper_latency_slow(result.helper_check_ms, warn_ms):
+            lines.append(
+                t("benchmark.sparkle.helper_slow").format(
+                    ms=f"{result.helper_check_ms:.2f}",
+                    threshold=warn_ms,
+                )
+            )
     else:
         lines.append(
             f"{t('benchmark.sparkle.helper_check')}: {t('benchmark.sparkle.none')}"

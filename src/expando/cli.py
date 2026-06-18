@@ -728,6 +728,7 @@ def hub_validate_community(as_json: bool) -> None:
     import json
 
     from .hub_marketplace import (
+        find_community_official_trigger_collisions,
         find_cross_package_trigger_duplicates,
         format_community_validation_report,
         validate_community_hub_packages,
@@ -735,6 +736,12 @@ def hub_validate_community(as_json: bool) -> None:
 
     reports = validate_community_hub_packages()
     trigger_duplicates = find_cross_package_trigger_duplicates()
+    official_collisions = find_community_official_trigger_collisions()
+    validation_ok = (
+        all(report.ok for _, report in reports)
+        and not trigger_duplicates
+        and not official_collisions
+    )
     if as_json:
         payload = {
             "packages": [
@@ -748,16 +755,21 @@ def hub_validate_community(as_json: bool) -> None:
                 for name, report in reports
             ],
             "trigger_duplicates": trigger_duplicates,
-            "ok": all(report.ok for _, report in reports) and not trigger_duplicates,
+            "official_collisions": {
+                trigger: [{"community": c, "official": o} for c, o in pairs]
+                for trigger, pairs in official_collisions.items()
+            },
+            "ok": validation_ok,
         }
         click.echo(json.dumps(payload, indent=2, ensure_ascii=False))
-        if not payload["ok"]:
+        if not validation_ok:
             raise SystemExit(1)
         return
 
     text, ok = format_community_validation_report(
         reports,
         trigger_duplicates=trigger_duplicates,
+        official_collisions=official_collisions,
     )
     click.echo(text)
     if not ok:
@@ -1248,12 +1260,19 @@ def check_updates_cmd(ctx: click.Context) -> None:
     default=None,
     help="Override Sparkle appcast URL for --sparkle",
 )
+@click.option(
+    "--sparkle-warn-ms",
+    type=int,
+    default=None,
+    help="Warn when Sparkle helper check exceeds this latency (ms)",
+)
 def benchmark(
     count: int,
     char_iterations: int,
     expand_iterations: int,
     sparkle: bool,
     feed_url: str | None,
+    sparkle_warn_ms: int | None,
 ) -> None:
     """Benchmark trigger buffer performance under load."""
     from .benchmark import (
@@ -1273,8 +1292,18 @@ def benchmark(
         raise click.ClickException(str(exc)) from exc
     click.echo(format_benchmark_report(result))
     if sparkle:
+        warn_ms = sparkle_warn_ms
+        if warn_ms is None:
+            from .benchmark import resolve_sparkle_helper_warn_ms
+
+            warn_ms = resolve_sparkle_helper_warn_ms()
         click.echo("")
-        click.echo(format_sparkle_benchmark_report(run_sparkle_update_benchmark(feed_url=feed_url)))
+        click.echo(
+            format_sparkle_benchmark_report(
+                run_sparkle_update_benchmark(feed_url=feed_url),
+                warn_ms=warn_ms,
+            )
+        )
 
 
 @main.group()

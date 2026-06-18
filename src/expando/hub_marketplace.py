@@ -223,6 +223,92 @@ def review_marketplace_package(
     return HubPackage.from_dict(updated)
 
 
+def init_contributor_package(
+    parent_dir: Path,
+    package_id: str,
+    *,
+    name: str,
+    description: str,
+    author: str = "Community",
+    tags: list[str] | None = None,
+    force: bool = False,
+) -> Path:
+    from .hub import _validate_package_id
+
+    package_id = _validate_package_id(package_id)
+    parent_dir = parent_dir.expanduser().resolve()
+    parent_dir.mkdir(parents=True, exist_ok=True)
+    package_dir = parent_dir / package_id
+    if package_dir.exists() and any(package_dir.iterdir()) and not force:
+        raise ValueError(f"Package directory already exists: {package_dir}")
+
+    package_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "id": package_id,
+        "name": name,
+        "description": description,
+        "author": author,
+        "tags": tags or ["community"],
+    }
+    (package_dir / "hub.json").write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    trigger = f":{package_id.replace('-', '')[:8]}"
+    snippets = (
+        "matches:\n"
+        f"  - trigger: '{trigger}'\n"
+        "    replace: |\n"
+        f"      Snippet di esempio per {name}.\n"
+        "      Modifica questo testo prima di inviare il package.\n"
+    )
+    (package_dir / "snippets.yml").write_text(snippets, encoding="utf-8")
+    return package_dir
+
+
+def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:
+    from .hub import fetch_registry
+    from .i18n import t
+
+    lines = [t("doctor.marketplace.title")]
+    remote_url = marketplace_index_url()
+    if remote_url:
+        lines.append(f"  {t('doctor.marketplace.remote')}: {remote_url}")
+    else:
+        lines.append(f"  {t('doctor.marketplace.remote')}: {t('hub.portal.remote_none')}")
+
+    try:
+        approved = fetch_marketplace_packages()
+    except RuntimeError:
+        lines.append(f"  {t('doctor.marketplace.unavailable')}")
+        return lines
+
+    official_ids = {item.id for item in fetch_registry(include_marketplace=False)}
+    community = [item for item in approved if item.id not in official_ids]
+    lines.append(
+        t("doctor.marketplace.counts").format(
+            approved=len(approved),
+            community=len(community),
+        )
+    )
+    if not community:
+        lines.append(f"  {t('doctor.marketplace.empty')}")
+        return lines
+
+    lines.append(t("doctor.marketplace.community"))
+    for package in community[:limit]:
+        lines.append(
+            t("doctor.marketplace.package").format(
+                package_id=package.id,
+                name=package.name,
+            )
+        )
+    if len(community) > limit:
+        lines.append(t("doctor.marketplace.more").format(count=len(community) - limit))
+    lines.append(f"  {t('doctor.marketplace.hint')}")
+    return lines
+
+
 def find_marketplace_package(package_id: str) -> HubPackage | None:
     data = _load_marketplace_document()
     for item in data.get("packages", []):

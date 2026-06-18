@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.3.0 | **Release:** v3.3.0 (hub submit E2E, doctor audit hint, benchmark Sparkle)
+**Versione:** 3.4.0 | **Release:** v3.4.0 (hub submit init, doctor marketplace, sparkle smoke CI)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.4.0** ✓ Sprint 13
+  - `hub submit init` template
+  - Doctor sezione marketplace remoto
+  - `sparkle-smoke` + CI release post-build
 - **v3.3.0** ✓ Sprint 12
   - `hub submit run` + `status` + `--queue`
   - Doctor hint su audit fail
@@ -29,8 +33,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 13)
+## Prossimi item (Sprint 14)
 
-- [ ] `hub submit init` template per nuovi package
-- [ ] Doctor: sezione marketplace remoto
-- [ ] Release CI smoke test Sparkle helper
+- [ ] Validazione automatica pre-submit in CI
+- [ ] Doctor: sync stato remoto vs locale marketplace
+- [ ] Benchmark latenza helper Sparkle

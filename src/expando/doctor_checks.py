@@ -233,6 +233,13 @@ def format_doctor_report(report: DoctorReport) -> str:
         lines.append("")
         lines.extend(notarize_lines)
 
+    from .hub_marketplace import doctor_marketplace_lines
+
+    marketplace_lines = doctor_marketplace_lines()
+    if marketplace_lines:
+        lines.append("")
+        lines.extend(marketplace_lines)
+
     return "\n".join(lines)
 
 

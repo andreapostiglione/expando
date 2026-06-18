@@ -721,9 +721,36 @@ def hub_publish(
         click.echo(t("cli.hub.publish.registered"))
 
 
-@hub.group("submit")
-def hub_submit_group() -> None:
+@hub.group("submit", invoke_without_command=True)
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write submission zip to this path (submit alias)",
+)
+@click.option(
+    "--queue",
+    is_flag=True,
+    help="Add the package to the local marketplace queue (submit alias)",
+)
+@click.pass_context
+def hub_submit_group(ctx: click.Context, output: Path | None, queue: bool) -> None:
     """Prepare and track marketplace package submissions."""
+    if ctx.invoked_subcommand is not None:
+        return
+    if not ctx.args:
+        click.echo(ctx.get_help())
+        ctx.exit(0)
+    if len(ctx.args) > 1:
+        raise click.ClickException(f"Unexpected arguments: {' '.join(ctx.args[1:])}")
+    package_dir = click.Path(exists=True, file_okay=False, path_type=Path)(ctx.args[0])
+    ctx.invoke(
+        hub_submit_run,
+        package_dir=package_dir,
+        output=output,
+        queue=queue,
+        as_json=False,
+    )
 
 
 @hub_submit_group.command("run")
@@ -791,6 +818,52 @@ def hub_submit_run(
         click.echo(format_submission_instructions(submission, bundle_path=result.bundle_path))
 
 
+@hub_submit_group.command("init")
+@click.argument("package_id")
+@click.option("--name", default=None, help="Display name (defaults to package id)")
+@click.option("--description", default=None, help="Short package description")
+@click.option("--author", default="Community", show_default=True)
+@click.option("--tag", "tags", multiple=True, help="Tag to include in hub.json (repeatable)")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=".",
+    show_default=True,
+    help="Parent directory for the new package folder",
+)
+@click.option("--force", is_flag=True, help="Overwrite files in an existing package directory")
+def hub_submit_init(
+    package_id: str,
+    name: str | None,
+    description: str | None,
+    author: str,
+    tags: tuple[str, ...],
+    output: Path,
+    force: bool,
+) -> None:
+    """Scaffold a new community hub package template."""
+    from .hub_marketplace import init_contributor_package
+    from .i18n import t
+
+    display_name = name or package_id.replace("-", " ").title()
+    package_description = description or f"Community snippets package {package_id}"
+    try:
+        package_dir = init_contributor_package(
+            output,
+            package_id,
+            name=display_name,
+            description=package_description,
+            author=author,
+            tags=list(tags) if tags else None,
+            force=force,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(t("hub.submit.init.ok").format(path=package_dir))
+    click.echo(t("hub.submit.init.next").format(path=package_dir))
+
+
 @hub_submit_group.command("status")
 @click.argument("package_id")
 @click.option("--json", "as_json", is_flag=True, help="Print status as JSON")
@@ -811,27 +884,6 @@ def hub_submit_status(package_id: str, as_json: bool) -> None:
         )
     else:
         click.echo(format_submission_status_report(report))
-
-
-@hub.command("submit")
-@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
-@click.option(
-    "-o",
-    "--output",
-    type=click.Path(path_type=Path),
-    help="Write submission zip to this path",
-)
-@click.option("--queue", is_flag=True, help="Add the package to the local marketplace queue")
-@click.pass_context
-def hub_submit(ctx: click.Context, package_dir: Path, output: Path | None, queue: bool) -> None:
-    """Validate a package and prepare a marketplace submission bundle (alias)."""
-    ctx.invoke(
-        hub_submit_run,
-        package_dir=package_dir,
-        output=output,
-        queue=queue,
-        as_json=False,
-    )
 
 
 @hub.group("review")
@@ -1239,6 +1291,34 @@ def security_audit_cmd(ctx: click.Context) -> None:
 
     report = run_security_audit(ctx.obj["config_dir"])
     click.echo(format_security_audit_report(report))
+    if not report.ok:
+        raise SystemExit(1)
+
+
+@main.command("sparkle-smoke")
+@click.option(
+    "--app",
+    "app_bundle",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False, path_type=Path),
+    help="Path to Expando.app (defaults to repo or /Applications)",
+)
+def sparkle_smoke_cmd(app_bundle: Path | None) -> None:
+    """Smoke-test Sparkle helper embed (codesign + framework) in a built app."""
+    from .sparkle_native import (
+        format_sparkle_smoke_report,
+        resolve_distribution_app_bundle,
+        smoke_test_sparkle_embed,
+    )
+
+    bundle = app_bundle
+    if bundle is None:
+        bundle = resolve_distribution_app_bundle()
+    if bundle is None:
+        raise click.ClickException(
+            "Expando.app not found — pass --app or set EXPANDO_APP_BUNDLE"
+        )
+    report = smoke_test_sparkle_embed(bundle)
+    click.echo(format_sparkle_smoke_report(report))
     if not report.ok:
         raise SystemExit(1)
 

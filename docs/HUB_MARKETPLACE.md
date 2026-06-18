@@ -4,6 +4,17 @@ Community hub packages can be submitted for review and listed alongside the offi
 
 ## Submit a package
 
+### Scaffold a new package
+
+```bash
+expando hub submit init my-package --name "My Package" --description "Short pitch"
+expando hub submit init my-package -o ~/Desktop/hub-packages --tag community --tag email
+```
+
+Creates `hub.json` and a starter `snippets.yml` in `{output}/{package_id}/`. Edit both files, then run the submit workflow below.
+
+### Validate and submit
+
 ```bash
 expando hub submit ./my-package
 expando hub submit run ./my-package --queue

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.3.0
+**Versione attuale:** v3.4.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.3.0)
+## Stato attuale (baseline v3.4.0)
 
 | Area | Stato |
 |------|--------|
@@ -55,6 +55,9 @@
 | Hub submit workflow contributor (`run`, `status`, `--queue`) | ✓ v3.3.0 |
 | Doctor hint su audit fail | ✓ v3.3.0 |
 | Benchmark Sparkle/appcast (`--sparkle`) | ✓ v3.3.0 |
+| Hub submit init template (`hub submit init`) | ✓ v3.4.0 |
+| Doctor marketplace remoto (community installabili) | ✓ v3.4.0 |
+| Release CI Sparkle helper smoke test | ✓ v3.4.0 |
 
 ### Gap noti oggi
 
@@ -255,10 +258,15 @@ flowchart LR
 2. Doctor hint `notarize-history` su ultimo audit fail
 3. `expando benchmark --sparkle` (appcast fetch + Sparkle embed)
 
-### Backlog (Sprint 13+)
-- Hub contributor: template `hub submit init` per nuovi package
-- Doctor: sezione marketplace remoto (package community installabili)
-- Release CI: smoke test Sparkle helper post-build
+### Sprint 13 → v3.4.0 ✓
+1. `expando hub submit init` — template per nuovi package community
+2. Doctor: sezione marketplace remoto (package community installabili)
+3. Release CI + `expando sparkle-smoke` post-build
+
+### Backlog (Sprint 14+)
+- Hub contributor: validazione automatica pre-submit in CI
+- Doctor: sync stato remoto vs locale marketplace
+- Benchmark: misura latenza helper Sparkle su update check
 
 ---
 

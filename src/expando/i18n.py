@@ -184,6 +184,39 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "  → Ultimo audit fallito: esegui expando notarize-history --limit 5",
         "en": "  → Last audit failed: run expando notarize-history --limit 5",
     },
+    "doctor.marketplace.title": {
+        "it": "Hub marketplace (remoto)",
+        "en": "Hub marketplace (remote)",
+    },
+    "doctor.marketplace.remote": {"it": "Indice remoto", "en": "Remote index"},
+    "doctor.marketplace.unavailable": {
+        "it": "Indice remoto non disponibile",
+        "en": "Remote index unavailable",
+    },
+    "doctor.marketplace.counts": {
+        "it": "  Approvati: {approved} · community: {community}",
+        "en": "  Approved: {approved} · community: {community}",
+    },
+    "doctor.marketplace.empty": {
+        "it": "  Nessun package community installabile",
+        "en": "  No installable community packages",
+    },
+    "doctor.marketplace.community": {
+        "it": "  Package community:",
+        "en": "  Community packages:",
+    },
+    "doctor.marketplace.package": {
+        "it": "    - {package_id} ({name})",
+        "en": "    - {package_id} ({name})",
+    },
+    "doctor.marketplace.more": {
+        "it": "    … e altri {count}",
+        "en": "    … and {count} more",
+    },
+    "doctor.marketplace.hint": {
+        "it": "  → expando hub install <id>",
+        "en": "  → expando hub install <id>",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
@@ -263,6 +296,15 @@ _STRINGS: dict[str, dict[str, str]] = {
     "benchmark.sparkle.entries": {"it": "release", "en": "releases"},
     "benchmark.sparkle.versions": {"it": "Versioni", "en": "Versions"},
     "benchmark.sparkle.none": {"it": "n/d", "en": "n/a"},
+    "sparkle.smoke.title": {
+        "it": "Sparkle smoke test",
+        "en": "Sparkle smoke test",
+    },
+    "sparkle.smoke.bundle": {"it": "App bundle", "en": "App bundle"},
+    "sparkle.smoke.helper": {"it": "Helper", "en": "Helper"},
+    "sparkle.smoke.framework": {"it": "Sparkle.framework", "en": "Sparkle.framework"},
+    "sparkle.smoke.ok": {"it": "OK — helper firmato e framework presente", "en": "OK — helper signed and framework present"},
+    "sparkle.smoke.fail": {"it": "FAIL", "en": "FAIL"},
     "benchmark.sparkle.update_available": {
         "it": "Aggiornamento disponibile",
         "en": "Update available",
@@ -388,6 +430,14 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.submit.status.official_index": {
         "it": "  Presente anche nell'indice ufficiale.",
         "en": "  Also listed in the official index.",
+    },
+    "hub.submit.init.ok": {
+        "it": "Template package creato: {path}",
+        "en": "Package template created: {path}",
+    },
+    "hub.submit.init.next": {
+        "it": "Modifica hub.json e snippets.yml, poi: expando hub submit run {path}",
+        "en": "Edit hub.json and snippets.yml, then: expando hub submit run {path}",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",

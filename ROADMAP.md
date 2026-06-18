@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.15.0
+**Versione attuale:** v3.16.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.15.0)
+## Stato attuale (baseline v3.16.0)
 
 | Area | Stato |
 |------|--------|
@@ -91,6 +91,9 @@
 | `hub/community-validation.json` su GitHub Pages (`publish-site`) | ✓ v3.15.0 |
 | Maintainer portal con badge validation + stats | ✓ v3.15.0 |
 | Release CI artifact unificato `release-health` (post-sparkle doctor) | ✓ v3.15.0 |
+| `doctor --full-html`: tabelle community validation complete | ✓ v3.16.0 |
+| Hub marketplace: badge validation + link `community-validation.json` | ✓ v3.16.0 |
+| CI/release: export `community-validation.json` in `release-health` | ✓ v3.16.0 |
 
 ### Gap noti oggi
 
@@ -351,7 +354,12 @@ flowchart LR
 2. Maintainer portal: stats validation (packages, duplicates, similarity warnings)
 3. Release CI: `doctor --full-html` dopo sparkle benchmark + artifact `release-health`
 
-### Backlog (Sprint 25+)
+### Sprint 25 → v3.16.0 ✓
+1. `doctor --full-html`: tabelle community validation (packages, duplicates, collisions, suggestions)
+2. Hub marketplace: badge validation + link `community-validation.json`
+3. CI/release: export `community-validation.json` nell'artifact `release-health`
+
+### Backlog (Sprint 26+)
 - TBD
 
 ---

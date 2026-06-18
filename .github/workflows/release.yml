@@ -107,6 +107,7 @@ jobs:
             echo "::warning title=Sparkle helper fail threshold::Helper update check exceeded ${FAIL_MS} ms (see sparkle-benchmark artifact)"
           fi
           .venv/bin/expando doctor --full-output doctor-full.json --full-html-output doctor-health.html
+          .venv/bin/expando hub validate-community --json > community-validation.json
 
       - name: Upload release health bundle
         if: always()
@@ -118,6 +119,7 @@ jobs:
             notarize-audit-trend.svg
             doctor-full.json
             doctor-health.html
+            community-validation.json
             sparkle-benchmark.txt
             sparkle-benchmark-history.json
             sparkle-benchmark-trend.svg

@@ -727,12 +727,7 @@ def default_trigger_suggestions_html_path(root: Path | None = None) -> Path:
     return base / "docs" / "hub-trigger-suggestions.html"
 
 
-def build_trigger_suggestions_html(document: dict[str, Any]) -> str:
-    generated_at = html.escape(str(document.get("generated_at", "")))
-    ok = bool(document.get("ok"))
-    status_label = "OK" if ok else "Issues found"
-    status_class = "ok" if ok else "fail"
-
+def community_validation_html_fragments(document: dict[str, Any]) -> dict[str, str]:
     packages = document.get("packages", [])
     if not isinstance(packages, list):
         packages = []
@@ -817,6 +812,26 @@ def build_trigger_suggestions_html(document: dict[str, Any]) -> str:
         if suggestion_rows
         else '<tr><td colspan="6" class="empty">No similarity warnings</td></tr>'
     )
+
+    return {
+        "packages_table": packages_table,
+        "duplicates_table": duplicates_table,
+        "collisions_table": collisions_table,
+        "suggestions_table": suggestions_table,
+    }
+
+
+def build_trigger_suggestions_html(document: dict[str, Any]) -> str:
+    generated_at = html.escape(str(document.get("generated_at", "")))
+    ok = bool(document.get("ok"))
+    status_label = "OK" if ok else "Issues found"
+    status_class = "ok" if ok else "fail"
+
+    tables = community_validation_html_fragments(document)
+    packages_table = tables["packages_table"]
+    duplicates_table = tables["duplicates_table"]
+    collisions_table = tables["collisions_table"]
+    suggestions_table = tables["suggestions_table"]
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1531,11 +1546,22 @@ def default_portal_site_paths(root: Path | None = None) -> tuple[Path, Path]:
     return base / "docs" / "hub-marketplace.html", base / "docs" / "hub" / "marketplace.json"
 
 
-def build_portal_site_html(payload: dict[str, Any]) -> str:
+def build_portal_site_html(
+    payload: dict[str, Any],
+    *,
+    validation: dict[str, Any] | None = None,
+) -> str:
     packages = payload.get("packages", [])
     if not isinstance(packages, list):
         packages = []
     updated_at = str(payload.get("updated_at", ""))
+    validation_doc = validation or {}
+    validation_ok = bool(validation_doc.get("ok"))
+    validation_label = "OK" if validation_ok else "Issues"
+    validation_class = "ok" if validation_ok else "fail"
+    suggestions = validation_doc.get("trigger_suggestions", [])
+    suggestion_count = len(suggestions) if isinstance(suggestions, list) else 0
+    duplicate_count = len(validation_doc.get("trigger_duplicates", {}) or {})
     package_cards: list[str] = []
     for item in packages:
         if not isinstance(item, dict):
@@ -1638,6 +1664,16 @@ def build_portal_site_html(payload: dict[str, Any]) -> str:
       color: var(--muted);
     }}
     .empty {{ color: var(--muted); }}
+    .badge {{
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }}
+    .badge.ok {{ color: #3ecf8e; border-color: rgba(62, 207, 142, 0.35); }}
+    .badge.fail {{ color: #ff6b6b; border-color: rgba(255, 107, 107, 0.35); }}
     pre {{
       background: var(--panel);
       border: 1px solid var(--border);
@@ -1655,7 +1691,7 @@ def build_portal_site_html(payload: dict[str, Any]) -> str:
     <p><a href="index.html">← Expando home</a></p>
     <h1>Hub Marketplace</h1>
     <p class="lead">Approved community snippet packages for <code>expando hub install</code>.</p>
-    <p class="meta">Updated {updated_at} · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
+    <p class="meta">Updated {updated_at} · Community validation <span class="badge {validation_class}">{validation_label}</span> · duplicates={duplicate_count} · similarity warnings={suggestion_count} · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub/community-validation.json">community-validation.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
 
     <div class="grid">
       {packages_html}
@@ -1671,7 +1707,8 @@ expando hub review approve &lt;package-id&gt;
 expando hub portal publish-site</pre>
 
     <footer>
-      <a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs</a>
+      <a href="hub/community-validation.json">community-validation.json</a>
+      · <a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs</a>
       · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit via GitHub</a>
     </footer>
   </div>
@@ -1867,7 +1904,10 @@ def publish_portal_site(
         encoding="utf-8",
     )
     html_destination.parent.mkdir(parents=True, exist_ok=True)
-    html_destination.write_text(build_portal_site_html(payload), encoding="utf-8")
+    html_destination.write_text(
+        build_portal_site_html(payload, validation=validation_document),
+        encoding="utf-8",
+    )
     write_trigger_suggestions_html(suggestions_destination)
     maintainer_destination.parent.mkdir(parents=True, exist_ok=True)
     maintainer_destination.write_text(

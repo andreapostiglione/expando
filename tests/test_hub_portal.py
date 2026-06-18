@@ -201,6 +201,25 @@ def test_build_portal_site_html_escapes_markup():
     assert "A &amp; B" in html
 
 
+def test_build_portal_site_html_includes_validation_badge():
+    payload = {
+        "updated_at": "2026-06-18T00:00:00+00:00",
+        "packages": [],
+    }
+    html = build_portal_site_html(
+        payload,
+        validation={
+            "ok": False,
+            "trigger_duplicates": {":dup": ["a", "b"]},
+            "trigger_suggestions": [{"community_trigger": ":x", "official_trigger": ":y"}],
+        },
+    )
+    assert "community-validation.json" in html
+    assert "similarity warnings=1" in html
+    assert "duplicates=1" in html
+    assert 'badge fail">Issues</span>' in html
+
+
 def test_marketplace_index_url_defaults_to_github_pages(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_URL", raising=False)
     monkeypatch.delenv("EXPANDO_HUB_MARKETPLACE_DISABLE", raising=False)

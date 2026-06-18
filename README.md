@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.15.0"><img src="https://img.shields.io/badge/version-3.15.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.16.0"><img src="https://img.shields.io/badge/version-3.16.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -25,6 +25,7 @@ Recent releases focused on the **hub marketplace**, **release quality**, and **d
 
 | Version | Highlights |
 |---------|------------|
+| **v3.16** | Community validation tables in `doctor --full-html` · marketplace validation badge · `community-validation.json` in `release-health` artifact |
 | **v3.15** | `hub/community-validation.json` on Pages · maintainer validation badge · unified `release-health` CI artifact (doctor after sparkle) |
 | **v3.14** | Inline SVG trends in `doctor --full-html` · `hub-maintainer.html` on Pages · CI smoke doctor HTML + `sparkle-benchmark-history --svg` |
 | **v3.13** | `doctor --full-html` health dashboard · CI `validate-community --html` gate · release artifact `doctor-health.html` |

@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.15.0 | **Release:** v3.15.0 (community-validation.json Pages, release-health artifact)
+**Versione:** 3.16.0 | **Release:** v3.16.0 (doctor validation tables, marketplace badge, release-health JSON)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.16.0** ✓ Sprint 25
+  - Tabelle community validation in `doctor --full-html`
+  - Badge validation su hub marketplace
+  - `community-validation.json` in artifact `release-health`
 - **v3.15.0** ✓ Sprint 24
   - `hub/community-validation.json` su Pages
   - Maintainer portal validation badge
@@ -77,6 +81,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 25)
+## Prossimi item (Sprint 26)
 
 - [ ] TBD — vedi ROADMAP.md

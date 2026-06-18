@@ -22,6 +22,8 @@ jobs:
         run: expando hub validate-community
       - name: Validate community trigger dashboard HTML
         run: expando hub validate-community --html -o /tmp/hub-trigger-suggestions.html
+      - name: Export community validation JSON
+        run: expando hub validate-community --json > /tmp/community-validation.json
       - name: Smoke test doctor full HTML dashboard
         run: expando doctor --full-html --full-html-output /tmp/doctor-health.html
       - name: Run E2E tests (headless-safe)

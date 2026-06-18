@@ -444,12 +444,20 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
     suggestions = validation.get("trigger_suggestions", [])
     if not isinstance(suggestions, list):
         suggestions = []
+    duplicate_count = len(validation.get("trigger_duplicates", {}) or {})
+    collision_count = sum(
+        len(items)
+        for items in (validation.get("official_collisions", {}) or {}).values()
+        if isinstance(items, list)
+    )
 
+    from .hub_marketplace import community_validation_html_fragments
     from .notarization_history import notarization_history_trend_svg
     from .sparkle_benchmark_history import sparkle_benchmark_trend_svg
 
     notarize_svg = notarization_history_trend_svg(notarize_entries)
     sparkle_svg = sparkle_benchmark_trend_svg(sparkle_entries)
+    validation_tables = community_validation_html_fragments(validation)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -598,7 +606,27 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
     </table>
 
     <h2>Community validation</h2>
-    <p class="meta">Packages validated: {len(validation.get('packages', [])) if isinstance(validation.get('packages'), list) else 0} · Similarity warnings: {len(suggestions)}</p>
+    <p class="meta">Packages validated: {len(validation.get('packages', [])) if isinstance(validation.get('packages'), list) else 0} · Duplicates: {duplicate_count} · Official collisions: {collision_count} · Similarity warnings: {len(suggestions)}</p>
+    <h3>Packages</h3>
+    <table>
+      <thead><tr><th>Package</th><th>Snippets</th><th>Status</th></tr></thead>
+      <tbody>{validation_tables["packages_table"]}</tbody>
+    </table>
+    <h3>Cross-package duplicates</h3>
+    <table>
+      <thead><tr><th>Trigger</th><th>Packages</th></tr></thead>
+      <tbody>{validation_tables["duplicates_table"]}</tbody>
+    </table>
+    <h3>Official collisions</h3>
+    <table>
+      <thead><tr><th>Trigger</th><th>Community</th><th>Official</th></tr></thead>
+      <tbody>{validation_tables["collisions_table"]}</tbody>
+    </table>
+    <h3>Similarity suggestions</h3>
+    <table>
+      <thead><tr><th>Community</th><th>Official</th><th>Score</th><th>Reason</th><th>Community pkg</th><th>Official pkg</th></tr></thead>
+      <tbody>{validation_tables["suggestions_table"]}</tbody>
+    </table>
 
     <h2>Regenerate</h2>
     <pre>expando doctor --full-html
@@ -606,7 +634,8 @@ expando doctor --full-html --full-html-output doctor-health.html
 expando doctor --full-json --full-output doctor-full.json</pre>
 
     <footer>
-      <a href="hub-maintainer.html">Maintainer portal</a>
+      <a href="hub/community-validation.json">community-validation.json</a>
+      · <a href="hub-maintainer.html">Maintainer portal</a>
       · <a href="hub-trigger-suggestions.html">Trigger dashboard</a>
       · <a href="hub-marketplace.html">Hub marketplace</a>
     </footer>

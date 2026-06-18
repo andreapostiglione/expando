@@ -60,15 +60,31 @@ def test_build_doctor_full_html_includes_sections():
         },
         "community_validation": {
             "ok": True,
-            "packages": [{"package_id": "typing-it", "ok": True}],
-            "trigger_suggestions": [],
+            "packages": [{"package_id": "typing-it", "ok": True, "match_count": 4}],
+            "trigger_suggestions": [
+                {
+                    "community_trigger": ":meet",
+                    "official_trigger": ":meeting",
+                    "score": 0.82,
+                    "reason": "prefix",
+                    "community_package": "meeting-it",
+                    "official_package": "dev",
+                }
+            ],
+            "trigger_duplicates": {},
+            "official_collisions": {},
         },
     }
     html_text = build_doctor_full_html(document)
     assert "Expando Health Dashboard" in html_text
     assert "Notarization history" in html_text
     assert "Sparkle benchmark history" in html_text
+    assert "Community validation" in html_text
+    assert "Cross-package duplicates" in html_text
+    assert "Similarity suggestions" in html_text
+    assert "community-validation.json" in html_text
     assert "typing-it" in html_text
+    assert ":meet" in html_text
     assert "3.12.0" in html_text
     assert "<svg" in html_text
     assert "polyline" in html_text

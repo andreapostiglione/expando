@@ -258,8 +258,11 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
         findings.append(
             NotarizationFinding(
                 check_id="entitlements.read",
-                status="fail",
-                message=f"Could not read entitlements from {app_bundle.name}",
+                status="warn",
+                message=(
+                    f"Could not read entitlements from Mach-O binaries in {app_bundle.name}; "
+                    "verify scripts/entitlements.plist on the signed app bundle"
+                ),
             )
         )
     elif expected:

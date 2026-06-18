@@ -100,7 +100,14 @@ expando hub validate-community
 expando hub validate-community --json
 ```
 
-Checks package structure, snippet validity, **cross-package duplicate literal triggers**, and **collisions with official hub packages** (community trigger already used in `default_config/match/packages/` fails CI). **Similar triggers** near official ones are reported as warnings only (prefix/Levenshtein) and do not fail CI.
+Checks package structure, snippet validity, **cross-package duplicate literal triggers**, and **collisions with official hub packages** (community trigger already used in `default_config/match/packages/` fails CI). **Similar triggers** near official ones are reported as warnings only (fuzzy score with `prefix` / `suffix` / `contains` / `levenshtein` reason) and do not fail CI.
+
+Export full marketplace diagnostics from doctor:
+
+```bash
+expando doctor --marketplace-json
+expando doctor --marketplace-json -o marketplace-health.json
+```
 
 Export pending metadata differences between remote marketplace and local queue:
 

@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.8.0 | **Release:** v3.8.0 (trigger similarity warnings, pending-diff export, sparkle history)
+**Versione:** 3.9.0 | **Release:** v3.9.0 (fuzzy trigger score, doctor marketplace JSON, sparkle fail + trend)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.9.0** ✓ Sprint 18
+  - Scoring fuzzy trigger (score/reason)
+  - `doctor --marketplace-json`
+  - `--sparkle-fail-ms` + trend sparkline
 - **v3.8.0** ✓ Sprint 17
   - Suggerimenti trigger simili (warning)
   - `hub portal pending-diff` JSON export
@@ -49,8 +53,8 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 18)
+## Prossimi item (Sprint 19)
 
-- [ ] Suggerimenti trigger con scoring più ricco
-- [ ] `doctor --marketplace-json`
-- [ ] Benchmark trend chart / soglia fail configurabile
+- [ ] Dashboard HTML suggerimenti trigger
+- [ ] Doctor merge marketplace JSON nel report completo
+- [ ] Release CI strict fail su soglia helper

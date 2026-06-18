@@ -10,6 +10,7 @@ from expando.sparkle_benchmark_history import (
     load_sparkle_benchmark_history,
     record_sparkle_benchmark,
     sparkle_benchmark_history_to_dict,
+    sparkle_benchmark_sparkline,
 )
 
 
@@ -28,16 +29,19 @@ def _sample_result(helper_ms: float | None = 1200.5) -> SparkleBenchmarkResult:
     )
 
 
-def test_build_sparkle_benchmark_entry_marks_slow():
+def test_build_sparkle_benchmark_entry_marks_slow_and_fail():
     entry = build_sparkle_benchmark_entry(
-        _sample_result(helper_ms=16000.0),
+        _sample_result(helper_ms=31000.0),
         version="3.8.0",
         warn_ms=15000,
+        fail_ms=30000,
         tag="v3.8.0",
     )
     assert entry["version"] == "3.8.0"
     assert entry["slow"] is True
+    assert entry["failed"] is True
     assert entry["benchmark"]["helper_slow"] is True
+    assert entry["benchmark"]["helper_fail"] is True
 
 
 def test_record_and_load_sparkle_benchmark_history(tmp_path: Path):
@@ -85,3 +89,20 @@ def test_sparkle_benchmark_history_report_and_to_dict(tmp_path: Path):
     assert payload["version"] == HISTORY_VERSION
     assert payload["stats"]["total"] == 1
     assert len(payload["entries"]) == 1
+
+
+def test_sparkle_benchmark_sparkline_and_report_trend(tmp_path: Path):
+    history_path = tmp_path / "sparkle-benchmark-history.json"
+    for helper_ms in (1000.0, 2000.0, 4000.0):
+        record_sparkle_benchmark(
+            _sample_result(helper_ms=helper_ms),
+            history_path,
+            version="3.8.0",
+            warn_ms=15000,
+        )
+    entries = load_sparkle_benchmark_history(history_path)
+    sparkline = sparkle_benchmark_sparkline(entries)
+    assert len(sparkline) == 3
+    report = format_sparkle_benchmark_history_report(history_path, limit=5)
+    assert sparkline in report
+    assert "min=" in report

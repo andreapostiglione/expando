@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.8.0
+**Versione attuale:** v3.9.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.8.0)
+## Stato attuale (baseline v3.9.0)
 
 | Area | Stato |
 |------|--------|
@@ -70,6 +70,9 @@
 | Suggerimenti trigger community vicini a ufficiali (warning) | ✓ v3.8.0 |
 | Export JSON pending diff marketplace (`hub portal pending-diff`) | ✓ v3.8.0 |
 | Storico latenza helper Sparkle multi-versione in release | ✓ v3.8.0 |
+| Scoring fuzzy trigger community vs ufficiali (score + reason) | ✓ v3.9.0 |
+| `expando doctor --marketplace-json` export diagnostico | ✓ v3.9.0 |
+| Benchmark Sparkle fail threshold + trend sparkline in history | ✓ v3.9.0 |
 
 ### Gap noti oggi
 
@@ -295,10 +298,15 @@ flowchart LR
 2. `hub portal pending-diff`: export JSON diff metadata pending
 3. `sparkle-benchmark-history` + artifact release multi-versione su `main`
 
-### Backlog (Sprint 18+)
-- Suggerimenti trigger con scoring più ricco / fuzzy
-- Doctor: comando dedicato `doctor --marketplace-json`
-- Benchmark: trend chart o soglia fail (non solo warn) configurabile
+### Sprint 18 → v3.9.0 ✓
+1. `validate-community`: scoring fuzzy trigger (prefix/suffix/contains/levenshtein)
+2. `expando doctor --marketplace-json` (+ `-o`) export marketplace
+3. `benchmark --sparkle-fail-ms` + trend sparkline in `sparkle-benchmark-history`
+
+### Backlog (Sprint 19+)
+- Hub contributor: dashboard HTML suggerimenti trigger
+- Doctor: merge `--marketplace-json` nel report doctor completo
+- Benchmark: soglia fail che blocca release CI (opt-in strict)
 
 ---
 

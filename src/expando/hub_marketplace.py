@@ -301,12 +301,17 @@ class PendingMetadataDiff:
     changed_fields: list[tuple[str, str, str]]
 
 
+TRIGGER_SIMILARITY_MIN_SCORE = 0.55
+
+
 @dataclass
 class TriggerSimilaritySuggestion:
     community_trigger: str
     official_trigger: str
     community_package: str
     official_package: str
+    score: float
+    reason: str
 
 
 def _package_id_from_dir(package_dir: Path) -> str:
@@ -358,21 +363,39 @@ def _levenshtein_distance(left: str, right: str) -> int:
     return previous[-1]
 
 
-def _triggers_are_similar(community_trigger: str, official_trigger: str) -> bool:
+def _score_trigger_similarity(
+    community_trigger: str,
+    official_trigger: str,
+) -> tuple[float, str] | None:
     if community_trigger == official_trigger:
-        return False
+        return None
     community_body = _normalize_trigger_body(community_trigger)
     official_body = _normalize_trigger_body(official_trigger)
     if not community_body or not official_body or community_body == official_body:
-        return False
+        return None
+
     min_len = min(len(community_body), len(official_body))
-    if min_len >= 3 and (
-        community_body.startswith(official_body) or official_body.startswith(community_body)
-    ):
-        return True
-    distance = _levenshtein_distance(community_body, official_body)
     max_len = max(len(community_body), len(official_body))
-    return distance <= 2 or (distance / max_len) <= 0.34
+    ratio = min_len / max_len if max_len else 0.0
+
+    if min_len >= 3:
+        if community_body.startswith(official_body) or official_body.startswith(community_body):
+            return round(0.82 + ratio * 0.16, 3), "prefix"
+        if community_body.endswith(official_body) or official_body.endswith(community_body):
+            return round(0.78 + ratio * 0.14, 3), "suffix"
+        if community_body in official_body or official_body in community_body:
+            return round(0.68 + ratio * 0.2, 3), "contains"
+
+    distance = _levenshtein_distance(community_body, official_body)
+    if distance <= 2 or (distance / max_len) <= 0.34:
+        score = max(0.5, 1.0 - (distance / max_len))
+        return round(score, 3), "levenshtein"
+    return None
+
+
+def _triggers_are_similar(community_trigger: str, official_trigger: str) -> bool:
+    scored = _score_trigger_similarity(community_trigger, official_trigger)
+    return scored is not None and scored[0] >= TRIGGER_SIMILARITY_MIN_SCORE
 
 
 def _format_metadata_value(value: Any) -> str:
@@ -486,16 +509,23 @@ def find_community_official_trigger_similarities(
                 if key in seen:
                     continue
                 seen.add(key)
+                scored = _score_trigger_similarity(community_trigger, official_trigger)
+                if scored is None or scored[0] < TRIGGER_SIMILARITY_MIN_SCORE:
+                    continue
+                score, reason = scored
                 suggestions.append(
                     TriggerSimilaritySuggestion(
                         community_trigger=community_trigger,
                         official_trigger=official_trigger,
                         community_package=community_id,
                         official_package=official_id,
+                        score=score,
+                        reason=reason,
                     )
                 )
     suggestions.sort(
         key=lambda item: (
+            -item.score,
             item.community_package,
             item.community_trigger,
             item.official_trigger,
@@ -504,12 +534,14 @@ def find_community_official_trigger_similarities(
     return suggestions
 
 
-def trigger_similarity_suggestion_to_dict(item: TriggerSimilaritySuggestion) -> dict[str, str]:
+def trigger_similarity_suggestion_to_dict(item: TriggerSimilaritySuggestion) -> dict[str, object]:
     return {
         "community_trigger": item.community_trigger,
         "official_trigger": item.official_trigger,
         "community_package": item.community_package,
         "official_package": item.official_package,
+        "score": item.score,
+        "reason": item.reason,
     }
 
 
@@ -646,6 +678,8 @@ def format_community_validation_report(
                     official_trigger=item.official_trigger,
                     community=item.community_package,
                     official=item.official_package,
+                    score=f"{item.score:.2f}",
+                    reason=item.reason,
                 )
             )
     return "\n".join(lines), ok
@@ -752,6 +786,63 @@ def marketplace_sync_preview() -> dict[str, Any] | None:
         "local_approved": local_approved,
         "remote_approved": remote_approved,
     }
+
+
+def doctor_marketplace_document(*, limit: int | None = None) -> dict[str, Any]:
+    from .hub import fetch_registry
+
+    remote_url = marketplace_index_url()
+    document: dict[str, Any] = {
+        "version": 1,
+        "generated_at": _utc_now(),
+        "remote_url": remote_url,
+        "available": False,
+        "approved_count": 0,
+        "community_count": 0,
+        "community_packages": [],
+        "sync_preview": None,
+        "pending_diffs": [],
+        "pending_sync_gaps": [],
+    }
+    if not remote_url:
+        return document
+
+    try:
+        approved = fetch_marketplace_packages()
+    except RuntimeError as exc:
+        document["error"] = str(exc)
+        return document
+
+    document["available"] = True
+    official_ids = {item.id for item in fetch_registry(include_marketplace=False)}
+    community = [item for item in approved if item.id not in official_ids]
+    document["approved_count"] = len(approved)
+    document["community_count"] = len(community)
+    community_slice = community if limit is None else community[:limit]
+    document["community_packages"] = [
+        {
+            "id": package.id,
+            "name": package.name,
+            "description": package.description,
+            "author": package.author,
+            "status": package.status,
+        }
+        for package in community_slice
+    ]
+    if limit is not None and len(community) > limit:
+        document["community_truncated"] = len(community) - limit
+
+    preview = marketplace_sync_preview()
+    if preview is not None:
+        document["sync_preview"] = preview
+
+    diffs = marketplace_pending_metadata_diffs()
+    diff_slice = diffs if limit is None else diffs[:limit]
+    document["pending_diffs"] = [pending_metadata_diff_to_dict(item) for item in diff_slice]
+    if limit is not None and len(diffs) > limit:
+        document["pending_diffs_truncated"] = len(diffs) - limit
+    document["pending_sync_gaps"] = marketplace_pending_sync_gaps()
+    return document
 
 
 def doctor_marketplace_lines(*, limit: int = 5) -> list[str]:

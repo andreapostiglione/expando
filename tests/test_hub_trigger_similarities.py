@@ -56,6 +56,10 @@ def test_find_community_official_trigger_similarities_prefix_and_levenshtein(tmp
     }
     assert (":emails", ":email", "typing-it", "core") in pairs
     assert (":grazie-it", ":grazie", "typing-it", "core") in pairs
+    by_trigger = {(item.community_trigger, item.official_trigger): item for item in suggestions}
+    assert by_trigger[(":emails", ":email")].reason == "prefix"
+    assert by_trigger[(":emails", ":email")].score >= 0.9
+    assert suggestions[0].score >= suggestions[-1].score
 
 
 def test_format_community_validation_report_keeps_ok_with_similarities_only():
@@ -64,6 +68,8 @@ def test_format_community_validation_report_keeps_ok_with_similarities_only():
         official_trigger=":email",
         community_package="typing-it",
         official_package="core",
+        score=0.95,
+        reason="prefix",
     )
     text, ok = format_community_validation_report(
         [],
@@ -80,10 +86,14 @@ def test_trigger_similarity_suggestion_to_dict():
         official_trigger=":food",
         community_package="a",
         official_package="b",
+        score=0.88,
+        reason="prefix",
     )
     assert trigger_similarity_suggestion_to_dict(item) == {
         "community_trigger": ":foo",
         "official_trigger": ":food",
         "community_package": "a",
         "official_package": "b",
+        "score": 0.88,
+        "reason": "prefix",
     }

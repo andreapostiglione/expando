@@ -1305,6 +1305,12 @@ def check_updates_cmd(ctx: click.Context) -> None:
     default=None,
     help="Warn when Sparkle helper check exceeds this latency (ms)",
 )
+@click.option(
+    "--sparkle-fail-ms",
+    type=int,
+    default=None,
+    help="Fail when Sparkle helper check exceeds this latency (ms)",
+)
 def benchmark(
     count: int,
     char_iterations: int,
@@ -1312,6 +1318,7 @@ def benchmark(
     sparkle: bool,
     feed_url: str | None,
     sparkle_warn_ms: int | None,
+    sparkle_fail_ms: int | None,
 ) -> None:
     """Benchmark trigger buffer performance under load."""
     from .benchmark import (
@@ -1331,18 +1338,29 @@ def benchmark(
         raise click.ClickException(str(exc)) from exc
     click.echo(format_benchmark_report(result))
     if sparkle:
+        from .benchmark import (
+            resolve_sparkle_helper_fail_ms,
+            resolve_sparkle_helper_warn_ms,
+            sparkle_helper_latency_fail,
+        )
+
         warn_ms = sparkle_warn_ms
         if warn_ms is None:
-            from .benchmark import resolve_sparkle_helper_warn_ms
-
             warn_ms = resolve_sparkle_helper_warn_ms()
+        fail_ms = sparkle_fail_ms
+        if fail_ms is None:
+            fail_ms = resolve_sparkle_helper_fail_ms()
+        sparkle_result = run_sparkle_update_benchmark(feed_url=feed_url)
         click.echo("")
         click.echo(
             format_sparkle_benchmark_report(
-                run_sparkle_update_benchmark(feed_url=feed_url),
+                sparkle_result,
                 warn_ms=warn_ms,
+                fail_ms=fail_ms,
             )
         )
+        if sparkle_helper_latency_fail(sparkle_result.helper_check_ms, fail_ms):
+            raise SystemExit(1)
 
 
 @main.group()
@@ -1567,6 +1585,12 @@ def sparkle_benchmark_history_group(
     default=None,
     help="Slow-helper warning threshold in milliseconds",
 )
+@click.option(
+    "--sparkle-fail-ms",
+    type=int,
+    default=None,
+    help="Fail threshold in milliseconds (stored in history; does not exit non-zero)",
+)
 @click.option("--feed-url", default=None, help="Override Sparkle appcast URL")
 @click.option(
     "--history-path",
@@ -1577,12 +1601,14 @@ def sparkle_benchmark_history_record(
     version: str,
     tag: str | None,
     sparkle_warn_ms: int | None,
+    sparkle_fail_ms: int | None,
     feed_url: str | None,
     history_path: Path | None,
 ) -> None:
     """Run Sparkle benchmark and append result to release history."""
     from .benchmark import (
         format_sparkle_benchmark_report,
+        resolve_sparkle_helper_fail_ms,
         resolve_sparkle_helper_warn_ms,
         run_sparkle_update_benchmark,
     )
@@ -1591,14 +1617,18 @@ def sparkle_benchmark_history_record(
     warn_ms = sparkle_warn_ms
     if warn_ms is None:
         warn_ms = resolve_sparkle_helper_warn_ms()
+    fail_ms = sparkle_fail_ms
+    if fail_ms is None:
+        fail_ms = resolve_sparkle_helper_fail_ms()
     result = run_sparkle_update_benchmark(feed_url=feed_url)
-    click.echo(format_sparkle_benchmark_report(result, warn_ms=warn_ms))
+    click.echo(format_sparkle_benchmark_report(result, warn_ms=warn_ms, fail_ms=fail_ms))
     path = history_path or default_history_path()
     entry = record_sparkle_benchmark(
         result,
         path,
         version=version,
         warn_ms=warn_ms,
+        fail_ms=fail_ms,
         tag=tag,
     )
     click.echo(
@@ -1651,9 +1681,41 @@ def notarize_history_cmd(
 
 
 @main.command()
+@click.option(
+    "--marketplace-json",
+    is_flag=True,
+    help="Export marketplace health (remote stats, sync preview, pending diff) as JSON",
+)
+@click.option(
+    "-o",
+    "--marketplace-output",
+    type=click.Path(path_type=Path),
+    help="Write marketplace JSON report to this path",
+)
 @click.pass_context
-def doctor(ctx: click.Context) -> None:
+def doctor(
+    ctx: click.Context,
+    marketplace_json: bool,
+    marketplace_output: Path | None,
+) -> None:
     """Validate configuration, permissions, and daemon health."""
+    if marketplace_json or marketplace_output is not None:
+        import json
+
+        from .hub_marketplace import doctor_marketplace_document
+
+        payload = doctor_marketplace_document()
+        text = json.dumps(payload, indent=2, ensure_ascii=False)
+        if marketplace_output is not None:
+            marketplace_output = marketplace_output.expanduser().resolve()
+            marketplace_output.parent.mkdir(parents=True, exist_ok=True)
+            marketplace_output.write_text(text + "\n", encoding="utf-8")
+            if not marketplace_json:
+                click.echo(t("doctor.marketplace.exported").format(path=marketplace_output))
+        if marketplace_json:
+            click.echo(text)
+        return
+
     report = run_doctor(ctx.obj["config_dir"])
     click.echo(format_doctor_report(report))
     if not report.ok:

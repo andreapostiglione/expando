@@ -257,6 +257,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "→ expando hub portal sync",
         "en": "→ expando hub portal sync",
     },
+    "doctor.marketplace.exported": {
+        "it": "Report marketplace esportato in {path}",
+        "en": "Marketplace report exported to {path}",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
@@ -340,6 +344,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "benchmark.sparkle.helper_slow": {
         "it": "SPARKLE_HELPER_SLOW: {ms} ms (soglia {threshold} ms)",
         "en": "SPARKLE_HELPER_SLOW: {ms} ms (threshold {threshold} ms)",
+    },
+    "benchmark.sparkle.helper_fail": {
+        "it": "SPARKLE_HELPER_FAIL: {ms} ms (soglia {threshold} ms)",
+        "en": "SPARKLE_HELPER_FAIL: {ms} ms (threshold {threshold} ms)",
     },
     "benchmark.sparkle.entries": {"it": "release", "en": "releases"},
     "benchmark.sparkle.versions": {"it": "Versioni", "en": "Versions"},
@@ -524,8 +532,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Triggers similar to official packages ({count}, warning only):",
     },
     "hub.validate.community.similar.item": {
-        "it": "  ! {community_trigger} ≈ {official_trigger} → community:{community} / official:{official}",
-        "en": "  ! {community_trigger} ≈ {official_trigger} → community:{community} / official:{official}",
+        "it": "  ! {community_trigger} ≈ {official_trigger} ({score}, {reason}) → community:{community} / official:{official}",
+        "en": "  ! {community_trigger} ≈ {official_trigger} ({score}, {reason}) → community:{community} / official:{official}",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",
@@ -618,6 +626,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "sparkle.benchmark.history.exported": {
         "it": "Storico benchmark esportato in {path}",
         "en": "Benchmark history exported to {path}",
+    },
+    "sparkle.benchmark.history.trend": {
+        "it": "Trend helper: {sparkline}  min={min_ms} ms · max={max_ms} ms · avg={avg_ms} ms",
+        "en": "Helper trend: {sparkline}  min={min_ms} ms · max={max_ms} ms · avg={avg_ms} ms",
     },
     "cli.update.available": {
         "it": "Aggiornamento disponibile: v{version}",

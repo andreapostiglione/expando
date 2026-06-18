@@ -93,15 +93,21 @@ jobs:
       - name: Sparkle helper benchmark
         env:
           EXPANDO_SPARKLE_HELPER_WARN_MS: "15000"
+          EXPANDO_SPARKLE_HELPER_FAIL_MS: "30000"
         run: |
           TAG="${GITHUB_REF_NAME#v}"
           WARN_MS="${EXPANDO_SPARKLE_HELPER_WARN_MS:-15000}"
+          FAIL_MS="${EXPANDO_SPARKLE_HELPER_FAIL_MS:-30000}"
           .venv/bin/expando sparkle-benchmark-history record \
             --version "$TAG" \
             --tag "${GITHUB_REF_NAME}" \
-            --sparkle-warn-ms "$WARN_MS" | tee sparkle-benchmark.txt
+            --sparkle-warn-ms "$WARN_MS" \
+            --sparkle-fail-ms "$FAIL_MS" | tee sparkle-benchmark.txt
           if grep -Fq "SPARKLE_HELPER_SLOW" sparkle-benchmark.txt; then
             echo "::warning title=Sparkle helper slow::Helper update check exceeded ${WARN_MS} ms (see sparkle-benchmark artifact)"
+          fi
+          if grep -Fq "SPARKLE_HELPER_FAIL" sparkle-benchmark.txt; then
+            echo "::warning title=Sparkle helper fail threshold::Helper update check exceeded ${FAIL_MS} ms (see sparkle-benchmark artifact)"
           fi
 
       - name: Upload Sparkle benchmark report

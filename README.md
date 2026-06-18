@@ -25,6 +25,7 @@ Recent releases focused on the **hub marketplace**, **release quality**, and **d
 
 | Version | Highlights |
 |---------|------------|
+| **v3.9** | Fuzzy trigger score/reason in `validate-community` · `doctor --marketplace-json` · `--sparkle-fail-ms` + sparkline trend |
 | **v3.8** | Trigger similarity warnings in `validate-community` · `hub portal pending-diff` JSON export · `sparkle-benchmark-history` release artifact |
 | **v3.7** | Community vs official trigger lint · doctor pending metadata diff · `SPARKLE_HELPER_SLOW` warning in release CI (15s threshold) |
 | **v3.6** | Cross-package trigger lint in CI · doctor alert for unsynced remote pending submissions · Sparkle benchmark artifact on release |
@@ -160,6 +161,7 @@ Or install auto-start at login:
 | `expando benchmark` | Benchmark trigger buffer under load (1000+ matches) |
 | `expando benchmark --sparkle` | Benchmark appcast fetch + Sparkle helper update-check latency |
 | `expando benchmark --sparkle --sparkle-warn-ms 15000` | Same + `SPARKLE_HELPER_SLOW` when helper exceeds threshold |
+| `expando benchmark --sparkle --sparkle-fail-ms 30000` | Exit 1 + `SPARKLE_HELPER_FAIL` when helper exceeds fail threshold |
 | `expando sparkle-smoke --app Expando.app` | Verify Sparkle helper codesign + framework embed |
 | `expando sparkle-benchmark-history` | Show Sparkle helper latency history across releases |
 | `expando sparkle-benchmark-history record` | Run Sparkle benchmark and append to `sparkle-benchmark-history.json` |
@@ -213,6 +215,7 @@ Each `migrate-*` command creates a config backup and prints a report (imported, 
 | `expando hub portal sync` | Merge remote marketplace JSON into local queue |
 | `expando hub portal publish-site` | Regenerate Hub Pages HTML + JSON |
 | `expando hub portal pending-diff` | Export remote vs local pending metadata diff (JSON) |
+| `expando doctor --marketplace-json` | Export marketplace health JSON (community, sync, pending diff) |
 | `expando hub review list` | List pending/approved/rejected queue (maintainers) |
 | `expando hub review approve <id>` | Approve a queued package (maintainers) |
 

@@ -158,20 +158,38 @@ def format_benchmark_report(result: BenchmarkResult) -> str:
 
 
 DEFAULT_SPARKLE_HELPER_WARN_MS = 15_000
+DEFAULT_SPARKLE_HELPER_FAIL_MS = 30_000
 
 
-def resolve_sparkle_helper_warn_ms(override: int | None = None) -> int | None:
+def _resolve_sparkle_helper_threshold_ms(
+    override: int | None,
+    env_key: str,
+) -> int | None:
     import os
 
     if override is not None:
         return override
-    raw = os.environ.get("EXPANDO_SPARKLE_HELPER_WARN_MS", "").strip()
+    raw = os.environ.get(env_key, "").strip()
     if not raw:
         return None
     try:
         return int(raw)
     except ValueError:
         return None
+
+
+def resolve_sparkle_helper_warn_ms(override: int | None = None) -> int | None:
+    return _resolve_sparkle_helper_threshold_ms(
+        override,
+        "EXPANDO_SPARKLE_HELPER_WARN_MS",
+    )
+
+
+def resolve_sparkle_helper_fail_ms(override: int | None = None) -> int | None:
+    return _resolve_sparkle_helper_threshold_ms(
+        override,
+        "EXPANDO_SPARKLE_HELPER_FAIL_MS",
+    )
 
 
 def sparkle_helper_latency_slow(
@@ -182,6 +200,17 @@ def sparkle_helper_latency_slow(
         helper_check_ms is not None
         and warn_ms is not None
         and helper_check_ms > warn_ms
+    )
+
+
+def sparkle_helper_latency_fail(
+    helper_check_ms: float | None,
+    fail_ms: int | None,
+) -> bool:
+    return (
+        helper_check_ms is not None
+        and fail_ms is not None
+        and helper_check_ms > fail_ms
     )
 
 
@@ -256,6 +285,7 @@ def sparkle_benchmark_result_to_dict(
     result: SparkleBenchmarkResult,
     *,
     warn_ms: int | None = None,
+    fail_ms: int | None = None,
 ) -> dict[str, object]:
     return {
         "sparkle_available": result.sparkle_available,
@@ -269,7 +299,9 @@ def sparkle_benchmark_result_to_dict(
         "current_version": result.current_version,
         "update_available": result.update_available,
         "helper_slow": sparkle_helper_latency_slow(result.helper_check_ms, warn_ms),
+        "helper_fail": sparkle_helper_latency_fail(result.helper_check_ms, fail_ms),
         "warn_ms": warn_ms,
+        "fail_ms": fail_ms,
     }
 
 
@@ -277,6 +309,7 @@ def format_sparkle_benchmark_report(
     result: SparkleBenchmarkResult,
     *,
     warn_ms: int | None = None,
+    fail_ms: int | None = None,
 ) -> str:
     lines = [
         t("benchmark.sparkle.title"),
@@ -303,6 +336,13 @@ def format_sparkle_benchmark_report(
                 t("benchmark.sparkle.helper_slow").format(
                     ms=f"{result.helper_check_ms:.2f}",
                     threshold=warn_ms,
+                )
+            )
+        if sparkle_helper_latency_fail(result.helper_check_ms, fail_ms):
+            lines.append(
+                t("benchmark.sparkle.helper_fail").format(
+                    ms=f"{result.helper_check_ms:.2f}",
+                    threshold=fail_ms,
                 )
             )
     else:

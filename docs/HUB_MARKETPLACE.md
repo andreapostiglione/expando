@@ -71,7 +71,7 @@ expando hub portal sync --dry-run
 expando hub portal sync
 ```
 
-`publish-site` writes `docs/hub-marketplace.html` and `docs/hub/marketplace.json` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`).
+`publish-site` writes `docs/hub-marketplace.html`, `docs/hub/marketplace.json`, and `docs/hub-trigger-suggestions.html` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`). The marketplace page links to the trigger dashboard.
 
 ## Community packages (approved)
 
@@ -104,14 +104,16 @@ expando hub validate-community --html -o docs/hub-trigger-suggestions.html
 
 Checks package structure, snippet validity, **cross-package duplicate literal triggers**, and **collisions with official hub packages** (community trigger already used in `default_config/match/packages/` fails CI). **Similar triggers** near official ones are reported as warnings only (fuzzy score with `prefix` / `suffix` / `contains` / `levenshtein` reason) and do not fail CI.
 
-Export full marketplace diagnostics from doctor:
+Export structured diagnostics from doctor:
 
 ```bash
+expando doctor --doctor-json
+expando doctor --doctor-json --doctor-output doctor-health.json
 expando doctor --marketplace-json
 expando doctor --marketplace-json -o marketplace-health.json
 ```
 
-`--marketplace-json` prints the normal doctor text report plus a combined JSON block (`doctor` + `marketplace`). Use `-o` to save the JSON without skipping the text report.
+`--doctor-json` prints the normal doctor text report plus a JSON block with the full doctor payload. `--marketplace-json` adds marketplace health (`doctor` + `marketplace`). Use `--doctor-output` or `-o` to save JSON to disk without skipping the text report.
 
 Export pending metadata differences between remote marketplace and local queue:
 

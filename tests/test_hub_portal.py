@@ -141,12 +141,16 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
 
     assert paths["html"] == html_path
     assert paths["json"] == json_path
+    assert "suggestions_html" in paths
     html = html_path.read_text(encoding="utf-8")
     payload = json.loads(json_path.read_text(encoding="utf-8"))
+    suggestions = paths["suggestions_html"].read_text(encoding="utf-8")
     assert "Social" in html
+    assert "hub-trigger-suggestions.html" in html
     assert "Pending" not in html
     assert len(payload["packages"]) == 1
     assert payload["packages"][0]["id"] == "social"
+    assert "Community Trigger Dashboard" in suggestions
 
 
 def test_build_portal_site_html_escapes_markup():

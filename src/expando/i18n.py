@@ -265,6 +265,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "--- Marketplace JSON ---",
         "en": "--- Marketplace JSON ---",
     },
+    "doctor.json.exported": {
+        "it": "Report doctor JSON esportato in {path}",
+        "en": "Doctor JSON report exported to {path}",
+    },
+    "doctor.json.section": {
+        "it": "--- Doctor JSON ---",
+        "en": "--- Doctor JSON ---",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
@@ -590,8 +598,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "added={added}, updated={updated}, unchanged={unchanged}",
     },
     "hub.portal.published": {
-        "it": "Sito marketplace pubblicato: {html} · JSON: {json} · package approvati: {count}",
-        "en": "Marketplace site published: {html} · JSON: {json} · approved packages: {count}",
+        "it": "Sito marketplace pubblicato: {html} · JSON: {json} · trigger dashboard: {suggestions} · package approvati: {count}",
+        "en": "Marketplace site published: {html} · JSON: {json} · trigger dashboard: {suggestions} · approved packages: {count}",
     },
     "hub.portal.pending_diff.title": {
         "it": "Diff metadata pending marketplace ({count}):",
@@ -630,6 +638,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "sparkle.benchmark.history.recorded": {
         "it": "Registrato in {path} ({recorded_at})",
         "en": "Recorded in {path} ({recorded_at})",
+    },
+    "sparkle.benchmark.history.svg_written": {
+        "it": "Grafico trend SVG scritto in {path}",
+        "en": "Trend SVG chart written to {path}",
     },
     "sparkle.benchmark.history.exported": {
         "it": "Storico benchmark esportato in {path}",

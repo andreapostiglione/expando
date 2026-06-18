@@ -86,15 +86,58 @@ def _entitlements_match(actual: dict[str, object], expected: dict[str, object]) 
     return False, "; ".join(parts)
 
 
-def _read_codesign_entitlements(target: Path) -> dict[str, object] | None:
-    result = _run_command(["codesign", "-d", "--entitlements", ":-", str(target)])
-    if result.returncode != 0:
+def _extract_entitlements_blob(output: str) -> dict[str, object] | None:
+    text = output.strip()
+    if not text:
         return None
+    start = text.find("<plist")
+    if start == -1:
+        return None
+    end = text.find("</plist>")
+    if end == -1:
+        return None
+    blob = text[start : end + len("</plist>")]
     try:
-        data = plistlib.loads(result.stdout.encode("utf-8"))
+        data = plistlib.loads(blob.encode("utf-8"))
     except Exception:
         return None
     return data if isinstance(data, dict) else {}
+
+
+def _read_codesign_entitlements(target: Path) -> dict[str, object] | None:
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(suffix=".plist", delete=False) as handle:
+        entitlements_path = Path(handle.name)
+    try:
+        result = _run_command(
+            ["codesign", "-d", "--entitlements", str(entitlements_path), str(target)]
+        )
+        if result.returncode != 0 or not entitlements_path.exists():
+            combined = "\n".join(part for part in (result.stdout, result.stderr) if part)
+            return _extract_entitlements_blob(combined)
+        if entitlements_path.stat().st_size == 0:
+            return {}
+        with entitlements_path.open("rb") as handle:
+            data = plistlib.load(handle)
+        return data if isinstance(data, dict) else {}
+    finally:
+        entitlements_path.unlink(missing_ok=True)
+
+
+def _resolve_entitlements_target(app_bundle: Path) -> Path:
+    candidates = [
+        app_bundle,
+        app_bundle / "Contents" / "MacOS" / "expando",
+        app_bundle / "Contents" / "MacOS" / "expando-sparkle",
+    ]
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        entitlements = _read_codesign_entitlements(candidate)
+        if entitlements is not None:
+            return candidate
+    return app_bundle
 
 
 def _codesign_details(target: Path) -> str:
@@ -190,13 +233,26 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
             )
         )
 
-    actual = _read_codesign_entitlements(app_bundle)
+    entitlements_target = _resolve_entitlements_target(app_bundle)
+    actual: dict[str, object] | None = None
+    for candidate in (
+        app_bundle,
+        app_bundle / "Contents" / "MacOS" / "expando",
+        app_bundle / "Contents" / "MacOS" / "expando-sparkle",
+    ):
+        if not candidate.exists():
+            continue
+        actual = _read_codesign_entitlements(candidate)
+        if actual is not None:
+            entitlements_target = candidate
+            break
+
     if actual is None:
         findings.append(
             NotarizationFinding(
                 check_id="entitlements.read",
                 status="fail",
-                message="Could not read app entitlements",
+                message=f"Could not read entitlements from {app_bundle.name}",
             )
         )
     elif expected:
@@ -205,7 +261,7 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
             NotarizationFinding(
                 check_id="entitlements.baseline",
                 status="pass" if ok else "fail",
-                message=message,
+                message=f"{message} ({entitlements_target.name})",
             )
         )
 

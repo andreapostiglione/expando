@@ -50,10 +50,13 @@ Publish an approved-only JSON index for `EXPANDO_HUB_MARKETPLACE_URL`:
 ```bash
 expando hub portal status
 expando hub portal export -o ./marketplace-published.json
-export EXPANDO_HUB_MARKETPLACE_URL=https://example.com/marketplace-published.json
+expando hub portal publish-site
+export EXPANDO_HUB_MARKETPLACE_URL=https://andreapostiglione.github.io/expando/hub/marketplace.json
 expando hub portal sync --dry-run
 expando hub portal sync
 ```
+
+`publish-site` writes `docs/hub-marketplace.html` and `docs/hub/marketplace.json` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`).
 
 `portal sync` merges the remote index into the local queue file (`packages/hub/marketplace.json` or `EXPANDO_HUB_MARKETPLACE_PATH`).
 

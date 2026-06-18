@@ -9,7 +9,12 @@ expando notarize-audit
 expando notarize-audit --app Expando.app --dmg Expando.dmg --strict
 expando notarize-audit --json
 expando notarize-audit -o notarize-audit.json
+expando notarize-audit --record
+expando notarize-history
+expando notarize-history --limit 20
 ```
+
+`--record` appends each run to `~/Library/Application Support/expando/notarize-audit-history.json` (last 100 entries). `notarize-history` shows pass/warn/fail trends over recent runs.
 
 Default targets:
 

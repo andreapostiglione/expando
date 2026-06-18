@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import json
 import os
 import shutil
@@ -400,6 +401,177 @@ def sync_remote_marketplace_index(*, dry_run: bool = False) -> dict[str, int]:
     local["packages"] = sorted(merged.values(), key=lambda item: str(item.get("id", "")))
     _save_marketplace_document(local)
     return stats
+
+
+def default_portal_site_paths(root: Path | None = None) -> tuple[Path, Path]:
+    from .paths import package_root as resolve_package_root
+
+    base = root or resolve_package_root()
+    return base / "docs" / "hub-marketplace.html", base / "docs" / "hub" / "marketplace.json"
+
+
+def build_portal_site_html(payload: dict[str, Any]) -> str:
+    packages = payload.get("packages", [])
+    if not isinstance(packages, list):
+        packages = []
+    updated_at = str(payload.get("updated_at", ""))
+    package_cards: list[str] = []
+    for item in packages:
+        if not isinstance(item, dict):
+            continue
+        package_id = html.escape(str(item.get("id", "")))
+        name = html.escape(str(item.get("name", item.get("id", ""))))
+        description = html.escape(str(item.get("description", "")))
+        author = html.escape(str(item.get("author", "")))
+        tags = item.get("tags", [])
+        tag_html = ""
+        if isinstance(tags, list) and tags:
+            tag_html = "".join(
+                f'<span class="tag">{html.escape(str(tag))}</span>'
+                for tag in tags
+                if str(tag).strip()
+            )
+        author_html = f'<p class="author">{author}</p>' if author else ""
+        package_cards.append(
+            "\n".join(
+                [
+                    '<article class="card package">',
+                    f"  <h3>{name}</h3>",
+                    f'  <p class="package-id"><code>{package_id}</code></p>',
+                    f"  <p>{description}</p>",
+                    author_html,
+                    f'  <div class="tags">{tag_html}</div>' if tag_html else "",
+                    '  <p class="install"><code>expando hub install '
+                    f"{package_id}</code></p>",
+                    "</article>",
+                ]
+            )
+        )
+
+    if package_cards:
+        packages_html = "\n".join(package_cards)
+    else:
+        packages_html = (
+            '<p class="empty">No approved community packages yet. '
+            'Submit yours with <code>expando hub submit ./my-package</code>.</p>'
+        )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expando Hub Marketplace</title>
+  <meta name="description" content="Approved community packages for Expando hub." />
+  <style>
+    :root {{
+      --bg: #0b0d12;
+      --panel: #141820;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --accent: #4f8cff;
+      --accent-2: #7c5cff;
+      --border: #232a36;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2240 0%, transparent 60%),
+                  radial-gradient(900px 500px at 90% 0%, #2a1840 0%, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }}
+    a {{ color: var(--accent); text-decoration: none; }}
+    a:hover {{ text-decoration: underline; }}
+    .wrap {{ max-width: 980px; margin: 0 auto; padding: 48px 24px 80px; }}
+    h1 {{ font-size: 2.2rem; margin: 0 0 8px; letter-spacing: -0.03em; }}
+    .lead {{ color: var(--muted); max-width: 720px; }}
+    .meta {{ color: var(--muted); font-size: 0.9rem; margin: 12px 0 32px; }}
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 24px 0 40px;
+    }}
+    .card {{
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }}
+    .card h3 {{ margin: 0 0 8px; font-size: 1.05rem; }}
+    .card p {{ margin: 0 0 8px; color: var(--muted); font-size: 0.95rem; }}
+    .package-id code, .install code {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85rem;
+    }}
+    .author {{ font-size: 0.85rem; }}
+    .tags {{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }}
+    .tag {{
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }}
+    .empty {{ color: var(--muted); }}
+    pre {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9rem;
+    }}
+    footer {{ margin-top: 56px; color: var(--muted); font-size: 0.9rem; }}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="index.html">← Expando home</a></p>
+    <h1>Hub Marketplace</h1>
+    <p class="lead">Approved community snippet packages for <code>expando hub install</code>.</p>
+    <p class="meta">Updated {updated_at} · <a href="hub/marketplace.json">marketplace.json</a></p>
+
+    <div class="grid">
+      {packages_html}
+    </div>
+
+    <h2>Submit a package</h2>
+    <pre>expando hub submit ./my-package
+expando hub review approve &lt;package-id&gt;
+expando hub portal publish-site</pre>
+
+    <footer>
+      <a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs</a>
+      · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit via GitHub</a>
+    </footer>
+  </div>
+</body>
+</html>
+"""
+
+
+def publish_portal_site(
+    *,
+    html_path: Path | None = None,
+    json_path: Path | None = None,
+) -> dict[str, Path]:
+    default_html, default_json = default_portal_site_paths()
+    html_destination = (html_path or default_html).expanduser().resolve()
+    json_destination = (json_path or default_json).expanduser().resolve()
+    payload = build_publishable_portal_index()
+    json_destination.parent.mkdir(parents=True, exist_ok=True)
+    json_destination.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    html_destination.parent.mkdir(parents=True, exist_ok=True)
+    html_destination.write_text(build_portal_site_html(payload), encoding="utf-8")
+    return {"html": html_destination, "json": json_destination}
 
 
 def format_portal_status_report(stats: dict[str, Any]) -> str:

@@ -107,6 +107,13 @@ def e2e_config_dir(tmp_path: Path) -> Path:
         + "\n",
         encoding="utf-8",
     )
+    images = config_dir / "images"
+    images.mkdir(parents=True)
+    (images / "badge.png").write_bytes(
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+        b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0"
+        b"\x00\x00\x00\x03\x00\x01\x00\x05\xfe\xd4\xef\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
     (config_dir / "match" / "base.yml").write_text(
         "matches:\n"
         "  - trigger: ':e2e'\n"
@@ -114,7 +121,9 @@ def e2e_config_dir(tmp_path: Path) -> Path:
         "  - trigger: ':term'\n"
         "    replace: 'terminal only'\n"
         "    if_app:\n"
-        "      - Terminal\n",
+        "      - Terminal\n"
+        "  - trigger: ':img'\n"
+        "    image: images/badge.png\n",
         encoding="utf-8",
     )
     return config_dir

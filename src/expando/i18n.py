@@ -107,6 +107,34 @@ _STRINGS: dict[str, dict[str, str]] = {
     "security.title.ok": {"it": "OK", "en": "OK"},
     "security.title.issues": {"it": "PROBLEMI RILEVATI", "en": "ISSUES FOUND"},
     "notarize.title.ok": {"it": "Audit notarizzazione OK", "en": "Notarization audit OK"},
+    "notarize.history.title": {
+        "it": "Storico audit notarizzazione",
+        "en": "Notarization audit history",
+    },
+    "notarize.history.path": {"it": "File", "en": "File"},
+    "notarize.history.stats": {
+        "it": "Esecuzioni: {total} (ok={ok}, fail={failed}) · ultimi 10: {recent_rate} ok",
+        "en": "Runs: {total} (ok={ok}, fail={failed}) · last 10: {recent_rate} ok",
+    },
+    "notarize.history.na": {"it": "n/d", "en": "n/a"},
+    "notarize.history.empty": {
+        "it": "Nessuna esecuzione registrata — usa expando notarize-audit --record",
+        "en": "No recorded runs — use expando notarize-audit --record",
+    },
+    "notarize.history.recent": {
+        "it": "Ultime {limit} esecuzioni:",
+        "en": "Last {limit} runs:",
+    },
+    "notarize.history.ok": {"it": "OK", "en": "OK"},
+    "notarize.history.fail": {"it": "FAIL", "en": "FAIL"},
+    "notarize.history.entry": {
+        "it": "  {recorded_at}  {status}  pass={pass_count} warn={warn_count} fail={fail_count}",
+        "en": "  {recorded_at}  {status}  pass={pass_count} warn={warn_count} fail={fail_count}",
+    },
+    "notarize.history.recorded": {
+        "it": "Registrato in {path} ({recorded_at})",
+        "en": "Recorded in {path} ({recorded_at})",
+    },
     "notarize.title.issues": {
         "it": "PROBLEMI NOTARIZZAZIONE",
         "en": "NOTARIZATION ISSUES",
@@ -331,6 +359,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.portal.sync_stats": {
         "it": "aggiunti={added}, aggiornati={updated}, invariati={unchanged}",
         "en": "added={added}, updated={updated}, unchanged={unchanged}",
+    },
+    "hub.portal.published": {
+        "it": "Sito marketplace pubblicato: {html} · JSON: {json} · package approvati: {count}",
+        "en": "Marketplace site published: {html} · JSON: {json} · approved packages: {count}",
     },
     "cli.update.available": {
         "it": "Aggiornamento disponibile: v{version}",

@@ -4,9 +4,11 @@ from pathlib import Path
 import pytest
 
 from expando.hub_marketplace import (
+    build_portal_site_html,
     build_publishable_portal_index,
     export_portal_index,
     marketplace_portal_stats,
+    publish_portal_site,
     sync_remote_marketplace_index,
 )
 
@@ -101,6 +103,66 @@ def test_sync_remote_marketplace_index_merges_entries(
     ids = {item["id"]: item for item in data["packages"]}
     assert ids["remote"]["status"] == "approved"
     assert ids["local"]["name"] == "Local updated"
+
+
+def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_path: Path):
+    marketplace_file.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "packages": [
+                    {
+                        "id": "social",
+                        "name": "Social",
+                        "description": "Social snippets",
+                        "author": "Andrea",
+                        "tags": ["social"],
+                        "status": "approved",
+                    },
+                    {
+                        "id": "pending",
+                        "name": "Pending",
+                        "description": "hidden",
+                        "status": "pending",
+                    },
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    html_path = tmp_path / "hub-marketplace.html"
+    json_path = tmp_path / "hub" / "marketplace.json"
+    paths = publish_portal_site(html_path=html_path, json_path=json_path)
+
+    assert paths["html"] == html_path
+    assert paths["json"] == json_path
+    html = html_path.read_text(encoding="utf-8")
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert "Social" in html
+    assert "Pending" not in html
+    assert len(payload["packages"]) == 1
+    assert payload["packages"][0]["id"] == "social"
+
+
+def test_build_portal_site_html_escapes_markup():
+    payload = {
+        "updated_at": "2026-06-18T00:00:00+00:00",
+        "packages": [
+            {
+                "id": "x",
+                "name": "<script>",
+                "description": "A & B",
+                "author": "Me",
+                "tags": ["<tag>"],
+            }
+        ],
+    }
+    html = build_portal_site_html(payload)
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+    assert "A &amp; B" in html
 
 
 def test_marketplace_portal_stats_counts(marketplace_file: Path):

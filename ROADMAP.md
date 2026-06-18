@@ -224,10 +224,10 @@ flowchart LR
 2. `expando notarize-audit --json` + artifact CI
 3. E2E image clipboard (`@pytest.mark.image`)
 
-### Sprint 9 → v3.0.0 (prossimo)
-1. Hub marketplace hosting/docs site integration
-2. Notarization audit trend/history locale
-3. E2E pipeline image snippet via engine trigger
+### Sprint 9 → v3.0.0 ✓
+1. `expando hub portal publish-site` + GitHub Pages (`docs/hub-marketplace.html`)
+2. `expando notarize-audit --record` + `expando notarize-history`
+3. E2E pipeline image trigger (`:img` → `inject_image`)
 
 ### Backlog
 - Fix test flaky clipboard E2E headless su macOS-latest

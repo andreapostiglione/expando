@@ -61,6 +61,29 @@ def test_build_service_respects_if_app_filter(e2e_config_dir):
     assert injected == ["terminal only"]
 
 
+@pytest.mark.image
+def test_build_service_expands_image_trigger_end_to_end(e2e_config_dir):
+    service = build_service(e2e_config_dir)
+    injected_images: list[object] = []
+    injected_text: list[str] = []
+
+    service.engine.injector.inject_image = (  # type: ignore[method-assign]
+        lambda path: injected_images.append(path) or True
+    )
+    service.engine.injector.inject = lambda text, **kwargs: injected_text.append(text)  # type: ignore[method-assign]
+    service.engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+
+    with patch(
+        "expando.engine.get_frontmost_context",
+        return_value=AppContext(name="TextEdit"),
+    ):
+        _type_chars(service, ":img")
+
+    assert len(injected_images) == 1
+    assert injected_images[0].name == "badge.png"  # type: ignore[attr-defined]
+    assert injected_text == []
+
+
 def test_build_service_undo_shortcut_end_to_end(e2e_config_dir):
     service = build_service(e2e_config_dir)
     injected: list[str] = []

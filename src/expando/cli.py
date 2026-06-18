@@ -883,6 +883,34 @@ def hub_portal_sync(dry_run: bool) -> None:
     )
 
 
+@hub_portal.command("publish-site")
+@click.option(
+    "--html",
+    "html_path",
+    type=click.Path(path_type=Path),
+    help="Write marketplace HTML (defaults to docs/hub-marketplace.html)",
+)
+@click.option(
+    "--json",
+    "json_path",
+    type=click.Path(path_type=Path),
+    help="Write marketplace JSON (defaults to docs/hub/marketplace.json)",
+)
+def hub_portal_publish_site(html_path: Path | None, json_path: Path | None) -> None:
+    """Generate GitHub Pages marketplace site and JSON index."""
+    from .hub_marketplace import build_publishable_portal_index, publish_portal_site
+
+    payload = build_publishable_portal_index()
+    paths = publish_portal_site(html_path=html_path, json_path=json_path)
+    click.echo(
+        t("hub.portal.published").format(
+            html=paths["html"],
+            json=paths["json"],
+            count=len(payload.get("packages", [])),
+        )
+    )
+
+
 @hub.command()
 @click.pass_context
 def browse(ctx: click.Context) -> None:
@@ -1130,12 +1158,20 @@ def security_audit_cmd(ctx: click.Context) -> None:
     type=click.Path(path_type=Path),
     help="Write JSON audit report to this file",
 )
+@click.option(
+    "--record",
+    is_flag=True,
+    help="Append this audit run to local notarize-audit-history.json",
+)
+@click.pass_context
 def notarize_audit_cmd(
+    ctx: click.Context,
     app_bundle: Path | None,
     dmg: Path | None,
     strict: bool,
     as_json: bool,
     output: Path | None,
+    record: bool,
 ) -> None:
     """Audit codesign, entitlements, Gatekeeper, and notarization staples."""
     import json
@@ -1143,6 +1179,7 @@ def notarize_audit_cmd(
     from .notarization_audit import (
         format_notarization_audit_report,
         notarization_audit_report_to_dict,
+        resolve_audit_targets,
         run_notarization_audit,
         write_notarization_audit_json,
     )
@@ -1150,12 +1187,39 @@ def notarize_audit_cmd(
     report = run_notarization_audit(app_bundle=app_bundle, dmg=dmg, strict=strict)
     if output is not None:
         write_notarization_audit_json(report, output)
+    if record:
+        from .notarization_history import record_notarization_audit
+
+        resolved_app, resolved_dmg = resolve_audit_targets(app_bundle=app_bundle, dmg=dmg)
+        entry = record_notarization_audit(
+            ctx.obj["config_dir"],
+            report,
+            app_bundle=resolved_app,
+            dmg=resolved_dmg,
+        )
+        if not as_json:
+            click.echo(
+                t("notarize.history.recorded").format(
+                    path=ctx.obj["config_dir"] / "notarize-audit-history.json",
+                    recorded_at=entry["recorded_at"],
+                )
+            )
     if as_json:
         click.echo(json.dumps(notarization_audit_report_to_dict(report), indent=2, ensure_ascii=False))
     else:
         click.echo(format_notarization_audit_report(report))
     if not report.ok:
         raise SystemExit(1)
+
+
+@main.command("notarize-history")
+@click.option("--limit", default=10, show_default=True, help="Recent entries to show")
+@click.pass_context
+def notarize_history_cmd(ctx: click.Context, limit: int) -> None:
+    """Show local notarization audit history and trend."""
+    from .notarization_history import format_notarization_history_report
+
+    click.echo(format_notarization_history_report(ctx.obj["config_dir"], limit=limit))
 
 
 @main.command()

@@ -41,6 +41,13 @@ done < <(find "$APP" -type f \( -perm -111 -o -name "*.so" -o -name "*.dylib" \)
 codesign --force --options runtime --timestamp \
   --sign "$IDENTITY" "$APP/Contents/MacOS/expando"
 
+HELPER="$APP/Contents/MacOS/expando-sparkle"
+if [[ -f "$HELPER" ]] && file "$HELPER" | grep -q "Mach-O"; then
+  codesign --force --options runtime --timestamp \
+    --entitlements "$ENTITLEMENTS" \
+    --sign "$IDENTITY" "$HELPER"
+fi
+
 codesign --force --options runtime --timestamp \
   --entitlements "$ENTITLEMENTS" \
   --sign "$IDENTITY" "$APP"

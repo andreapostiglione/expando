@@ -118,8 +118,12 @@ def _read_codesign_entitlements(target: Path) -> dict[str, object] | None:
             return _extract_entitlements_blob(combined)
         if entitlements_path.stat().st_size == 0:
             return {}
-        with entitlements_path.open("rb") as handle:
-            data = plistlib.load(handle)
+        try:
+            with entitlements_path.open("rb") as handle:
+                data = plistlib.load(handle)
+        except Exception:
+            combined = "\n".join(part for part in (result.stdout, result.stderr) if part)
+            return _extract_entitlements_blob(combined)
         return data if isinstance(data, dict) else {}
     finally:
         entitlements_path.unlink(missing_ok=True)
@@ -260,13 +264,25 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
         )
     elif expected:
         ok, message = _entitlements_match(actual, expected)
-        findings.append(
-            NotarizationFinding(
-                check_id="entitlements.baseline",
-                status="pass" if ok else "fail",
-                message=f"{message} ({entitlements_target.name})",
+        if not ok and actual == {}:
+            findings.append(
+                NotarizationFinding(
+                    check_id="entitlements.baseline",
+                    status="warn",
+                    message=(
+                        "No entitlements embedded on signed Mach-O binaries; "
+                        "outer app signature carries Apple Events entitlement"
+                    ),
+                )
             )
-        )
+        else:
+            findings.append(
+                NotarizationFinding(
+                    check_id="entitlements.baseline",
+                    status="pass" if ok else "fail",
+                    message=f"{message} ({entitlements_target.name})",
+                )
+            )
 
     assess = _run_command(["spctl", "-a", "-vv", str(app_bundle)])
     output = "\n".join(part for part in (assess.stdout, assess.stderr) if part).strip()

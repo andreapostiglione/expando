@@ -129,6 +129,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           cp sparkle-benchmark-history.json /tmp/sparkle-benchmark-history-release.json
+          git checkout -- sparkle-benchmark-history.json
           git fetch origin main
           git switch -C main origin/main
           cp /tmp/sparkle-benchmark-history-release.json sparkle-benchmark-history.json

@@ -400,6 +400,32 @@ def run_notarization_audit(
     return report
 
 
+def notarization_audit_report_to_dict(report: NotarizationAuditReport) -> dict[str, object]:
+    return {
+        "ok": report.ok,
+        "findings": [
+            {
+                "check_id": item.check_id,
+                "status": item.status,
+                "message": item.message,
+            }
+            for item in report.findings
+        ],
+    }
+
+
+def write_notarization_audit_json(report: NotarizationAuditReport, destination: Path) -> Path:
+    import json
+
+    destination = destination.expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps(notarization_audit_report_to_dict(report), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return destination
+
+
 def format_notarization_audit_report(report: NotarizationAuditReport) -> str:
     from .i18n import t
 

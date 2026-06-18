@@ -43,6 +43,20 @@ After approval, publish into the official bundle:
 expando hub publish ./my-package --bundle --register
 ```
 
+## Portal (remote hosting)
+
+Publish an approved-only JSON index for `EXPANDO_HUB_MARKETPLACE_URL`:
+
+```bash
+expando hub portal status
+expando hub portal export -o ./marketplace-published.json
+export EXPANDO_HUB_MARKETPLACE_URL=https://example.com/marketplace-published.json
+expando hub portal sync --dry-run
+expando hub portal sync
+```
+
+`portal sync` merges the remote index into the local queue file (`packages/hub/marketplace.json` or `EXPANDO_HUB_MARKETPLACE_PATH`).
+
 ## Official index (maintainers)
 
 ```bash

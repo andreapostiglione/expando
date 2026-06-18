@@ -37,7 +37,15 @@ jobs:
 
       - name: Run notarization audit
         run: |
-          expando notarize-audit --app Expando.app --dmg Expando.dmg --strict
+          expando notarize-audit --app Expando.app --dmg Expando.dmg --strict -o notarize-audit.json
+
+      - name: Upload audit JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: notarize-audit-weekly
+          path: notarize-audit.json
+          if-no-files-found: ignore
 
   audit-skipped:
     if: vars.ENABLE_SELF_HOSTED_E2E != 'true'

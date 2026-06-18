@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.8.0
+**Versione attuale:** v2.9.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.8.0)
+## Stato attuale (baseline v2.9.0)
 
 | Area | Stato |
 |------|--------|
@@ -33,18 +33,21 @@
 | Snippet templates CLI + security audit | ✓ |
 | CLI/menu bar localizzati (IT default) | ✓ |
 | Changelog in-app post-update | ✓ |
-| Test (170+) + E2E su runner self-hosted | ✓ |
+| Test (180+) + E2E su runner self-hosted | ✓ |
 | Sync assistito CLI (`expando sync`) | ✓ v2.7.0 |
 | Sparkle.framework nativo (distribution build) | ✓ v2.7.0 |
 | Hub marketplace submit + merge remoto | ✓ v2.7.0 |
 | Notarization audit CLI + CI periodico | ✓ v2.8.0 |
 | E2E clipboard con TCC su runner self-hosted | ✓ v2.8.0 |
 | Hub marketplace review/approval flow | ✓ v2.8.0 |
+| Hub portal export/sync remoto | ✓ v2.9.0 |
+| Notarization audit JSON artifact | ✓ v2.9.0 |
+| E2E image clipboard su runner | ✓ v2.9.0 |
 
 ### Gap noti oggi
 
 - **Updater:** Sparkle nativo solo in build `EXPANDO_DISTRIBUTION=1`; fallback Python appcast in dev
-- **Hub marketplace:** review locale/JSON; nessun portale web automatico
+- **Hub marketplace:** portal JSON export/sync; nessun hosting web integrato
 - **Test:** E2E clipboard skipped in CI headless (richiede runner self-hosted + TCC)
 - **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC sul servizio launchd
 
@@ -216,10 +219,15 @@ flowchart LR
 2. E2E clipboard (`EXPANDO_E2E_CLIPBOARD=1`, probe TCC)
 3. `expando hub review` queue/approve/reject
 
-### Sprint 8 → v2.9.0 (prossimo)
-1. Hub marketplace portale/remoto avanzato
-2. Notarization audit report export (JSON/CI artifact)
-3. E2E image snippet clipboard su runner
+### Sprint 8 → v2.9.0 ✓
+1. `expando hub portal` status/export/sync remoto
+2. `expando notarize-audit --json` + artifact CI
+3. E2E image clipboard (`@pytest.mark.image`)
+
+### Sprint 9 → v3.0.0 (prossimo)
+1. Hub marketplace hosting/docs site integration
+2. Notarization audit trend/history locale
+3. E2E pipeline image snippet via engine trigger
 
 ### Backlog
 - Fix test flaky clipboard E2E headless su macOS-latest

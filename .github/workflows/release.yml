@@ -74,10 +74,18 @@ jobs:
             STRICT=1
           fi
           if [[ "$STRICT" == "1" ]]; then
-            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg --strict
+            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg --strict -o notarize-audit.json
           else
-            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg
+            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg -o notarize-audit.json
           fi
+
+      - name: Upload notarization audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: notarize-audit-${{ github.ref_name }}
+          path: notarize-audit.json
+          if-no-files-found: ignore
 
       - name: Generate Sparkle appcast
         env:

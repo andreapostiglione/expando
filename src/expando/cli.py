@@ -832,6 +832,57 @@ def hub_review_reject(package_id: str, reviewer: str, note: str) -> None:
     click.echo(t("hub.review.rejected").format(package_id=package.id))
 
 
+@hub.group("portal")
+def hub_portal() -> None:
+    """Manage remote marketplace index export and sync."""
+
+
+@hub_portal.command("status")
+def hub_portal_status() -> None:
+    """Show local marketplace path, remote URL, and queue counts."""
+    from .hub_marketplace import format_portal_status_report, marketplace_portal_stats
+
+    click.echo(format_portal_status_report(marketplace_portal_stats()))
+
+
+@hub_portal.command("export")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write publishable JSON index (defaults to packages/hub/marketplace-published.json)",
+)
+def hub_portal_export(output: Path | None) -> None:
+    """Export approved packages as a JSON index for remote hosting."""
+    from .hub_marketplace import export_portal_index
+    from .paths import package_root
+
+    destination = output or (package_root() / "packages" / "hub" / "marketplace-published.json")
+    path = export_portal_index(destination)
+    click.echo(t("hub.portal.exported").format(path=path))
+
+
+@hub_portal.command("sync")
+@click.option("--dry-run", is_flag=True, help="Show merge stats without writing local index")
+def hub_portal_sync(dry_run: bool) -> None:
+    """Merge a remote marketplace index into the local queue file."""
+    from .hub_marketplace import sync_remote_marketplace_index
+
+    try:
+        stats = sync_remote_marketplace_index(dry_run=dry_run)
+    except RuntimeError as exc:
+        raise click.ClickException(str(exc)) from exc
+    prefix = t("hub.portal.dry_run") if dry_run else t("hub.portal.synced")
+    click.echo(
+        f"{prefix}: "
+        + t("hub.portal.sync_stats").format(
+            added=stats["added"],
+            updated=stats["updated"],
+            unchanged=stats["unchanged"],
+        )
+    )
+
+
 @hub.command()
 @click.pass_context
 def browse(ctx: click.Context) -> None:
@@ -1072,12 +1123,37 @@ def security_audit_cmd(ctx: click.Context) -> None:
     help="Path to Expando.dmg",
 )
 @click.option("--strict", is_flag=True, help="Fail when artifacts are missing")
-def notarize_audit_cmd(app_bundle: Path | None, dmg: Path | None, strict: bool) -> None:
+@click.option("--json", "as_json", is_flag=True, help="Print the audit report as JSON")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write JSON audit report to this file",
+)
+def notarize_audit_cmd(
+    app_bundle: Path | None,
+    dmg: Path | None,
+    strict: bool,
+    as_json: bool,
+    output: Path | None,
+) -> None:
     """Audit codesign, entitlements, Gatekeeper, and notarization staples."""
-    from .notarization_audit import format_notarization_audit_report, run_notarization_audit
+    import json
+
+    from .notarization_audit import (
+        format_notarization_audit_report,
+        notarization_audit_report_to_dict,
+        run_notarization_audit,
+        write_notarization_audit_json,
+    )
 
     report = run_notarization_audit(app_bundle=app_bundle, dmg=dmg, strict=strict)
-    click.echo(format_notarization_audit_report(report))
+    if output is not None:
+        write_notarization_audit_json(report, output)
+    if as_json:
+        click.echo(json.dumps(notarization_audit_report_to_dict(report), indent=2, ensure_ascii=False))
+    else:
+        click.echo(format_notarization_audit_report(report))
     if not report.ok:
         raise SystemExit(1)
 

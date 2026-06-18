@@ -7,6 +7,8 @@
 ```bash
 expando notarize-audit
 expando notarize-audit --app Expando.app --dmg Expando.dmg --strict
+expando notarize-audit --json
+expando notarize-audit -o notarize-audit.json
 ```
 
 Default targets:
@@ -29,4 +31,5 @@ Default targets:
 ## CI
 
 - Every tagged release runs the audit after DMG creation (strict when notarization secrets exist).
+- Release and weekly workflows upload `notarize-audit.json` as a GitHub Actions artifact.
 - Weekly workflow **Notarization audit** re-checks the latest GitHub release on the self-hosted macOS runner.

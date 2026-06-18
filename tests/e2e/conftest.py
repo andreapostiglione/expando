@@ -20,6 +20,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "clipboard: clipboard injection E2E; needs Accessibility and working pbcopy/pbpaste",
     )
+    config.addinivalue_line(
+        "markers",
+        "image: image clipboard injection E2E; needs Accessibility and PNG paste support",
+    )
 
 
 @pytest.fixture

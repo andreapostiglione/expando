@@ -1,23 +1,23 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 2.8.0 | **Release:** v2.8.0 (notarize-audit, E2E clipboard, hub review)  
+**Versione:** 2.9.0 | **Release:** v2.9.0 (hub portal, audit JSON, E2E image)  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
-- **v2.8.0** ✓ Sprint 7
-  - T3-15 `expando notarize-audit` + CI release/weekly
-  - E2E clipboard con `EXPANDO_E2E_CLIPBOARD=1` e probe TCC
-  - `expando hub review` queue/approve/reject
-- **v2.7.0** ✓ Sprint 6 (sync, Sparkle nativo, hub submit)
+- **v2.9.0** ✓ Sprint 8
+  - `expando hub portal` status/export/sync
+  - `expando notarize-audit --json` + artifact CI
+  - E2E image clipboard (`EXPANDO_E2E_IMAGE=1`)
+- **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 8)
+## Prossimi item (Sprint 9)
 
-- [ ] Hub marketplace portale/remoto avanzato
-- [ ] Notarization audit report JSON/artifact
-- [ ] E2E image snippet clipboard su runner
+- [ ] Hub marketplace hosting/docs integration
+- [ ] Notarization audit history/trend locale
+- [ ] E2E engine trigger per image snippet
 
 ## Backlog
 

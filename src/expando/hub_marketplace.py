@@ -281,3 +281,152 @@ def merged_registry_ids() -> set[str]:
     except RuntimeError:
         pass
     return ids
+
+
+def _package_entry_dict(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in item.items()
+        if key in {
+            "id",
+            "name",
+            "description",
+            "author",
+            "tags",
+            "status",
+            "submitted_at",
+            "reviewed_at",
+            "reviewer",
+            "review_note",
+        }
+    }
+
+
+def marketplace_portal_stats() -> dict[str, Any]:
+    data = _load_marketplace_document()
+    counts = {status: 0 for status in MARKETPLACE_STATUSES}
+    for item in data.get("packages", []):
+        if not isinstance(item, dict):
+            continue
+        status = str(item.get("status", "approved")).lower()
+        if status in counts:
+            counts[status] += 1
+    remote_url = marketplace_index_url()
+    remote_approved = 0
+    if remote_url:
+        try:
+            remote_approved = len(fetch_marketplace_packages())
+        except RuntimeError:
+            remote_approved = -1
+    return {
+        "local_path": str(marketplace_index_path()),
+        "remote_url": remote_url,
+        "counts": counts,
+        "total": len(data.get("packages", [])),
+        "remote_approved": remote_approved,
+    }
+
+
+def build_publishable_portal_index() -> dict[str, Any]:
+    data = _load_marketplace_document()
+    packages = [
+        _package_entry_dict(item)
+        for item in data.get("packages", [])
+        if isinstance(item, dict) and _package_entry_visible(item)
+    ]
+    packages.sort(key=lambda item: str(item.get("id", "")))
+    return {
+        "version": int(data.get("version", 1)),
+        "description": str(
+            data.get("description", "Expando hub marketplace — approved community packages")
+        ),
+        "updated_at": _utc_now(),
+        "packages": packages,
+    }
+
+
+def export_portal_index(destination: Path) -> Path:
+    destination = destination.expanduser().resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    payload = build_publishable_portal_index()
+    destination.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return destination
+
+
+def fetch_remote_marketplace_document() -> dict[str, Any]:
+    url = marketplace_index_url()
+    if not url:
+        raise RuntimeError("EXPANDO_HUB_MARKETPLACE_URL is not set")
+    try:
+        with urlopen(url, timeout=15) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except (URLError, json.JSONDecodeError, TimeoutError) as exc:
+        raise RuntimeError(f"Could not fetch marketplace index: {exc}") from exc
+    if not isinstance(data, dict):
+        raise RuntimeError("Remote marketplace index must be a JSON object")
+    data.setdefault("packages", [])
+    return data
+
+
+def sync_remote_marketplace_index(*, dry_run: bool = False) -> dict[str, int]:
+    remote = fetch_remote_marketplace_document()
+    local = _load_marketplace_document()
+    local_by_id = {
+        str(item.get("id")): item
+        for item in local.get("packages", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    stats = {"added": 0, "updated": 0, "unchanged": 0}
+    merged = dict(local_by_id)
+
+    for item in remote.get("packages", []):
+        if not isinstance(item, dict) or not item.get("id"):
+            continue
+        package_id = str(item["id"])
+        incoming = _package_entry_dict(item)
+        if package_id not in merged:
+            merged[package_id] = incoming
+            stats["added"] += 1
+            continue
+        if merged[package_id] != incoming:
+            merged[package_id] = incoming
+            stats["updated"] += 1
+        else:
+            stats["unchanged"] += 1
+
+    if dry_run:
+        return stats
+
+    local["packages"] = sorted(merged.values(), key=lambda item: str(item.get("id", "")))
+    _save_marketplace_document(local)
+    return stats
+
+
+def format_portal_status_report(stats: dict[str, Any]) -> str:
+    from .i18n import t
+
+    lines = [
+        t("hub.portal.title"),
+        f"  {t('hub.portal.local')}: {stats['local_path']}",
+    ]
+    remote = stats.get("remote_url")
+    if remote:
+        lines.append(f"  {t('hub.portal.remote')}: {remote}")
+        remote_approved = stats.get("remote_approved", 0)
+        if remote_approved >= 0:
+            lines.append(
+                t("hub.portal.remote_approved").format(count=remote_approved)
+            )
+    else:
+        lines.append(f"  {t('hub.portal.remote')}: {t('hub.portal.remote_none')}")
+
+    counts = stats.get("counts", {})
+    lines.append(
+        t("hub.portal.counts").format(
+            pending=counts.get("pending", 0),
+            approved=counts.get("approved", 0),
+            rejected=counts.get("rejected", 0),
+            total=stats.get("total", 0),
+        )
+    )
+    return "\n".join(lines)

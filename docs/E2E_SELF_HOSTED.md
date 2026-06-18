@@ -24,11 +24,13 @@ gh variable set ENABLE_SELF_HOSTED_E2E --body true --repo andreapostiglione/expa
 ```bash
 export EXPANDO_E2E_FULL=1
 export EXPANDO_E2E_CLIPBOARD=1
+export EXPANDO_E2E_IMAGE=1
 pytest -q tests/e2e -ra
 ```
 
 Injection tests (TextEdit) need Accessibility. The global listener test also needs Input Monitoring.
 The clipboard test is marked `@pytest.mark.clipboard` and skips when TCC is incomplete.
+Image snippet tests use `@pytest.mark.image` and verify PNG clipboard paste into TextEdit.
 
 ## Notarization audit (weekly)
 

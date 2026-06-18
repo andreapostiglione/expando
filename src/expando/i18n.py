@@ -310,6 +310,28 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Package {package_id} rifiutato.",
         "en": "Package {package_id} rejected.",
     },
+    "hub.portal.title": {"it": "Hub marketplace portal", "en": "Hub marketplace portal"},
+    "hub.portal.local": {"it": "Indice locale", "en": "Local index"},
+    "hub.portal.remote": {"it": "Indice remoto", "en": "Remote index"},
+    "hub.portal.remote_none": {"it": "non configurato", "en": "not configured"},
+    "hub.portal.remote_approved": {
+        "it": "Package approvati remoti: {count}",
+        "en": "Remote approved packages: {count}",
+    },
+    "hub.portal.counts": {
+        "it": "Coda locale: pending={pending}, approved={approved}, rejected={rejected}, totale={total}",
+        "en": "Local queue: pending={pending}, approved={approved}, rejected={rejected}, total={total}",
+    },
+    "hub.portal.exported": {
+        "it": "Indice pubblicabile scritto in {path}",
+        "en": "Publishable index written to {path}",
+    },
+    "hub.portal.synced": {"it": "Sync completata", "en": "Sync completed"},
+    "hub.portal.dry_run": {"it": "Dry-run", "en": "Dry-run"},
+    "hub.portal.sync_stats": {
+        "it": "aggiunti={added}, aggiornati={updated}, invariati={unchanged}",
+        "en": "added={added}, updated={updated}, unchanged={unchanged}",
+    },
     "cli.update.available": {
         "it": "Aggiornamento disponibile: v{version}",
         "en": "Update available: v{version}",

@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.11.0
+**Versione attuale:** v3.12.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.11.0)
+## Stato attuale (baseline v3.12.0)
 
 | Area | Stato |
 |------|--------|
@@ -79,6 +79,9 @@
 | Dashboard trigger su GitHub Pages (`publish-site` + link) | ✓ v3.11.0 |
 | `expando doctor --doctor-json` export strutturato | ✓ v3.11.0 |
 | Benchmark SVG trend in artifact release (`--svg`) | ✓ v3.11.0 |
+| `expando doctor --full-json` export health completo | ✓ v3.12.0 |
+| Notarization history trend SVG (`notarize-audit --svg`) | ✓ v3.12.0 |
+| Release CI artifact `doctor-full.json` + notarize SVG | ✓ v3.12.0 |
 
 ### Gap noti oggi
 
@@ -319,7 +322,12 @@ flowchart LR
 2. `expando doctor --doctor-json` (+ `--doctor-output`) export doctor strutturato
 3. `sparkle-benchmark-history record --svg`: grafico trend SVG in artifact release
 
-### Backlog (Sprint 21+)
+### Sprint 21 → v3.12.0 ✓
+1. `expando doctor --full-json` (+ `--full-output`): doctor + marketplace + histories + community validation
+2. `notarize-audit --record --svg` / `notarize-history --svg`: grafico trend pass/fail
+3. Release CI: artifact `doctor-full.json` + `notarize-audit-trend.svg`
+
+### Backlog (Sprint 22+)
 - TBD
 
 ---

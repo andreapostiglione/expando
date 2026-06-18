@@ -107,13 +107,15 @@ Checks package structure, snippet validity, **cross-package duplicate literal tr
 Export structured diagnostics from doctor:
 
 ```bash
+expando doctor --full-json
+expando doctor --full-json --full-output health.json
 expando doctor --doctor-json
 expando doctor --doctor-json --doctor-output doctor-health.json
 expando doctor --marketplace-json
 expando doctor --marketplace-json -o marketplace-health.json
 ```
 
-`--doctor-json` prints the normal doctor text report plus a JSON block with the full doctor payload. `--marketplace-json` adds marketplace health (`doctor` + `marketplace`). Use `--doctor-output` or `-o` to save JSON to disk without skipping the text report.
+`--full-json` exports doctor, marketplace, notarization/sparkle histories, and community validation. `--doctor-json` prints the doctor payload only. `--marketplace-json` adds marketplace health (`doctor` + `marketplace`). Use `--full-output`, `--doctor-output`, or `-o` to save JSON to disk without skipping the text report.
 
 Export pending metadata differences between remote marketplace and local queue:
 

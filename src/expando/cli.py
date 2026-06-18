@@ -1477,6 +1477,17 @@ def sparkle_smoke_cmd(app_bundle: Path | None) -> None:
     is_flag=True,
     help="Append this audit run to local notarize-audit-history.json",
 )
+@click.option(
+    "--svg",
+    is_flag=True,
+    help="Write notarization trend SVG (notarize-audit-trend.svg)",
+)
+@click.option(
+    "--svg-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override SVG output path (implies --svg)",
+)
 @click.pass_context
 def notarize_audit_cmd(
     ctx: click.Context,
@@ -1486,6 +1497,8 @@ def notarize_audit_cmd(
     as_json: bool,
     output: Path | None,
     record: bool,
+    svg: bool,
+    svg_path: Path | None,
 ) -> None:
     """Audit codesign, entitlements, Gatekeeper, and notarization staples."""
     import json
@@ -1518,6 +1531,18 @@ def notarize_audit_cmd(
                     recorded_at=entry["recorded_at"],
                 )
             )
+    if svg or svg_path is not None:
+        from .notarization_history import (
+            default_trend_svg_path,
+            write_notarization_history_trend_svg,
+        )
+
+        svg_destination = write_notarization_history_trend_svg(
+            ctx.obj["config_dir"],
+            svg_path or default_trend_svg_path(ctx.obj["config_dir"]),
+        )
+        if not as_json:
+            click.echo(t("notarize.history.svg_written").format(path=svg_destination))
     if as_json:
         click.echo(json.dumps(notarization_audit_report_to_dict(report), indent=2, ensure_ascii=False))
     else:
@@ -1671,22 +1696,45 @@ def sparkle_benchmark_history_record(
     type=click.Path(path_type=Path),
     help="Write JSON history export to this file",
 )
+@click.option(
+    "--svg",
+    is_flag=True,
+    help="Write notarization trend SVG (notarize-audit-trend.svg)",
+)
+@click.option(
+    "--svg-path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override SVG output path (implies --svg)",
+)
 @click.pass_context
 def notarize_history_cmd(
     ctx: click.Context,
     limit: int,
     as_json: bool,
     output: Path | None,
+    svg: bool,
+    svg_path: Path | None,
 ) -> None:
     """Show local notarization audit history and trend."""
     import json
 
     from .notarization_history import (
+        default_trend_svg_path,
         format_notarization_history_report,
         notarization_history_to_dict,
+        write_notarization_history_trend_svg,
     )
 
     config_dir: Path = ctx.obj["config_dir"]
+    if svg or svg_path is not None:
+        svg_destination = write_notarization_history_trend_svg(
+            config_dir,
+            svg_path or default_trend_svg_path(config_dir),
+            limit=limit,
+        )
+        click.echo(t("notarize.history.svg_written").format(path=svg_destination))
+
     if as_json or output is not None:
         payload = notarization_history_to_dict(config_dir, limit=limit)
         text = json.dumps(payload, indent=2, ensure_ascii=False)
@@ -1725,6 +1773,16 @@ def notarize_history_cmd(
     type=click.Path(path_type=Path),
     help="Write marketplace JSON report to this path",
 )
+@click.option(
+    "--full-json",
+    is_flag=True,
+    help="Export full health JSON (doctor, marketplace, histories, community validation)",
+)
+@click.option(
+    "--full-output",
+    type=click.Path(path_type=Path),
+    help="Write full health JSON report to this path",
+)
 @click.pass_context
 def doctor(
     ctx: click.Context,
@@ -1732,6 +1790,8 @@ def doctor(
     doctor_output: Path | None,
     marketplace_json: bool,
     marketplace_output: Path | None,
+    full_json: bool,
+    full_output: Path | None,
 ) -> None:
     """Validate configuration, permissions, and daemon health."""
     import json
@@ -1739,6 +1799,25 @@ def doctor(
     config_dir: Path = ctx.obj["config_dir"]
     report = run_doctor(config_dir)
     text_report = format_doctor_report(report)
+
+    if full_json or full_output is not None:
+        from .doctor_checks import doctor_full_document
+
+        payload = doctor_full_document(config_dir)
+        json_text = json.dumps(payload, indent=2, ensure_ascii=False)
+        if full_output is not None:
+            full_output = full_output.expanduser().resolve()
+            full_output.parent.mkdir(parents=True, exist_ok=True)
+            full_output.write_text(json_text + "\n", encoding="utf-8")
+            click.echo(t("doctor.full.exported").format(path=full_output))
+        click.echo(text_report)
+        if full_json:
+            click.echo("")
+            click.echo(t("doctor.full.json_section"))
+            click.echo(json_text)
+        if not report.ok:
+            raise SystemExit(1)
+        return
 
     if marketplace_json or marketplace_output is not None:
         from .doctor_checks import doctor_combined_document

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "recorded_at": "2026-06-18T08:17:05+00:00",
+      "version": "3.8.0",
+      "tag": "v3.8.0",
+      "warn_ms": 15000,
+      "slow": false,
+      "benchmark": {
+        "sparkle_available": true,
+        "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
+        "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
+        "framework_present": true,
+        "appcast_fetch_ms": 179.29,
+        "helper_check_ms": null,
+        "appcast_entries": 1,
+        "latest_version": "3.7.0",
+        "current_version": "3.8.0",
+        "update_available": false,
+        "helper_slow": false,
+        "warn_ms": 15000
+      }
+    }
+  ],
+  "updated_at": "2026-06-18T08:17:05+00:00"
+}

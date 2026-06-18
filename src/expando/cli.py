@@ -752,6 +752,86 @@ def hub_submit(ctx: click.Context, package_dir: Path, output: Path | None) -> No
     click.echo(format_submission_instructions(submission, bundle_path=bundle_path))
 
 
+@hub.group("review")
+def hub_review() -> None:
+    """Review pending marketplace submissions (maintainers)."""
+
+
+@hub_review.command("list")
+@click.option(
+    "--status",
+    default="pending",
+    show_default=True,
+    type=click.Choice(["pending", "approved", "rejected", "all"]),
+)
+def hub_review_list(status: str) -> None:
+    """List marketplace submissions by review status."""
+    from .hub_marketplace import format_review_queue_report, list_marketplace_queue
+
+    if status == "all":
+        lines = []
+        for value in ("pending", "approved", "rejected"):
+            packages = list_marketplace_queue(status=value)
+            lines.append(format_review_queue_report(packages, status=value))
+        click.echo("\n\n".join(lines))
+        return
+    packages = list_marketplace_queue(status=status)
+    click.echo(format_review_queue_report(packages, status=status))
+
+
+@hub_review.command("queue")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+def hub_review_queue(package_dir: Path) -> None:
+    """Add a validated package to the local marketplace queue as pending."""
+    from .hub_marketplace import queue_marketplace_submission
+
+    try:
+        package = queue_marketplace_submission(package_dir)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(t("hub.review.queued").format(package_id=package.id))
+
+
+@hub_review.command("approve")
+@click.argument("package_id")
+@click.option("--reviewer", default="", help="Reviewer name or handle")
+@click.option("--note", default="", help="Optional review note")
+def hub_review_approve(package_id: str, reviewer: str, note: str) -> None:
+    """Approve a pending marketplace package."""
+    from .hub_marketplace import review_marketplace_package
+
+    try:
+        package = review_marketplace_package(
+            package_id,
+            "approve",
+            reviewer=reviewer,
+            note=note,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(t("hub.review.approved").format(package_id=package.id))
+
+
+@hub_review.command("reject")
+@click.argument("package_id")
+@click.option("--reviewer", default="", help="Reviewer name or handle")
+@click.option("--note", default="", help="Optional rejection reason")
+def hub_review_reject(package_id: str, reviewer: str, note: str) -> None:
+    """Reject a pending marketplace package."""
+    from .hub_marketplace import review_marketplace_package
+
+    try:
+        package = review_marketplace_package(
+            package_id,
+            "reject",
+            reviewer=reviewer,
+            note=note,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(t("hub.review.rejected").format(package_id=package.id))
+
+
 @hub.command()
 @click.pass_context
 def browse(ctx: click.Context) -> None:
@@ -974,6 +1054,30 @@ def security_audit_cmd(ctx: click.Context) -> None:
 
     report = run_security_audit(ctx.obj["config_dir"])
     click.echo(format_security_audit_report(report))
+    if not report.ok:
+        raise SystemExit(1)
+
+
+@main.command("notarize-audit")
+@click.option(
+    "--app",
+    "app_bundle",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False, path_type=Path),
+    help="Path to Expando.app (defaults to repo or /Applications)",
+)
+@click.option(
+    "--dmg",
+    "dmg",
+    type=click.Path(exists=True, dir_okay=False, file_okay=True, path_type=Path),
+    help="Path to Expando.dmg",
+)
+@click.option("--strict", is_flag=True, help="Fail when artifacts are missing")
+def notarize_audit_cmd(app_bundle: Path | None, dmg: Path | None, strict: bool) -> None:
+    """Audit codesign, entitlements, Gatekeeper, and notarization staples."""
+    from .notarization_audit import format_notarization_audit_report, run_notarization_audit
+
+    report = run_notarization_audit(app_bundle=app_bundle, dmg=dmg, strict=strict)
+    click.echo(format_notarization_audit_report(report))
     if not report.ok:
         raise SystemExit(1)
 

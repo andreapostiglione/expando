@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from expando.permissions import _check_accessibility_macos
+from expando.permissions import _check_accessibility_macos, clipboard_injection_ready
 from tests.e2e.helpers import close_textedit_documents, open_textedit_blank
 
 
@@ -15,6 +15,10 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
         "e2e: end-to-end tests; macOS injection tests need Accessibility permission",
+    )
+    config.addinivalue_line(
+        "markers",
+        "clipboard: clipboard injection E2E; needs Accessibility and working pbcopy/pbpaste",
     )
 
 
@@ -27,6 +31,22 @@ def require_accessibility() -> None:
             "Accessibility permission not granted — enable Terminal or Python in "
             "System Settings → Privacy & Security → Accessibility"
         )
+
+
+@pytest.fixture
+def require_clipboard_e2e(require_textedit_e2e) -> None:
+    if os.environ.get("EXPANDO_E2E_CLIPBOARD") != "1" and os.environ.get("EXPANDO_E2E_FULL") != "1":
+        pytest.skip(
+            "Clipboard E2E disabled — set EXPANDO_E2E_CLIPBOARD=1 on a runner with full TCC"
+        )
+    ready = clipboard_injection_ready()
+    if ready is False:
+        pytest.skip(
+            "Clipboard injection unavailable — grant Accessibility to the runner process and "
+            "ensure pbcopy/pbpaste work in the runner session"
+        )
+    if ready is None:
+        pytest.skip("Could not verify clipboard injection readiness on this host")
 
 
 @pytest.fixture

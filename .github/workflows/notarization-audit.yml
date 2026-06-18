@@ -1,0 +1,49 @@
+name: Notarization audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/entitlements.plist"
+      - "scripts/codesign-app.sh"
+      - "scripts/notarize-dmg.sh"
+      - "src/expando/notarization_audit.py"
+
+jobs:
+  audit-release-artifact:
+    if: vars.ENABLE_SELF_HOSTED_E2E == 'true'
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        run: |
+          python3 -m venv .venv
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+          .venv/bin/pip install -q -e ".[dev]"
+
+      - name: Download latest release DMG
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh release view --repo andreapostiglione/expando --json tagName -q .tagName)
+          gh release download "$TAG" --repo andreapostiglione/expando --pattern "Expando.dmg"
+          hdiutil attach -nobrowse -quiet Expando.dmg
+          cp -R "/Volumes/Expando/Expando.app" ./Expando.app
+          hdiutil detach "/Volumes/Expando" -quiet || true
+
+      - name: Run notarization audit
+        run: |
+          expando notarize-audit --app Expando.app --dmg Expando.dmg --strict
+
+  audit-skipped:
+    if: vars.ENABLE_SELF_HOSTED_E2E != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self-hosted audit disabled
+        run: |
+          echo "Set ENABLE_SELF_HOSTED_E2E=true on a macOS self-hosted runner for weekly notarization audits."
+          echo "Release builds also run expando notarize-audit immediately after DMG creation."

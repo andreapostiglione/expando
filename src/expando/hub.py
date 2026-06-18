@@ -31,6 +31,11 @@ class HubPackage:
     description: str
     author: str = ""
     tags: list[str] | None = None
+    status: str | None = None
+    submitted_at: str | None = None
+    reviewed_at: str | None = None
+    reviewer: str | None = None
+    review_note: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> HubPackage:
@@ -40,6 +45,11 @@ class HubPackage:
             description=str(data.get("description", "")),
             author=str(data.get("author", "")),
             tags=[str(item) for item in data.get("tags", []) or []],
+            status=str(data["status"]) if data.get("status") else None,
+            submitted_at=str(data["submitted_at"]) if data.get("submitted_at") else None,
+            reviewed_at=str(data["reviewed_at"]) if data.get("reviewed_at") else None,
+            reviewer=str(data["reviewer"]) if data.get("reviewer") else None,
+            review_note=str(data["review_note"]) if data.get("review_note") else None,
         )
 
 

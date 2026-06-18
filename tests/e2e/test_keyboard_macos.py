@@ -15,16 +15,18 @@ pytestmark = [pytest.mark.e2e, pytest.mark.skipif(platform.system() != "Darwin",
 
 def test_textinjector_types_into_textedit(textedit_document):
     injector = TextInjector(InjectorSettings(backend="inject", clipboard_threshold=9999))
-    injector.inject("hello e2e typing")
+    payload = "hello expando typing"
+    injector.inject(payload)
     time.sleep(0.5)
     content = get_textedit_content()
-    assert "hello e2e typing" in content, content
+    assert payload in content, content
 
 
-def test_textinjector_clipboard_paste_into_textedit(textedit_document):
+@pytest.mark.clipboard
+def test_textinjector_clipboard_paste_into_textedit(require_clipboard_e2e, textedit_document):
     injector = TextInjector(InjectorSettings(backend="clipboard"))
     injector.inject("hello e2e clipboard")
-    time.sleep(0.6)
+    time.sleep(0.8)
     content = get_textedit_content()
     assert "hello e2e clipboard" in content, content
 

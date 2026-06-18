@@ -106,6 +106,11 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "security.title.ok": {"it": "OK", "en": "OK"},
     "security.title.issues": {"it": "PROBLEMI RILEVATI", "en": "ISSUES FOUND"},
+    "notarize.title.ok": {"it": "Audit notarizzazione OK", "en": "Notarization audit OK"},
+    "notarize.title.issues": {
+        "it": "PROBLEMI NOTARIZZAZIONE",
+        "en": "NOTARIZATION ISSUES",
+    },
     "menubar.disable": {"it": "Disattiva", "en": "Disable"},
     "menubar.enable": {"it": "Attiva", "en": "Enable"},
     "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
@@ -276,6 +281,34 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.submit.maintainer": {
         "it": "Per maintainer del repo ufficiale:",
         "en": "For official repo maintainers:",
+    },
+    "hub.submit.review_hint": {
+        "it": "Flusso review locale (maintainer):",
+        "en": "Local review flow (maintainers):",
+    },
+    "hub.review.empty": {
+        "it": "Nessun package con stato {status}.",
+        "en": "No packages with status {status}.",
+    },
+    "hub.review.header": {
+        "it": "Marketplace ({status}, {count}):",
+        "en": "Marketplace ({status}, {count}):",
+    },
+    "hub.review.submitted": {"it": "Inviato", "en": "Submitted"},
+    "hub.review.reviewed": {"it": "Revisionato", "en": "Reviewed"},
+    "hub.review.reviewer": {"it": "Reviewer", "en": "Reviewer"},
+    "hub.review.note": {"it": "Nota", "en": "Note"},
+    "hub.review.queued": {
+        "it": "Package {package_id} aggiunto alla coda pending.",
+        "en": "Package {package_id} queued as pending.",
+    },
+    "hub.review.approved": {
+        "it": "Package {package_id} approvato.",
+        "en": "Package {package_id} approved.",
+    },
+    "hub.review.rejected": {
+        "it": "Package {package_id} rifiutato.",
+        "en": "Package {package_id} rejected.",
     },
     "cli.update.available": {
         "it": "Aggiornamento disponibile: v{version}",

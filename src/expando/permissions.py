@@ -24,6 +24,7 @@ class PermissionStatus:
     accessibility: bool | None
     input_monitoring: bool | None
     notes: list[str]
+    clipboard: bool | None = None
     runtime: RuntimeInfo | None = None
     injection_ready: bool | None = None
 
@@ -111,6 +112,18 @@ def _client_matches_runtime(client: str, runtime: RuntimeInfo) -> bool:
     return any(label and label in client_lower for label in labels)
 
 
+def _check_clipboard_macos() -> bool | None:
+    if platform.system() != "Darwin":
+        return None
+    probe = "expando-clipboard-probe"
+    try:
+        subprocess.run(["pbcopy"], input=probe, text=True, check=True, timeout=2)
+        result = subprocess.run(["pbpaste"], capture_output=True, text=True, timeout=2, check=True)
+    except Exception:
+        return None
+    return result.stdout == probe
+
+
 def _check_input_monitoring_macos(runtime: RuntimeInfo) -> bool | None:
     if platform.system() != "Darwin":
         return None
@@ -145,6 +158,7 @@ def check_permissions(*, prompt_accessibility: bool = False) -> PermissionStatus
     input_monitoring = (
         _check_input_monitoring_macos(runtime) if runtime is not None else None
     )
+    clipboard = _check_clipboard_macos() if platform.system() == "Darwin" else None
     injection_ready = accessibility
 
     if platform.system() == "Darwin" and runtime is not None:
@@ -172,16 +186,35 @@ def check_permissions(*, prompt_accessibility: bool = False) -> PermissionStatus
             notes.append(
                 "Impossibile verificare Monitoraggio input dal database TCC."
             )
+        if clipboard is False:
+            notes.append(
+                "Clipboard non disponibile: l'iniezione via pbcopy/pbpaste potrebbe fallire."
+            )
+        if clipboard is None:
+            notes.append("Impossibile verificare l'accesso alla clipboard.")
     else:
         notes.append("Verifica permessi disponibile solo su macOS.")
 
     return PermissionStatus(
         accessibility=accessibility,
         input_monitoring=input_monitoring,
+        clipboard=clipboard,
         notes=notes,
         runtime=runtime,
         injection_ready=injection_ready,
     )
+
+
+def clipboard_injection_ready() -> bool | None:
+    if platform.system() != "Darwin":
+        return None
+    accessibility = _check_accessibility_macos()
+    clipboard = _check_clipboard_macos()
+    if accessibility is False or clipboard is False:
+        return False
+    if accessibility is True and clipboard is True:
+        return True
+    return None
 
 
 def permissions_ready(status: PermissionStatus) -> bool:

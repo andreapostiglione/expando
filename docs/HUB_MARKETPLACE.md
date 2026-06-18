@@ -17,6 +17,32 @@ Requirements:
 
 The command validates snippets, creates a zip bundle, and prints GitHub issue instructions.
 
+## Review flow (maintainers)
+
+Packages in the marketplace index carry a `status`:
+
+| Status | Visible in `hub list` |
+|--------|------------------------|
+| `pending` | No |
+| `approved` | Yes |
+| `rejected` | No |
+
+Local queue (repo `packages/hub/marketplace.json`):
+
+```bash
+expando hub review queue ./my-package
+expando hub review list
+expando hub review list --status pending
+expando hub review approve my-package --reviewer andrea
+expando hub review reject my-package --note "duplicate of social"
+```
+
+After approval, publish into the official bundle:
+
+```bash
+expando hub publish ./my-package --bundle --register
+```
+
 ## Official index (maintainers)
 
 ```bash
@@ -26,11 +52,26 @@ expando hub publish ./my-package --bundle --register
 ## Remote marketplace index
 
 Set `EXPANDO_HUB_MARKETPLACE_URL` to a JSON index with the same shape as `packages/hub/index.json`.
-`expando hub list` merges community packages that are not already in the official index.
+Only entries with `"status": "approved"` (or no status field) are merged into `expando hub list`.
 
-Example:
+For a local file instead of a remote URL:
 
 ```bash
-export EXPANDO_HUB_MARKETPLACE_URL=https://example.com/expando-hub/index.json
+export EXPANDO_HUB_MARKETPLACE_PATH=./packages/hub/marketplace.json
 expando hub list
+```
+
+Example remote index entry:
+
+```json
+{
+  "id": "community-pack",
+  "name": "Community Pack",
+  "description": "Shared snippets",
+  "author": "Contributor",
+  "status": "approved",
+  "submitted_at": "2026-06-17T12:00:00+00:00",
+  "reviewed_at": "2026-06-17T13:00:00+00:00",
+  "reviewer": "maintainer"
+}
 ```

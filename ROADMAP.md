@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v2.7.0
+**Versione attuale:** v2.8.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v2.7.0)
+## Stato attuale (baseline v2.8.0)
 
 | Area | Stato |
 |------|--------|
@@ -37,12 +37,15 @@
 | Sync assistito CLI (`expando sync`) | ✓ v2.7.0 |
 | Sparkle.framework nativo (distribution build) | ✓ v2.7.0 |
 | Hub marketplace submit + merge remoto | ✓ v2.7.0 |
+| Notarization audit CLI + CI periodico | ✓ v2.8.0 |
+| E2E clipboard con TCC su runner self-hosted | ✓ v2.8.0 |
+| Hub marketplace review/approval flow | ✓ v2.8.0 |
 
 ### Gap noti oggi
 
 - **Updater:** Sparkle nativo solo in build `EXPANDO_DISTRIBUTION=1`; fallback Python appcast in dev
-- **Hub marketplace:** submit via issue + bundle; nessun approval flow automatico
-- **Test:** E2E clipboard flaky in CI headless (skip su runner senza TCC)
+- **Hub marketplace:** review locale/JSON; nessun portale web automatico
+- **Test:** E2E clipboard skipped in CI headless (richiede runner self-hosted + TCC)
 - **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` online; richiede TCC sul servizio launchd
 
 ---
@@ -121,7 +124,7 @@ flowchart LR
 | T3-12 | **Homebrew cask** | `brew install --cask expando` con DMG precompilato | ✓ |
 | T3-13 | **Sito progetto** | Landing + docs (install, YAML reference, hub); GitHub Pages o sito Inochi | ✓ |
 | T3-14 | **Changelog in-app** | "What's new" alla prima apertura post-update | ✓ |
-| T3-15 | **Notarization hardening** | Hardened runtime audit; entitlement review periodico | Ops continua |
+| T3-15 | **Notarization hardening** | Hardened runtime audit; entitlement review periodico | ✓ v2.8.0 |
 
 **Release target:** Q1 2027  
 **Criterio di done:** utente Homebrew cask riceve update senza rebuild locale.
@@ -208,13 +211,18 @@ flowchart LR
 2. Sparkle.framework nativo in distribution `.app`
 3. Hub submit + marketplace merge (`expando hub submit`, `EXPANDO_HUB_MARKETPLACE_URL`)
 
-### Sprint 7 → v2.8.0 (prossimo)
-1. T3-15 notarization audit periodico
-2. E2E clipboard con TCC completo sul runner
-3. Hub marketplace review/approval flow
+### Sprint 7 → v2.8.0 ✓
+1. T3-15 `expando notarize-audit` + CI release/weekly
+2. E2E clipboard (`EXPANDO_E2E_CLIPBOARD=1`, probe TCC)
+3. `expando hub review` queue/approve/reject
+
+### Sprint 8 → v2.9.0 (prossimo)
+1. Hub marketplace portale/remoto avanzato
+2. Notarization audit report export (JSON/CI artifact)
+3. E2E image snippet clipboard su runner
 
 ### Backlog
-- Fix test flaky clipboard E2E headless
+- Fix test flaky clipboard E2E headless su macOS-latest
 
 ---
 

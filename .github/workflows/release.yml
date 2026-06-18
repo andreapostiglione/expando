@@ -65,6 +65,20 @@ jobs:
           fi
           ./scripts/build-dmg.sh
 
+      - name: Notarization audit
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -q -e .
+          STRICT=0
+          if [[ -n "${{ secrets.NOTARY_APPLE_ID }}" && -n "${{ secrets.NOTARY_PASSWORD }}" ]] || [[ -n "${{ secrets.NOTARY_API_KEY }}" ]]; then
+            STRICT=1
+          fi
+          if [[ "$STRICT" == "1" ]]; then
+            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg --strict
+          else
+            .venv/bin/expando notarize-audit --app Expando.app --dmg Expando.dmg
+          fi
+
       - name: Generate Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}

@@ -721,6 +721,98 @@ def hub_publish(
         click.echo(t("cli.hub.publish.registered"))
 
 
+@hub.group("submit")
+def hub_submit_group() -> None:
+    """Prepare and track marketplace package submissions."""
+
+
+@hub_submit_group.command("run")
+@click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Write submission zip to this path",
+)
+@click.option(
+    "--queue",
+    is_flag=True,
+    help="Add the package to the local marketplace queue as pending",
+)
+@click.option("--json", "as_json", is_flag=True, help="Print submission result as JSON")
+@click.pass_context
+def hub_submit_run(
+    ctx: click.Context,
+    package_dir: Path,
+    output: Path | None,
+    queue: bool,
+    as_json: bool,
+) -> None:
+    """Validate, bundle, and optionally queue a contributor submission."""
+    import json
+
+    from .hub import validate_hub_package_dir
+    from .hub_marketplace import (
+        contributor_submission_to_dict,
+        format_submission_instructions,
+        run_contributor_submission_workflow,
+    )
+
+    report = validate_hub_package_dir(package_dir)
+    if not report.ok:
+        raise click.ClickException("; ".join(report.errors))
+    bundle_path = output or (
+        ctx.obj["config_dir"] / f"hub-submit-{report.package_id}.zip"
+    )
+    try:
+        result = run_contributor_submission_workflow(
+            package_dir,
+            bundle_path=bundle_path,
+            queue=queue,
+        )
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if queue and not as_json:
+        from .i18n import t
+
+        click.echo(t("hub.submit.queued").format(package_id=result.package_id))
+    if as_json:
+        click.echo(json.dumps(contributor_submission_to_dict(result), indent=2, ensure_ascii=False))
+    else:
+        from .hub_marketplace import HubSubmission
+
+        submission = HubSubmission(
+            package_id=result.package_id,
+            bundle_path=result.bundle_path,
+            manifest=result.manifest,
+            match_count=result.match_count,
+        )
+        click.echo(format_submission_instructions(submission, bundle_path=result.bundle_path))
+
+
+@hub_submit_group.command("status")
+@click.argument("package_id")
+@click.option("--json", "as_json", is_flag=True, help="Print status as JSON")
+def hub_submit_status(package_id: str, as_json: bool) -> None:
+    """Show marketplace review status for a submitted package."""
+    import json
+
+    from .hub_marketplace import (
+        contributor_submission_status,
+        contributor_submission_status_to_dict,
+        format_submission_status_report,
+    )
+
+    report = contributor_submission_status(package_id)
+    if as_json:
+        click.echo(
+            json.dumps(contributor_submission_status_to_dict(report), indent=2, ensure_ascii=False)
+        )
+    else:
+        click.echo(format_submission_status_report(report))
+
+
 @hub.command("submit")
 @click.argument("package_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.option(
@@ -729,27 +821,17 @@ def hub_publish(
     type=click.Path(path_type=Path),
     help="Write submission zip to this path",
 )
+@click.option("--queue", is_flag=True, help="Add the package to the local marketplace queue")
 @click.pass_context
-def hub_submit(ctx: click.Context, package_dir: Path, output: Path | None) -> None:
-    """Validate a package and prepare a marketplace submission bundle."""
-    from .hub_marketplace import (
-        create_submission_bundle,
-        format_submission_instructions,
-        publish_submission_bundle,
+def hub_submit(ctx: click.Context, package_dir: Path, output: Path | None, queue: bool) -> None:
+    """Validate a package and prepare a marketplace submission bundle (alias)."""
+    ctx.invoke(
+        hub_submit_run,
+        package_dir=package_dir,
+        output=output,
+        queue=queue,
+        as_json=False,
     )
-
-    try:
-        submission = create_submission_bundle(package_dir)
-    except ValueError as exc:
-        raise click.ClickException(str(exc)) from exc
-
-    bundle_path = output
-    if bundle_path is None:
-        bundle_path = (
-            ctx.obj["config_dir"] / f"hub-submit-{submission.package_id}.zip"
-        )
-    publish_submission_bundle(submission, bundle_path)
-    click.echo(format_submission_instructions(submission, bundle_path=bundle_path))
 
 
 @hub.group("review")
@@ -1061,9 +1143,30 @@ def check_updates_cmd(ctx: click.Context) -> None:
     show_default=True,
     help="Iterations for expansion lookup latency",
 )
-def benchmark(count: int, char_iterations: int, expand_iterations: int) -> None:
+@click.option(
+    "--sparkle",
+    is_flag=True,
+    help="Include Sparkle/appcast update-check benchmark (distribution builds)",
+)
+@click.option(
+    "--feed-url",
+    default=None,
+    help="Override Sparkle appcast URL for --sparkle",
+)
+def benchmark(
+    count: int,
+    char_iterations: int,
+    expand_iterations: int,
+    sparkle: bool,
+    feed_url: str | None,
+) -> None:
     """Benchmark trigger buffer performance under load."""
-    from .benchmark import format_benchmark_report, run_engine_benchmark
+    from .benchmark import (
+        format_benchmark_report,
+        format_sparkle_benchmark_report,
+        run_engine_benchmark,
+        run_sparkle_update_benchmark,
+    )
 
     try:
         result = run_engine_benchmark(
@@ -1074,6 +1177,9 @@ def benchmark(count: int, char_iterations: int, expand_iterations: int) -> None:
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
     click.echo(format_benchmark_report(result))
+    if sparkle:
+        click.echo("")
+        click.echo(format_sparkle_benchmark_report(run_sparkle_update_benchmark(feed_url=feed_url)))
 
 
 @main.group()

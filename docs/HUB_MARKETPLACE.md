@@ -6,7 +6,9 @@ Community hub packages can be submitted for review and listed alongside the offi
 
 ```bash
 expando hub submit ./my-package
-expando hub submit ./my-package -o ~/Desktop/my-package.zip
+expando hub submit run ./my-package --queue
+expando hub submit status my-package
+expando hub submit ./my-package -o ~/Desktop/my-package.zip --queue --json
 ```
 
 Requirements:

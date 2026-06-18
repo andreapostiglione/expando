@@ -109,7 +109,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           cp appcast.xml /tmp/appcast-release.xml
           git fetch origin main
-          git checkout -B main origin/main
+          git reset --hard origin/main
           cp /tmp/appcast-release.xml appcast.xml
           git add appcast.xml
           git diff --staged --quiet || git commit -m "chore: update appcast for ${GITHUB_REF_NAME}"

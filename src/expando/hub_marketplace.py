@@ -33,6 +33,30 @@ class HubSubmission:
     match_count: int
 
 
+@dataclass
+class ContributorSubmissionResult:
+    package_id: str
+    bundle_path: Path
+    match_count: int
+    queued: bool
+    manifest: dict[str, object]
+
+
+@dataclass
+class SubmissionStatusReport:
+    package_id: str
+    found: bool
+    status: str | None = None
+    name: str = ""
+    description: str = ""
+    in_official_index: bool = False
+    in_marketplace: bool = False
+    submitted_at: str | None = None
+    reviewed_at: str | None = None
+    reviewer: str | None = None
+    review_note: str | None = None
+
+
 def marketplace_index_url() -> str | None:
     override = os.environ.get("EXPANDO_HUB_MARKETPLACE_URL", "").strip()
     if override:
@@ -199,6 +223,113 @@ def review_marketplace_package(
     return HubPackage.from_dict(updated)
 
 
+def find_marketplace_package(package_id: str) -> HubPackage | None:
+    data = _load_marketplace_document()
+    for item in data.get("packages", []):
+        if isinstance(item, dict) and str(item.get("id")) == package_id:
+            return _entry_to_package(item)
+    return None
+
+
+def contributor_submission_status(package_id: str) -> SubmissionStatusReport:
+    from .hub import fetch_registry
+
+    official_ids = {item.id for item in fetch_registry(include_marketplace=False)}
+    package = find_marketplace_package(package_id)
+    if package is None:
+        return SubmissionStatusReport(
+            package_id=package_id,
+            found=False,
+            in_official_index=package_id in official_ids,
+        )
+    return SubmissionStatusReport(
+        package_id=package_id,
+        found=True,
+        status=package.status,
+        name=package.name,
+        description=package.description,
+        in_official_index=package_id in official_ids,
+        in_marketplace=True,
+        submitted_at=package.submitted_at,
+        reviewed_at=package.reviewed_at,
+        reviewer=package.reviewer,
+        review_note=package.review_note,
+    )
+
+
+def contributor_submission_status_to_dict(report: SubmissionStatusReport) -> dict[str, object]:
+    return {
+        "package_id": report.package_id,
+        "found": report.found,
+        "status": report.status,
+        "name": report.name,
+        "description": report.description,
+        "in_official_index": report.in_official_index,
+        "in_marketplace": report.in_marketplace,
+        "submitted_at": report.submitted_at,
+        "reviewed_at": report.reviewed_at,
+        "reviewer": report.reviewer,
+        "review_note": report.review_note,
+    }
+
+
+def format_submission_status_report(report: SubmissionStatusReport) -> str:
+    from .i18n import t
+
+    if not report.found:
+        if report.in_official_index:
+            return t("hub.submit.status.official").format(package_id=report.package_id)
+        return t("hub.submit.status.not_found").format(package_id=report.package_id)
+
+    lines = [
+        t("hub.submit.status.header").format(
+            package_id=report.package_id,
+            status=report.status or "unknown",
+        ),
+        f"  {report.name}: {report.description}",
+    ]
+    if report.submitted_at:
+        lines.append(t("hub.submit.status.submitted").format(when=report.submitted_at))
+    if report.reviewed_at:
+        lines.append(t("hub.submit.status.reviewed").format(when=report.reviewed_at))
+    if report.reviewer:
+        lines.append(t("hub.submit.status.reviewer").format(name=report.reviewer))
+    if report.review_note:
+        lines.append(t("hub.submit.status.note").format(note=report.review_note))
+    if report.in_official_index:
+        lines.append(t("hub.submit.status.official_index"))
+    return "\n".join(lines)
+
+
+def run_contributor_submission_workflow(
+    package_dir: Path,
+    *,
+    bundle_path: Path,
+    queue: bool = False,
+) -> ContributorSubmissionResult:
+    submission = create_submission_bundle(package_dir)
+    destination = publish_submission_bundle(submission, bundle_path)
+    if queue:
+        queue_marketplace_submission(package_dir)
+    return ContributorSubmissionResult(
+        package_id=submission.package_id,
+        bundle_path=destination,
+        match_count=submission.match_count,
+        queued=queue,
+        manifest=submission.manifest,
+    )
+
+
+def contributor_submission_to_dict(result: ContributorSubmissionResult) -> dict[str, object]:
+    return {
+        "package_id": result.package_id,
+        "bundle_path": str(result.bundle_path),
+        "match_count": result.match_count,
+        "queued": result.queued,
+        "manifest": result.manifest,
+    }
+
+
 def create_submission_bundle(package_dir: Path) -> HubSubmission:
     report = validate_hub_package_dir(package_dir)
     if not report.ok:
@@ -259,6 +390,7 @@ def format_submission_instructions(
             f"     {MARKETPLACE_DOCS_URL}",
             "",
             t("hub.submit.review_hint"),
+            f"  expando hub submit status {submission.package_id}",
             f"  expando hub review queue ./my-package",
             f"  expando hub review approve {submission.package_id}",
             "",

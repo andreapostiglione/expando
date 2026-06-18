@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Callable
 from unittest.mock import patch
 
+from . import __version__
 from .app_context import AppContext
 from .config import AppConfig, ConfigBundle, Match, compile_matches
 from .engine import ExpansionEngine
@@ -153,4 +154,92 @@ def format_benchmark_report(result: BenchmarkResult) -> str:
             f"p99 {result.expand_lookup_p99_us:.1f} µs"
         ),
     ]
+    return "\n".join(lines)
+
+
+@dataclass
+class SparkleBenchmarkResult:
+    sparkle_available: bool
+    app_bundle: str | None
+    helper_path: str | None
+    framework_present: bool
+    appcast_fetch_ms: float
+    appcast_entries: int
+    latest_version: str | None
+    current_version: str
+    update_available: bool
+
+
+def run_sparkle_update_benchmark(*, feed_url: str | None = None) -> SparkleBenchmarkResult:
+    from .sparkle_native import (
+        resolve_distribution_app_bundle,
+        sparkle_available,
+        sparkle_framework_path,
+        sparkle_helper_path,
+    )
+    from .updater import fetch_appcast, latest_update, parse_appcast
+    from .version_utils import is_newer, normalize_version
+
+    current = normalize_version(__version__)
+    bundle = resolve_distribution_app_bundle()
+    helper = sparkle_helper_path(bundle) if bundle is not None else None
+    framework_present = (
+        sparkle_framework_path(bundle) is not None if bundle is not None else False
+    )
+
+    fetch_ms = 0.0
+    entries = 0
+    latest_version: str | None = None
+    update_available = False
+    try:
+        fetch_start = time.perf_counter()
+        xml_text = fetch_appcast(feed_url)
+        fetch_ms = (time.perf_counter() - fetch_start) * 1000
+        updates = parse_appcast(xml_text)
+        entries = len(updates)
+        latest = latest_update(updates)
+        if latest is not None:
+            latest_version = latest.version
+            update_available = is_newer(latest.version, current)
+    except Exception:
+        fetch_ms = fetch_ms or 0.0
+
+    return SparkleBenchmarkResult(
+        sparkle_available=sparkle_available(),
+        app_bundle=str(bundle) if bundle is not None else None,
+        helper_path=str(helper) if helper is not None else None,
+        framework_present=framework_present,
+        appcast_fetch_ms=fetch_ms,
+        appcast_entries=entries,
+        latest_version=latest_version,
+        current_version=current,
+        update_available=update_available,
+    )
+
+
+def format_sparkle_benchmark_report(result: SparkleBenchmarkResult) -> str:
+    lines = [
+        t("benchmark.sparkle.title"),
+        f"{t('benchmark.sparkle.available')}: {t('doctor.yes') if result.sparkle_available else t('doctor.no')}",
+    ]
+    if result.app_bundle:
+        lines.append(f"{t('benchmark.sparkle.bundle')}: {result.app_bundle}")
+    if result.helper_path:
+        lines.append(f"{t('benchmark.sparkle.helper')}: {result.helper_path}")
+    lines.append(
+        f"{t('benchmark.sparkle.framework')}: "
+        f"{t('doctor.yes') if result.framework_present else t('doctor.no')}"
+    )
+    lines.append(
+        f"{t('benchmark.sparkle.appcast_fetch')}: {result.appcast_fetch_ms:.2f} ms "
+        f"({result.appcast_entries} {t('benchmark.sparkle.entries')})"
+    )
+    lines.append(
+        f"{t('benchmark.sparkle.versions')}: "
+        f"{result.current_version} → {result.latest_version or t('benchmark.sparkle.none')}"
+    )
+    lines.append(
+        f"{t('benchmark.sparkle.update_available')}: "
+        f"{t('doctor.yes') if result.update_available else t('doctor.no')}"
+    )
     return "\n".join(lines)

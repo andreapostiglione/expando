@@ -139,7 +139,7 @@ def doctor_notarization_lines(config_dir: Path) -> list[str]:
     last_status = (
         t("notarize.history.ok") if last.get("ok") else t("notarize.history.fail")
     )
-    return [
+    lines = [
         t("doctor.notarize_history.title"),
         t("doctor.notarize_history.stats").format(
             total=stats["total"],
@@ -155,6 +155,9 @@ def doctor_notarization_lines(config_dir: Path) -> list[str]:
             fail_count=summary.get("fail", 0),
         ),
     ]
+    if not last.get("ok"):
+        lines.append(t("doctor.notarize_history.hint_fail"))
+    return lines
 
 
 def format_notarization_history_report(

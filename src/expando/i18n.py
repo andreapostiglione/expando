@@ -180,6 +180,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "  Ultima: {recorded_at} {status} · pass={pass_count} warn={warn_count} fail={fail_count}",
         "en": "  Last: {recorded_at} {status} · pass={pass_count} warn={warn_count} fail={fail_count}",
     },
+    "doctor.notarize_history.hint_fail": {
+        "it": "  → Ultimo audit fallito: esegui expando notarize-history --limit 5",
+        "en": "  → Last audit failed: run expando notarize-history --limit 5",
+    },
     "doctor.crash_warning": {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
@@ -244,6 +248,25 @@ _STRINGS: dict[str, dict[str, str]] = {
     "benchmark.expand_lookup": {"it": "Lookup espansione", "en": "expand lookup"},
     "benchmark.ops_per_sec": {"it": "ops/s su", "en": "ops/s over"},
     "benchmark.iterations": {"it": "iterazioni", "en": "iterations"},
+    "benchmark.sparkle.title": {
+        "it": "Sparkle / appcast",
+        "en": "Sparkle / appcast",
+    },
+    "benchmark.sparkle.available": {
+        "it": "Sparkle nativo",
+        "en": "Native Sparkle",
+    },
+    "benchmark.sparkle.bundle": {"it": "App bundle", "en": "App bundle"},
+    "benchmark.sparkle.helper": {"it": "Helper", "en": "Helper"},
+    "benchmark.sparkle.framework": {"it": "Sparkle.framework", "en": "Sparkle.framework"},
+    "benchmark.sparkle.appcast_fetch": {"it": "Fetch appcast", "en": "Appcast fetch"},
+    "benchmark.sparkle.entries": {"it": "release", "en": "releases"},
+    "benchmark.sparkle.versions": {"it": "Versioni", "en": "Versions"},
+    "benchmark.sparkle.none": {"it": "n/d", "en": "n/a"},
+    "benchmark.sparkle.update_available": {
+        "it": "Aggiornamento disponibile",
+        "en": "Update available",
+    },
     "cli.packages.none": {"it": "Nessun pacchetto installato.", "en": "No packages installed."},
     "cli.restored": {"it": "Configurazione ripristinata.", "en": "Configuration restored."},
     "cli.plugins.none": {"it": "Nessun plugin caricato.", "en": "No plugins loaded."},
@@ -329,6 +352,42 @@ _STRINGS: dict[str, dict[str, str]] = {
     "hub.submit.review_hint": {
         "it": "Flusso review locale (maintainer):",
         "en": "Local review flow (maintainers):",
+    },
+    "hub.submit.queued": {
+        "it": "Package {package_id} aggiunto alla coda marketplace (pending).",
+        "en": "Package {package_id} added to the marketplace queue (pending).",
+    },
+    "hub.submit.status.header": {
+        "it": "Package {package_id}: stato {status}",
+        "en": "Package {package_id}: status {status}",
+    },
+    "hub.submit.status.not_found": {
+        "it": "Package {package_id} non trovato nel marketplace locale.",
+        "en": "Package {package_id} not found in the local marketplace.",
+    },
+    "hub.submit.status.official": {
+        "it": "Package {package_id} è nell'indice ufficiale (non in coda marketplace).",
+        "en": "Package {package_id} is in the official index (not in marketplace queue).",
+    },
+    "hub.submit.status.submitted": {
+        "it": "  Inviato: {when}",
+        "en": "  Submitted: {when}",
+    },
+    "hub.submit.status.reviewed": {
+        "it": "  Revisionato: {when}",
+        "en": "  Reviewed: {when}",
+    },
+    "hub.submit.status.reviewer": {
+        "it": "  Reviewer: {name}",
+        "en": "  Reviewer: {name}",
+    },
+    "hub.submit.status.note": {
+        "it": "  Nota: {note}",
+        "en": "  Note: {note}",
+    },
+    "hub.submit.status.official_index": {
+        "it": "  Presente anche nell'indice ufficiale.",
+        "en": "  Also listed in the official index.",
     },
     "hub.review.empty": {
         "it": "Nessun package con stato {status}.",

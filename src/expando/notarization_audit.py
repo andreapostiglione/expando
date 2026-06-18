@@ -233,17 +233,20 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
             )
         )
 
-    entitlements_target = _resolve_entitlements_target(app_bundle)
     actual: dict[str, object] | None = None
+    entitlements_target = app_bundle
     for candidate in (
+        app_bundle / "Contents" / "MacOS" / "expando-sparkle",
         app_bundle,
         app_bundle / "Contents" / "MacOS" / "expando",
-        app_bundle / "Contents" / "MacOS" / "expando-sparkle",
     ):
         if not candidate.exists():
             continue
-        actual = _read_codesign_entitlements(candidate)
-        if actual is not None:
+        candidate_entitlements = _read_codesign_entitlements(candidate)
+        if candidate_entitlements is None:
+            continue
+        if candidate_entitlements or not expected:
+            actual = candidate_entitlements
             entitlements_target = candidate
             break
 

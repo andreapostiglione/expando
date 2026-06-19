@@ -4,6 +4,7 @@ import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .brand_assets import brand_asset_path
 from .i18n import t, tf
 
 if TYPE_CHECKING:
@@ -25,7 +26,12 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
     class ExpandoMenuBar(rumps.App):
         def __init__(self) -> None:
-            super().__init__("Expando", quit_button=None)
+            icon = brand_asset_path("menubar-icon.png")
+            super().__init__(
+                "Expando",
+                icon=str(icon) if icon else None,
+                quit_button=None,
+            )
             self.config_dir = config_dir
             self.service = service
             self.enabled_item = rumps.MenuItem(t("menubar.disable"), callback=self.toggle_enabled)
@@ -96,7 +102,6 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
             picked = show_search_picker(hub_packages_for_picker(self.config_dir))
             if not picked:
-                rumps.notification("Expando", "", t("menubar.ui_failed"))
                 return
             if picked.get("installed") == "1":
                 return

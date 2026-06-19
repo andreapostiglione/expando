@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 import platform
 
 from .fuzzy import fuzzy_filter_search_items
+
+logger = logging.getLogger(__name__)
 
 
 def _import_tk():
@@ -207,8 +210,8 @@ def run_search_picker(items: list[dict[str, str]]) -> dict[str, str] | None:
             from .ui_appkit import run_search_picker as appkit_search
 
             return appkit_search(items)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("AppKit search picker unavailable, falling back to tkinter: %s", exc)
     return SearchPicker(items).run()
 
 
@@ -218,6 +221,6 @@ def run_form_dialog(fields: list[dict[str, str]]) -> dict[str, str] | None:
             from .ui_appkit import run_form_dialog as appkit_form
 
             return appkit_form(fields)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("AppKit form dialog unavailable, falling back to tkinter: %s", exc)
     return FormDialog(fields).run()

@@ -9,6 +9,16 @@ VERSION="$(grep '^version' "$ROOT/pyproject.toml" | head -1 | sed 's/.*"\(.*\)".
 
 mkdir -p "$MACOS" "$RESOURCES"
 
+if [[ -f "$ROOT/assets/AppIcon.icns" ]]; then
+  cp "$ROOT/assets/AppIcon.icns" "$RESOURCES/AppIcon.icns"
+fi
+if [[ -f "$ROOT/assets/menubar-icon.png" ]]; then
+  cp "$ROOT/assets/menubar-icon.png" "$RESOURCES/menubar-icon.png"
+fi
+if [[ -f "$ROOT/assets/logo.png" ]]; then
+  cp "$ROOT/assets/logo.png" "$RESOURCES/logo.png"
+fi
+
 if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
   VENV="$RESOURCES/venv"
   rm -rf "$VENV"
@@ -65,6 +75,8 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <string>${VERSION}</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSHighResolutionCapable</key>

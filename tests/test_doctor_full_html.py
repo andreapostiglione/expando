@@ -58,6 +58,13 @@ def test_build_doctor_full_html_includes_sections():
                 }
             ],
         },
+        "crash_loop": {
+            "stats": {"total": 2, "crash_count": 1, "trend_sparkline": "▁█"},
+            "entries": [
+                {"recorded_at": "2026-06-18T08:00:00+00:00", "event": "start"},
+                {"recorded_at": "2026-06-18T08:05:00+00:00", "event": "crash", "reason": "test"},
+            ],
+        },
         "community_validation": {
             "ok": True,
             "packages": [{"package_id": "typing-it", "ok": True, "match_count": 4}],
@@ -79,6 +86,7 @@ def test_build_doctor_full_html_includes_sections():
     assert "Expando Health Dashboard" in html_text
     assert "Notarization history" in html_text
     assert "Sparkle benchmark history" in html_text
+    assert "Crash loop history" in html_text
     assert "Community validation" in html_text
     assert "Cross-package duplicates" in html_text
     assert "Similarity suggestions" in html_text
@@ -143,6 +151,9 @@ def test_write_doctor_full_html(tmp_path: Path, monkeypatch):
 def test_doctor_cli_full_html(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
     monkeypatch.setattr("expando.i18n._LOCALE", "en")
+    monkeypatch.setattr("expando.doctor_checks.permissions_ready", lambda _status: True)
+    (tmp_path / "config").mkdir(parents=True)
+    (tmp_path / "config" / "default.yml").write_text("auto_backup: off\n", encoding="utf-8")
     runner = CliRunner()
     html_path = tmp_path / "doctor-health.html"
     result = runner.invoke(

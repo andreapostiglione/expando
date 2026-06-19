@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ctypes
 import logging
 import platform
 import subprocess
@@ -8,14 +9,29 @@ from .runtime_cache import TimedCache
 
 logger = logging.getLogger(__name__)
 
-_SECURE_INPUT_CACHE = TimedCache[bool](ttl_seconds=1.0)
+_SECURE_INPUT_CACHE = TimedCache[bool](ttl_seconds=0.5)
 
 
 def invalidate_secure_input_cache() -> None:
     _SECURE_INPUT_CACHE.invalidate()
 
 
-def _probe_secure_input_active() -> bool:
+def _probe_secure_input_native() -> bool | None:
+    if platform.system() != "Darwin":
+        return None
+    try:
+        carbon = ctypes.CDLL(
+            "/System/Library/Frameworks/Carbon.framework/Carbon",
+            use_errno=True,
+        )
+        carbon.IsSecureEventInputEnabled.restype = ctypes.c_bool
+        return bool(carbon.IsSecureEventInputEnabled())
+    except Exception:
+        logger.debug("Native secure input probe failed", exc_info=True)
+        return None
+
+
+def _probe_secure_input_ax() -> bool:
     script = '''
         tell application "System Events"
             set frontProc to first application process whose frontmost is true
@@ -55,6 +71,16 @@ def _probe_secure_input_active() -> bool:
     except Exception:
         logger.debug("Secure input check failed", exc_info=True)
     return False
+
+
+def _probe_secure_input_active() -> bool:
+    native = _probe_secure_input_native()
+    if native is True:
+        return True
+    ax = _probe_secure_input_ax()
+    if native is False:
+        return ax
+    return ax
 
 
 def is_secure_input_active() -> bool:

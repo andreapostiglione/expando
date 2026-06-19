@@ -159,7 +159,7 @@ def check_permissions(*, prompt_accessibility: bool = False) -> PermissionStatus
         _check_input_monitoring_macos(runtime) if runtime is not None else None
     )
     clipboard = _check_clipboard_macos() if platform.system() == "Darwin" else None
-    injection_ready = accessibility
+    injection_ready = _injection_ready(accessibility, input_monitoring)
 
     if platform.system() == "Darwin" and runtime is not None:
         if runtime.mode == "app":
@@ -217,5 +217,20 @@ def clipboard_injection_ready() -> bool | None:
     return None
 
 
+def _injection_ready(
+    accessibility: bool | None,
+    input_monitoring: bool | None,
+) -> bool | None:
+    if accessibility is False or input_monitoring is False:
+        return False
+    if accessibility is True and input_monitoring is not False:
+        return True
+    return None
+
+
 def permissions_ready(status: PermissionStatus) -> bool:
-    return status.accessibility is True
+    if status.accessibility is not True:
+        return False
+    if status.input_monitoring is False:
+        return False
+    return True

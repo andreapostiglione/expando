@@ -3,5 +3,10 @@
   "name": "Typing IT",
   "description": "Abbreviazioni rapide per indirizzo, telefono e dati fiscali",
   "author": "Community",
-  "tags": ["italian", "typing", "business"]
+  "tags": [
+    "italian",
+    "typing",
+    "business"
+  ],
+  "version": "1.0.0"
 }

@@ -68,6 +68,8 @@ def run_permission_wizard(config_dir: Path) -> bool:
             alert.addButtonWithTitle_(t("wizard.skip"))
         elif step_id == "done":
             alert.addButtonWithTitle_(t("wizard.finish"))
+            if runtime and runtime.mode == "app":
+                alert.addButtonWithTitle_(t("wizard.install_launch_agent"))
         else:
             alert.addButtonWithTitle_(t("wizard.continue"))
             alert.addButtonWithTitle_(t("wizard.skip"))
@@ -108,6 +110,24 @@ def run_permission_wizard(config_dir: Path) -> bool:
             step_index += 1
             continue
 
+        if step_id == "done":
+            if response == NSAlertSecondButtonReturn and runtime and runtime.mode == "app":
+                _offer_launch_agent_install(config_dir)
+            return True
         return True
 
     return True
+
+
+def _offer_launch_agent_install(config_dir: Path) -> None:
+    import subprocess
+
+    from .paths import package_root
+
+    script = package_root() / "scripts" / "install-launch-agent.sh"
+    if not script.exists():
+        return
+    try:
+        subprocess.run(["bash", str(script)], check=False, timeout=120)
+    except Exception:
+        return

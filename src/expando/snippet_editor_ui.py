@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import platform
+from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
 from typing import Callable
@@ -299,6 +300,8 @@ def run_snippet_editor(
     on_create: Callable[[dict[str, str]], str | None],
     on_delete: Callable[[str], str | None],
     reload_items: Callable[[], list[dict[str, str]]],
+    match_files: list[str] | None = None,
+    config_dir: Path | None = None,
 ) -> dict[str, str] | None:
     if _use_appkit():
         try:
@@ -310,6 +313,8 @@ def run_snippet_editor(
                 on_create=on_create,
                 on_delete=on_delete,
                 reload_items=reload_items,
+                match_files=match_files,
+                config_dir=config_dir,
             )
         except Exception:
             pass

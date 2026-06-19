@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":startup-it"
+    replace: "Snippet from startup-it package"
+  - trigger: ":startup-it-2"
+    replace: "Second snippet from startup-it"

@@ -77,7 +77,12 @@ class ExpansionEngine:
         self._last_expansion: _LastExpansion | None = None
         self._needs_window_title = self._compute_needs_window_title(config.matches)
         self._plugin_manager = (
-            PluginManager(config_dir) if config_dir is not None else None
+            PluginManager(
+                config_dir,
+                allowlist=config.app.plugins_allowlist,
+            )
+            if config_dir is not None
+            else None
         )
 
     @property
@@ -104,6 +109,7 @@ class ExpansionEngine:
             self._postponed = None
             self._last_expansion = None
             if self._plugin_manager is not None:
+                self._plugin_manager.set_allowlist(config.app.plugins_allowlist)
                 self._plugin_manager.reload()
 
     def undo_last(self) -> bool:
@@ -223,6 +229,13 @@ class ExpansionEngine:
 
     def _secure_input_blocks(self, config: ConfigBundle) -> bool:
         return config.app.respect_secure_input and is_secure_input_active()
+
+    def _injection_disabled(self) -> bool:
+        if self._config_dir is None:
+            return False
+        from .injection_degradation import degradation_status
+
+        return bool(degradation_status(self._config_dir).get("should_disable"))
 
     def _match_allowed(self, match: Match, context: AppContext, config: ConfigBundle) -> bool:
         if not match_allowed(
@@ -389,28 +402,47 @@ class ExpansionEngine:
             replacement = apply_trim(replacement)
         replacement, cursor_left = strip_cursor_hint(replacement)
 
-        self.injector.delete_chars(len(trigger))
-        pasted_image = False
-        if match.image and self._config_dir is not None:
-            try:
-                from .image_paths import resolve_image_path
-
-                image_file = resolve_image_path(self._config_dir, match.image)
-                pasted_image = self.injector.inject_image(image_file)
-                if not pasted_image and not replacement:
-                    replacement = str(image_file)
-            except RuntimeError as exc:
-                logger.warning("Image expansion failed for %r: %s", trigger, exc)
-
-        if pasted_image:
-            if cursor_left:
-                self.injector.move_cursor_left(cursor_left)
-        else:
-            self.injector.inject(
-                replacement,
-                force_clipboard=match.force_clipboard or bool(match.image),
-                cursor_left=cursor_left,
+        if self._config_dir is not None and self._injection_disabled():
+            logger.warning(
+                "Expansion of %r skipped: injection disabled after consecutive failures",
+                trigger,
             )
+            return False
+
+        try:
+            self.injector.delete_chars(len(trigger))
+            pasted_image = False
+            if match.image and self._config_dir is not None:
+                try:
+                    from .image_paths import resolve_image_path
+
+                    image_file = resolve_image_path(self._config_dir, match.image)
+                    pasted_image = self.injector.inject_image(image_file)
+                    if not pasted_image and not replacement:
+                        replacement = str(image_file)
+                except RuntimeError as exc:
+                    logger.warning("Image expansion failed for %r: %s", trigger, exc)
+
+            if pasted_image:
+                if cursor_left:
+                    self.injector.move_cursor_left(cursor_left)
+            else:
+                self.injector.inject(
+                    replacement,
+                    force_clipboard=match.force_clipboard or bool(match.image),
+                    cursor_left=cursor_left,
+                )
+        except Exception:
+            if self._config_dir is not None:
+                from .injection_degradation import record_injection_failure
+
+                record_injection_failure(self._config_dir)
+            raise
+
+        if self._config_dir is not None:
+            from .injection_degradation import record_injection_success
+
+            record_injection_success(self._config_dir)
         self._buffer = suffix
         self._last_expansion = _LastExpansion(
             trigger=trigger,

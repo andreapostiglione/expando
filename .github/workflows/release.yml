@@ -186,12 +186,20 @@ jobs:
           TAG="${GITHUB_REF_NAME#v}"
           ./scripts/generate-appcast.sh "$TAG" Expando.dmg appcast.xml
 
+      - name: Generate Homebrew cask bump snippet
+        run: |
+          chmod +x scripts/bump-homebrew-cask.sh
+          ./scripts/bump-homebrew-cask.sh Expando.dmg > homebrew-cask-bump.rb
+          shasum -a 256 Expando.dmg | tee homebrew-cask-sha256.txt
+
       - name: Attach DMG and appcast to GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: |
             Expando.dmg
             appcast.xml
+            homebrew-cask-bump.rb
+            homebrew-cask-sha256.txt
           generate_release_notes: true
 
       - name: Update appcast on main

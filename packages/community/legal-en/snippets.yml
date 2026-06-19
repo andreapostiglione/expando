@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":legal-en"
+    replace: "Snippet from legal-en package"
+  - trigger: ":legal-en-2"
+    replace: "Second snippet from legal-en"

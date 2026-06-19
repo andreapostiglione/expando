@@ -3,5 +3,10 @@
   "name": "Meeting IT",
   "description": "Template per inviti, agenda e follow-up riunioni",
   "author": "Community",
-  "tags": ["italian", "meeting", "business"]
+  "tags": [
+    "italian",
+    "meeting",
+    "business"
+  ],
+  "version": "1.0.0"
 }

@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":travel-it"
+    replace: "Snippet from travel-it package"
+  - trigger: ":travel-it-2"
+    replace: "Second snippet from travel-it"

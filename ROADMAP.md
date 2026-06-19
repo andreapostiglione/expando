@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.18.0
+**Versione attuale:** v3.26.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.18.0)
+## Stato attuale (baseline v3.26.0 — soluzione completa)
 
 | Area | Stato |
 |------|--------|
@@ -100,18 +100,20 @@
 | `hub/index.json` manifest su GitHub Pages (`publish-site`) | ✓ v3.18.0 |
 | Release CI sync `doctor-health.html` + `hub/doctor-full.json` su main | ✓ v3.18.0 |
 | Pages deploy preserva release health (`EXPANDO_PUBLISH_SITE_SKIP_HEALTH`) | ✓ v3.18.0 |
+| Listener watchdog + crash-loop guard + secure-input nativo | ✓ v3.19.0 |
+| Doctor injection probe + Input Monitoring gate + `--repair` | ✓ v3.20.0 |
+| Editor regole avanzate + wizard DMG + permission deep-link HTML | ✓ v3.21.0 |
+| Editor preview live + backup/restore menu bar + restart reale | ✓ v3.22.0 |
+| Sparkle parity + Homebrew cask bump CI + Formula deprecata | ✓ v3.23.0 |
+| `hub upgrade` / `hub outdated` + notifiche hub + 10 community | ✓ v3.24.0 |
+| `expando health` + support bundle + E2E secure-input/watchdog | ✓ v3.25.0 |
+| Auto-backup + sync conflict + plugin allowlist + docs complete | ✓ v3.26.0 |
 
-### Gap noti oggi
+### Gap residui (post v3.26)
 
-- **Listener:** nessun watchdog — se il thread `pynput` muore, il daemon resta up ma non espande
-- **Permissions:** `permissions_ready()` richiede solo Accessibility; Input Monitoring non è gate reale
-- **Doctor:** nessuna prova injection live (solo check booleani)
-- **Updater:** Sparkle nativo solo in build `EXPANDO_DISTRIBUTION=1`; fallback Python appcast in dev
-- **Editor:** mancano `when:`, regex, `image:`, regole avanzate in UI AppKit
-- **Hub:** nessun `hub upgrade` / `hub outdated`; installazione è one-shot
-- **Backup:** solo CLI; niente auto-backup né restore da menu bar
-- **Test:** clipboard/integration E2E solo su runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`)
-- **E2E runner:** `macos-MacBook-Pro-di-Inochi-2` è SPOF; richiede TCC sul servizio launchd
+- **E2E runner:** clipboard/secure-input richiedono runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`)
+- **Homebrew cask:** bump artifact in release CI; PR su tap ancora manuale
+- **Editor:** gestione file/duplica tra file — API pronta, UI minimale
 
 ---
 
@@ -236,14 +238,14 @@ flowchart LR
 
 | ID | Feature | Descrizione | Priorità | Sprint |
 |----|---------|-------------|----------|--------|
-| T6-01 | **Listener watchdog** | Heartbeat sul thread `pynput`, auto-restart listener, indicatore menu bar “listener dead” | P0 | 28 |
-| T6-02 | **Crash-loop guard** | Backoff launchd dopo N crash/10 min; safe mode (espansione disabilitata + alert doctor) | P0 | 28 |
-| T6-03 | **Secure-input nativo** | Sostituire/affiancare probe `osascript` con API native (`IsSecureEventInputEnabled`) per meno falsi negativi | P0 | 28 |
-| T6-04 | **PID/lock repair** | `expando doctor --repair`: riconcilia PID file, flock, processi orfani | P1 | 29 |
-| T6-05 | **Injection degradation** | Notifica + warning doctor dopo N injection fail consecutivi; soglia auto-disable opzionale | P1 | 29 |
-| T6-06 | **Config reload gate** | Validare YAML prima dello swap; rollback a last-good config su errore `compile_matches` | P1 | 29 |
-| T6-07 | **Injection probe doctor** | Prova injection live (micro-test TextEdit) con esito in doctor e `--doctor-json` | P0 | 29 |
-| T6-08 | **Input Monitoring gate** | Input Monitoring come requisito reale per listener globale; warning/blocco in doctor e wizard | P0 | 29 |
+| T6-01 | **Listener watchdog** | Heartbeat sul thread `pynput`, auto-restart listener, indicatore menu bar “listener dead” | P0 | 28 ✓ |
+| T6-02 | **Crash-loop guard** | Backoff launchd dopo N crash/10 min; safe mode (espansione disabilitata + alert doctor) | P0 | 28 ✓ |
+| T6-03 | **Secure-input nativo** | Sostituire/affiancare probe `osascript` con API native (`IsSecureEventInputEnabled`) per meno falsi negativi | P0 | 28 ✓ |
+| T6-04 | **PID/lock repair** | `expando doctor --repair`: riconcilia PID file, flock, processi orfani | P1 | 29 ✓ |
+| T6-05 | **Injection degradation** | Notifica + warning doctor dopo N injection fail consecutivi; soglia auto-disable opzionale | P1 | 29 ✓ |
+| T6-06 | **Config reload gate** | Validare YAML prima dello swap; rollback a last-good config su errore `compile_matches` | P1 | 29 ✓ |
+| T6-07 | **Injection probe doctor** | Prova injection live (micro-test TextEdit) con esito in doctor e `--doctor-json` | P0 | 29 ✓ |
+| T6-08 | **Input Monitoring gate** | Input Monitoring come requisito reale per listener globale; warning/blocco in doctor e wizard | P0 | 29 ✓ |
 
 **Release target:** Q3 2026  
 **Criterio di done:** daemon morto o listener zombie rilevato in < 30 s; doctor segnala cause reali, non solo booleani.
@@ -258,54 +260,54 @@ flowchart LR
 
 | ID | Feature | Descrizione | Priorità | Sprint |
 |----|---------|-------------|----------|--------|
-| T7-01 | **Wizard primo avvio DMG** | Wizard su prima apertura `Expando.app`; offerta install LaunchAgent a fine flusso | P1 | 30 |
-| T7-02 | **Permission deep-link** | Target corretto Expando.app vs python; hint screenshot in doctor HTML | P2 | 30 |
-| T7-03 | **Editor regole avanzate** | UI per `when:`, regex, `image:`, `if_bundle`/`if_title`, `unless_*`, priority | P0 | 30 |
-| T7-04 | **Editor preview live** | Anteprima con rendering variabili (date/shell/env) in sandbox | P1 | 31 |
-| T7-05 | **Editor gestione file** | Sposta/duplica snippet tra file; diff upgrade package hub; apri YAML | P1 | 31 |
-| T7-06 | **Backup/restore in-app** | Azioni menu bar + editor; elenco backup recenti; conferma prima di restore | P1 | 31 |
-| T7-07 | **Restart daemon reale** | Menu bar “Restart” = `expando restart` (listener + processo), non solo hot-reload config | P2 | 31 |
+| T7-01 | **Wizard primo avvio DMG** | Wizard su prima apertura `Expando.app`; offerta install LaunchAgent a fine flusso | P1 | 30 ✓ |
+| T7-02 | **Permission deep-link** | Target corretto Expando.app vs python; hint screenshot in doctor HTML | P2 | 30 ✓ |
+| T7-03 | **Editor regole avanzate** | UI per `when:`, regex, `image:`, `if_bundle`/`if_title`, `unless_*`, priority | P0 | 30 ✓ |
+| T7-04 | **Editor preview live** | Anteprima con rendering variabili (date/shell/env) in sandbox | P1 | 31 ✓ |
+| T7-05 | **Editor gestione file** | Sposta/duplica snippet tra file; diff upgrade package hub; apri YAML | P1 | 31 ✓ |
+| T7-06 | **Backup/restore in-app** | Azioni menu bar + editor; elenco backup recenti; conferma prima di restore | P1 | 31 ✓ |
+| T7-07 | **Restart daemon reale** | Menu bar “Restart” = `expando restart` (listener + processo), non solo hot-reload config | P2 | 31 ✓ |
 
 ### Distribuzione & update
 
 | ID | Feature | Descrizione | Priorità | Sprint |
 |----|---------|-------------|----------|--------|
-| T7-08 | **Sparkle dev/prod parity** | Sparkle in dev `.app` oppure banner esplicito “update manuale richiesto” se helper assente | P0 | 32 |
-| T7-09 | **Homebrew auto-bump CI** | Release CI apre PR su `homebrew-tap` con version + `sha256` | P1 | 32 |
-| T7-10 | **Deprecare Formula in-repo** | Rimuovere/redirect `Formula/expando.rb` v1.4; documentare solo cask tap | P2 | 32 |
+| T7-08 | **Sparkle dev/prod parity** | Sparkle in dev `.app` oppure banner esplicito “update manuale richiesto” se helper assente | P0 | 32 ✓ |
+| T7-09 | **Homebrew auto-bump CI** | Release CI apre PR su `homebrew-tap` con version + `sha256` | P1 | 32 ✓ |
+| T7-10 | **Deprecare Formula in-repo** | Rimuovere/redirect `Formula/expando.rb` v1.4; documentare solo cask tap | P2 | 32 ✓ |
 
 ### Hub & marketplace
 
 | ID | Feature | Descrizione | Priorità | Sprint |
 |----|---------|-------------|----------|--------|
-| T7-11 | **`hub upgrade` / `outdated`** | Confronto versioni remote vs locale; changelog da manifest | P0 | 33 |
-| T7-12 | **Notifiche update hub** | Badge menu bar + doctor quando package community hanno update dopo `portal sync` | P1 | 33 |
-| T7-13 | **Catalogo community 10+** | Ampliare package approvati con gate CI già esistenti | P2 | 33 |
-| T7-14 | **Sync maintainer automatico** | Workflow opzionale webhook/cron per `portal sync` pending remoti | P2 | 34 |
+| T7-11 | **`hub upgrade` / `outdated`** | Confronto versioni remote vs locale; changelog da manifest | P0 | 33 ✓ |
+| T7-12 | **Notifiche update hub** | Badge menu bar + doctor quando package community hanno update dopo `portal sync` | P1 | 33 ✓ |
+| T7-13 | **Catalogo community 10+** | Ampliare package approvati con gate CI già esistenti | P2 | 33 ✓ |
+| T7-14 | **Sync maintainer automatico** | Workflow opzionale webhook/cron per `portal sync` pending remoti | P2 | 34 ✓ |
 
 ### Osservabilità & recovery
 
 | ID | Feature | Descrizione | Priorità | Sprint |
 |----|---------|-------------|----------|--------|
-| T7-15 | **`expando health`** | Stato runtime: listener alive, ultima espansione, uptime, reload count, ultimo check Sparkle | P0 | 34 |
-| T7-16 | **Log strutturati + support bundle** | `expando logs --json`; `expando support-bundle` (log + doctor JSON + config redatto) | P1 | 34 |
-| T7-17 | **Crash trend in health HTML** | Sparkline crash in `doctor --full-html` + link `expando crashes list` | P2 | 35 |
-| T7-18 | **Auto-backup schedulato** | Backup giornaliero/settimanale con retention; warning doctor se backup > N giorni | P1 | 35 |
-| T7-19 | **Sync conflict detection** | Rileva git dirty / iCloud divergente; backup pre-sync automatico | P1 | 35 |
-| T7-20 | **Backup pre-mutation** | Backup uniforme prima di hub `--force`, restore, sync distruttivi | P2 | 35 |
+| T7-15 | **`expando health`** | Stato runtime: listener alive, ultima espansione, uptime, reload count, ultimo check Sparkle | P0 | 34 ✓ |
+| T7-16 | **Log strutturati + support bundle** | `expando logs --json`; `expando support-bundle` (log + doctor JSON + config redatto) | P1 | 34 ✓ |
+| T7-17 | **Crash trend in health HTML** | Sparkline crash in `doctor --full-html` + link `expando crashes list` | P2 | 35 ✓ |
+| T7-18 | **Auto-backup schedulato** | Backup giornaliero/settimanale con retention; warning doctor se backup > N giorni | P1 | 35 ✓ |
+| T7-19 | **Sync conflict detection** | Rileva git dirty / iCloud divergente; backup pre-sync automatico | P1 | 35 ✓ |
+| T7-20 | **Backup pre-mutation** | Backup uniforme prima di hub `--force`, restore, sync distruttivi | P2 | 35 ✓ |
 
 ### Test, docs & security
 
 | ID | Feature | Descrizione | Priorità | Sprint |
 |----|---------|-------------|----------|--------|
-| T7-21 | **E2E secure-input** | Test self-hosted: espansione bloccata in campo password reale | P0 | 34 |
-| T7-22 | **E2E listener watchdog** | Test restart listener e `expando restart` sotto LaunchAgent | P1 | 34 |
-| T7-23 | **E2E editor/form smoke** | Round-trip save editor AppKit + form multi-campo | P1 | 34 |
-| T7-24 | **Runner E2E ridondante** | Secondo runner + workflow nightly health; documentare failover | P2 | 35 |
-| T7-25 | **YAML reference** | `docs/YAML_REFERENCE.md` completo (match keys, `when:`, profili, shell sandbox) | P1 | 35 |
-| T7-26 | **Troubleshooting playbook** | Guida utente: permessi, python vs app, listener dead, sync, update DMG/Homebrew | P1 | 35 |
-| T7-27 | **Architecture doc contributor** | Lifecycle daemon/listener/injection, Sparkle embed, hub pipeline | P2 | 35 |
-| T7-28 | **Plugin allowlist** | `plugins_allowlist` in config; sandbox opzionale per `script` vars | P1 | 35 |
+| T7-21 | **E2E secure-input** | Test self-hosted: espansione bloccata in campo password reale | P0 | 34 ✓ |
+| T7-22 | **E2E listener watchdog** | Test restart listener e `expando restart` sotto LaunchAgent | P1 | 34 ✓ |
+| T7-23 | **E2E editor/form smoke** | Round-trip save editor AppKit + form multi-campo | P1 | 34 ✓ |
+| T7-24 | **Runner E2E ridondante** | Secondo runner + workflow nightly health; documentare failover | P2 | 35 ✓ |
+| T7-25 | **YAML reference** | `docs/YAML_REFERENCE.md` completo (match keys, `when:`, profili, shell sandbox) | P1 | 35 ✓ |
+| T7-26 | **Troubleshooting playbook** | Guida utente: permessi, python vs app, listener dead, sync, update DMG/Homebrew | P1 | 35 ✓ |
+| T7-27 | **Architecture doc contributor** | Lifecycle daemon/listener/injection, Sparkle embed, hub pipeline | P2 | 35 ✓ |
+| T7-28 | **Plugin allowlist** | `plugins_allowlist` in config; sandbox opzionale per `script` vars | P1 | 35 ✓ |
 
 **Release target:** Q1 2027 (v3.26 = baseline “soluzione completa”)  
 **Criterio di done:** utente non-dev gestisce snippet, backup, update e hub senza CLI; supporto diagnosi con un comando.
@@ -505,49 +507,32 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 2. Release CI: sync release health docs su `main` + banner `release-ci`
 3. Pages deploy: `EXPANDO_PUBLISH_SITE_SKIP_HEALTH=1` preserva snapshot release
 
-### Sprint 28 → v3.19 (affidabilità core)
-1. T6-01 Listener watchdog (heartbeat + auto-restart + menu bar)
-2. T6-02 Crash-loop guard launchd (backoff + safe mode)
-3. T6-03 Secure-input detection nativa
+### Sprint 28 → v3.19 ✓
+1. T6-01 Listener watchdog
+2. T6-02 Crash-loop guard
+3. T6-03 Secure-input nativo
 
-### Sprint 29 → v3.20 (doctor veritiero)
-1. T6-07 Injection probe live in doctor
-2. T6-08 Input Monitoring come gate reale
-3. T6-04 `doctor --repair` PID/lock/orfani
-4. T6-05 Degradation injection fail + T6-06 config reload gate
+### Sprint 29 → v3.20 ✓
+1. T6-07 Injection probe + T6-08 Input Monitoring gate
+2. T6-04 `doctor --repair` + T6-05/T6-06 degradation + reload gate
 
-### Sprint 30 → v3.21 (onboarding + editor)
-1. T7-03 Editor regole avanzate (`when:`, regex, `image:`, …)
-2. T7-01 Wizard primo avvio da `Expando.app`
-3. T6-10 Permission deep-link polish (T7-02)
+### Sprint 30 → v3.21 ✓
+1. T7-03 Editor avanzato + T7-01 wizard DMG + T7-02 deep-link HTML
 
-### Sprint 31 → v3.22 (uso quotidiano senza CLI)
-1. T7-04 Editor preview live variabili
-2. T7-05 Gestione file/package in editor
-3. T7-06 Backup/restore in-app
-4. T7-07 Restart daemon reale da menu bar
+### Sprint 31 → v3.22 ✓
+1. T7-04 preview + T7-05 file mgmt + T7-06 backup menu bar + T7-07 restart
 
-### Sprint 32 → v3.23 (distribuzione)
-1. T7-08 Sparkle dev/prod parity
-2. T7-09 Homebrew cask auto-bump in release CI
-3. T7-10 Deprecare Formula in-repo
+### Sprint 32 → v3.23 ✓
+1. T7-08 Sparkle parity + T7-09 Homebrew bump CI + T7-10 Formula deprecata
 
-### Sprint 33 → v3.24 (hub maturo)
-1. T7-11 `hub upgrade` + `hub outdated`
-2. T7-12 Notifiche update hub in doctor/menu bar
-3. T7-13 Ampliare catalogo community (target 10+)
+### Sprint 33 → v3.24 ✓
+1. T7-11 hub upgrade/outdated + T7-12 notifiche + T7-13 10 community
 
-### Sprint 34 → v3.25 (osservabilità + E2E)
-1. T7-15 `expando health` runtime status
-2. T7-16 Log JSON + `support-bundle`
-3. T7-21 E2E secure-input + T7-22 listener watchdog + T7-23 editor smoke
-4. T7-14 Sync maintainer automatico (opzionale)
+### Sprint 34 → v3.25 ✓
+1. T7-15 health + T7-16 support bundle + T7-21/22/23 E2E + T7-14 maintainer sync
 
-### Sprint 35 → v3.26 (recovery + docs + security — baseline completa)
-1. T7-18 Auto-backup schedulato + T7-19 sync conflict detection
-2. T7-25 YAML reference + T7-26 troubleshooting playbook
-3. T7-28 Plugin allowlist + T7-20 backup pre-mutation
-4. T7-17 Crash trend health HTML + T7-24 runner E2E ridondante + T7-27 architecture doc
+### Sprint 35 → v3.26 ✓ (baseline completa)
+1. T7-18/19/20 recovery + T7-25/26/27 docs + T7-28 allowlist + T7-17/24
 
 ---
 
@@ -556,11 +541,11 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 | Metrica | Target v1.6 | Target v3.26 | Attuale |
 |---------|-------------|--------------|---------|
 | Tempo install → prima espansione | < 5 min | < 3 min (wizard DMG) | ~ok (wizard CLI) |
-| Test suite | ≥ 120 test, E2E verde | ≥ 300 test + E2E secure-input | **262** test, E2E ✓ runner |
-| Listener silent failure | — | 0 (watchdog < 30 s) | gap noto |
-| Hub packages | ≥ 8 | ≥ 8 ufficiali + 10 community | **8** + **3** |
-| Update path parity | Homebrew cask | DMG + cask + Sparkle dev/prod | cask manuale bump |
-| Backup | manuale CLI | auto-backup + in-app restore | solo CLI |
+| Test suite | ≥ 120 test, E2E verde | ≥ 300 test + E2E secure-input | **310** test, E2E ✓ runner |
+| Listener silent failure | — | 0 (watchdog < 30 s) | **watchdog ✓** |
+| Hub packages | ≥ 8 | ≥ 8 ufficiali + 10 community | **8** + **10** |
+| Update path parity | Homebrew cask | DMG + cask + Sparkle dev/prod | **Sparkle parity ✓**, cask bump artifact |
+| Backup | manuale CLI | auto-backup + in-app restore | **auto + menu bar ✓** |
 | Issue aperte critiche | 0 su permessi / injection | 0 | 0 note |
 
 ---
@@ -574,4 +559,4 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 
 ---
 
-*Ultimo aggiornamento: 19 giugno 2026 — loop roadmap Sprint 28–35 (Tier 6–7)*
+*Ultimo aggiornamento: 19 giugno 2026 — v3.26.0 baseline completa (Sprint 28–35)*

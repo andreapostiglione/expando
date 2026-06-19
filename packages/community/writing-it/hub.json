@@ -3,5 +3,10 @@
   "name": "Writing IT",
   "description": "Formule di cortesia e chiusure per email e messaggi",
   "author": "Community",
-  "tags": ["italian", "writing", "email"]
+  "tags": [
+    "italian",
+    "writing",
+    "email"
+  ],
+  "version": "1.0.0"
 }

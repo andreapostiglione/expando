@@ -62,6 +62,12 @@ def _should_check(config_dir: Path, *, force: bool) -> bool:
 def _record_check(config_dir: Path) -> None:
     config_dir.mkdir(parents=True, exist_ok=True)
     _last_check_file(config_dir).write_text(str(time.time()), encoding="utf-8")
+    try:
+        from .health import record_sparkle_check
+
+        record_sparkle_check(config_dir)
+    except Exception:
+        logger.debug("Failed to record sparkle check health metric", exc_info=True)
 
 
 def fetch_appcast(feed_url: str | None = None) -> str:

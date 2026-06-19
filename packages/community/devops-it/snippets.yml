@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":devops-it"
+    replace: "Snippet from devops-it package"
+  - trigger: ":devops-it-2"
+    replace: "Second snippet from devops-it"

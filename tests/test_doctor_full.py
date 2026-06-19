@@ -26,12 +26,16 @@ def test_doctor_full_document_includes_histories(tmp_path: Path, monkeypatch):
     assert "marketplace" in payload
     assert "notarization_history" in payload
     assert "sparkle_benchmark_history" in payload
+    assert "crash_loop" in payload
     assert "community_validation" in payload
     json.dumps(payload)
 
 
 def test_doctor_cli_full_json(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
+    monkeypatch.setattr("expando.doctor_checks.permissions_ready", lambda _status: True)
+    (tmp_path / "config").mkdir(parents=True)
+    (tmp_path / "config" / "default.yml").write_text("auto_backup: off\n", encoding="utf-8")
     runner = CliRunner()
     result = runner.invoke(
         main,

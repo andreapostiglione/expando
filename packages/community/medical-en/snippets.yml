@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":medical-en"
+    replace: "Snippet from medical-en package"
+  - trigger: ":medical-en-2"
+    replace: "Second snippet from medical-en"

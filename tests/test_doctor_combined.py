@@ -69,6 +69,9 @@ def test_doctor_document_exports_structured_report(tmp_path: Path, monkeypatch):
 
 def test_doctor_cli_doctor_json_includes_text_and_json(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
+    monkeypatch.setattr("expando.doctor_checks.permissions_ready", lambda _status: True)
+    (tmp_path / "config").mkdir(parents=True)
+    (tmp_path / "config" / "default.yml").write_text("auto_backup: off\n", encoding="utf-8")
     runner = CliRunner()
     result = runner.invoke(
         main,
@@ -82,6 +85,9 @@ def test_doctor_cli_doctor_json_includes_text_and_json(tmp_path: Path, monkeypat
 
 def test_doctor_cli_marketplace_json_includes_text_and_json(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
+    monkeypatch.setattr("expando.doctor_checks.permissions_ready", lambda _status: True)
+    (tmp_path / "config").mkdir(parents=True)
+    (tmp_path / "config" / "default.yml").write_text("auto_backup: off\n", encoding="utf-8")
     runner = CliRunner()
     result = runner.invoke(
         main,

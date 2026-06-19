@@ -3,7 +3,7 @@ from __future__ import annotations
 import platform
 import shutil
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from .i18n import t, tf
@@ -31,6 +31,18 @@ class SyncStatus:
     git_repo: bool
     git_dirty: bool
     icloud_backed: bool
+    icloud_conflicts: list[str] = field(default_factory=list)
+
+
+@dataclass
+class SyncConflictReport:
+    git_dirty: bool
+    icloud_conflicts: list[str]
+    messages: list[str]
+
+    @property
+    def has_conflicts(self) -> bool:
+        return self.git_dirty or bool(self.icloud_conflicts)
 
 
 def _run_git(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str] | None:
@@ -43,6 +55,42 @@ def _run_git(args: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str] 
         text=True,
         check=False,
     )
+
+
+def find_icloud_conflict_markers(config_dir: Path) -> list[str]:
+    config_dir = config_dir.expanduser()
+    if not config_dir.exists():
+        return []
+    conflicts: list[str] = []
+    for path in config_dir.rglob("*"):
+        name = path.name
+        if name.endswith(".icloud"):
+            conflicts.append(str(path.relative_to(config_dir)))
+            continue
+        if name.startswith(".") and name.endswith(".icloud"):
+            conflicts.append(str(path.relative_to(config_dir)))
+    return sorted(conflicts)
+
+
+def detect_sync_conflicts(config_dir: Path) -> SyncConflictReport:
+    status = inspect_sync_status(config_dir)
+    messages: list[str] = []
+    if status.git_dirty:
+        messages.append(t("sync.conflict.git_dirty"))
+    for marker in status.icloud_conflicts:
+        messages.append(tf("sync.conflict.icloud_marker", path=marker))
+    return SyncConflictReport(
+        git_dirty=status.git_dirty,
+        icloud_conflicts=list(status.icloud_conflicts),
+        messages=messages,
+    )
+
+
+def ensure_sync_safe(config_dir: Path) -> None:
+    report = detect_sync_conflicts(config_dir)
+    if report.has_conflicts:
+        detail = "; ".join(report.messages)
+        raise RuntimeError(tf("sync.conflict.blocked", detail=detail))
 
 
 def inspect_sync_status(config_dir: Path) -> SyncStatus:
@@ -73,6 +121,8 @@ def inspect_sync_status(config_dir: Path) -> SyncStatus:
         if status is not None and status.returncode == 0:
             git_dirty = bool(status.stdout.strip())
 
+    icloud_conflicts = find_icloud_conflict_markers(resolved)
+
     return SyncStatus(
         config_dir=config_dir,
         resolved_dir=resolved,
@@ -82,6 +132,7 @@ def inspect_sync_status(config_dir: Path) -> SyncStatus:
         git_repo=git_repo,
         git_dirty=git_dirty,
         icloud_backed=icloud_backed,
+        icloud_conflicts=icloud_conflicts,
     )
 
 
@@ -98,6 +149,12 @@ def format_sync_report(status: SyncStatus) -> str:
         lines.append(f"{t('sync.git')}: {dirty}")
     else:
         lines.append(f"{t('sync.git')}: {t('sync.git_none')}")
+    if status.icloud_conflicts:
+        lines.append(f"{t('sync.icloud_conflicts')}: {len(status.icloud_conflicts)}")
+        for marker in status.icloud_conflicts[:5]:
+            lines.append(f"  ! {marker}")
+        if len(status.icloud_conflicts) > 5:
+            lines.append(f"  … +{len(status.icloud_conflicts) - 5} more")
     lines.append("")
     lines.append(t("sync.paths_hint"))
     for name in SYNC_PATHS:
@@ -171,6 +228,9 @@ def setup_icloud_symlink(
 ) -> list[str]:
     if platform.system() != "Darwin":
         raise RuntimeError(t("sync.icloud_macos_only"))
+
+    if not dry_run:
+        ensure_sync_safe(config_dir or default_config_dir())
 
     config_dir = (config_dir or default_config_dir()).expanduser()
     icloud_root = ICLOUD_DOCS

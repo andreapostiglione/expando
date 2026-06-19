@@ -14,8 +14,11 @@ from .config import ConfigCompileError, compile_matches, load_config
 from .daemon import is_running
 from .i18n import t, tf
 from .match_utils import find_duplicate_literal_triggers
-from .permissions import PermissionStatus, check_permissions, permissions_ready
+from .crash_loop import safe_mode_status
 from .crash_reporting import recent_crash_count
+from .injection_degradation import degradation_status
+from .injection_probe import run_injection_probe
+from .permissions import PermissionStatus, check_permissions, permissions_ready
 from .runtime_info import RuntimeInfo, detect_runtime
 
 
@@ -31,6 +34,10 @@ class DoctorReport:
     config_errors: list[str] = field(default_factory=list)
     permissions: PermissionStatus | None = None
     runtime: RuntimeInfo | None = None
+    injection_probe: dict[str, Any] | None = None
+    injection_degradation: dict[str, Any] | None = None
+    safe_mode: dict[str, Any] | None = None
+    repair: dict[str, Any] | None = None
     warnings: list[str] = field(default_factory=list)
 
 
@@ -129,8 +136,16 @@ def run_doctor(config_dir: Path) -> DoctorReport:
     duplicate_triggers = find_duplicate_triggers(config_dir)
     permissions = check_permissions()
     runtime = permissions.runtime or detect_runtime()
+    injection_probe = run_injection_probe(config_dir)
+    injection_degradation = degradation_status(config_dir)
+    safe_mode = safe_mode_status(config_dir)
+    from .doctor_repair import diagnose_daemon_state
+
+    repair = diagnose_daemon_state(config_dir)
 
     warnings: list[str] = []
+    if repair.get("needs_repair"):
+        warnings.append(t("doctor.repair.hint"))
     if process_count > 1:
         warnings.append(
             f"Trovati {process_count} processi Expando: esegui `expando stop` e riavvia."
@@ -142,13 +157,60 @@ def run_doctor(config_dir: Path) -> DoctorReport:
     if permissions:
         warnings.extend(permissions.notes)
     if permissions and not permissions_ready(permissions):
+        if permissions.accessibility is not True:
+            warnings.append(
+                tf(
+                    "doctor.permissions.accessibility_missing",
+                    grant_label=runtime.grant_label,
+                )
+            )
+        elif permissions.input_monitoring is False:
+            warnings.append(t("doctor.permissions.input_monitoring_missing"))
+    if injection_probe and not injection_probe.get("skipped") and injection_probe.get("ok") is False:
         warnings.append(
-            "L'espansione automatica non funzionerà finché Accessibilità non è concessa "
-            f"per {runtime.grant_label}."
+            tf(
+                "doctor.injection_probe.failed",
+                detail=injection_probe.get("detail", ""),
+            )
+        )
+    if injection_degradation.get("should_warn"):
+        warnings.append(
+            tf(
+                "doctor.injection_degradation.warn",
+                count=injection_degradation.get("consecutive_failures", 0),
+            )
+        )
+    if injection_degradation.get("should_disable"):
+        warnings.append(t("doctor.injection_degradation.disabled"))
+    if safe_mode:
+        warnings.append(
+            tf(
+                "doctor.safe_mode.active",
+                reason=safe_mode.get("reason", "unknown"),
+            )
         )
     crash_count = recent_crash_count(config_dir)
     if crash_count:
         warnings.append(tf("doctor.crash_warning", count=crash_count))
+
+    try:
+        from .hub import hub_outdated_packages
+
+        outdated = hub_outdated_packages(config_dir)
+        if outdated:
+            package_list = ", ".join(item["package_id"] for item in outdated[:5])
+            warnings.append(tf("doctor.hub_updates.available", count=len(outdated), packages=package_list))
+    except Exception:
+        pass
+
+    try:
+        from .auto_backup import backup_stale_warning
+
+        stale_warning = backup_stale_warning(config_dir)
+        if stale_warning:
+            warnings.append(stale_warning)
+    except Exception:
+        pass
 
     try:
         bundle = load_config(config_dir)
@@ -175,6 +237,10 @@ def run_doctor(config_dir: Path) -> DoctorReport:
         config_errors=config_errors,
         permissions=permissions,
         runtime=runtime,
+        injection_probe=injection_probe,
+        injection_degradation=injection_degradation,
+        safe_mode=safe_mode,
+        repair=repair,
         warnings=warnings,
     )
 
@@ -213,6 +279,45 @@ def format_doctor_report(report: DoctorReport) -> str:
         lines.append(
             f"{t('doctor.injection')}: {_fmt_bool(inj)}"
         )
+
+    if report.injection_probe is not None:
+        probe = report.injection_probe
+        if probe.get("skipped"):
+            lines.append(
+                tf(
+                    "doctor.injection_probe.skipped",
+                    detail=probe.get("detail", ""),
+                )
+            )
+        else:
+            lines.append(
+                tf(
+                    "doctor.injection_probe.result",
+                    method=probe.get("method", "unknown"),
+                    status=_fmt_bool(probe.get("ok")),
+                    detail=probe.get("detail", ""),
+                )
+            )
+
+    if report.injection_degradation is not None:
+        degradation = report.injection_degradation
+        lines.append(
+            tf(
+                "doctor.injection_degradation.status",
+                count=degradation.get("consecutive_failures", 0),
+            )
+        )
+
+    if report.safe_mode is not None:
+        lines.append(
+            tf(
+                "doctor.safe_mode.line",
+                reason=report.safe_mode.get("reason", "unknown"),
+            )
+        )
+
+    if report.repair is not None and report.repair.get("needs_repair"):
+        lines.append(t("doctor.repair.needs_repair"))
 
     if report.config_errors:
         lines.append("")
@@ -273,6 +378,10 @@ def doctor_report_to_dict(report: DoctorReport) -> dict[str, Any]:
         "warnings": report.warnings,
         "permissions": permissions,
         "runtime": runtime,
+        "injection_probe": report.injection_probe,
+        "injection_degradation": report.injection_degradation,
+        "safe_mode": report.safe_mode,
+        "repair": report.repair,
     }
 
 
@@ -298,11 +407,13 @@ def doctor_full_document(
     *,
     history_limit: int = 10,
 ) -> dict[str, Any]:
+    from .crash_loop import crash_loop_document
     from .hub_marketplace import community_validation_document
     from .notarization_history import notarization_history_to_dict
     from .sparkle_benchmark_history import sparkle_benchmark_history_to_dict
 
     payload = doctor_combined_document(config_dir)
+    payload["crash_loop"] = crash_loop_document(config_dir, limit=history_limit)
     payload["notarization_history"] = notarization_history_to_dict(
         config_dir,
         limit=history_limit,
@@ -507,6 +618,35 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
         else '<tr><td colspan="4" class="empty">No sparkle benchmark history</td></tr>'
     )
 
+    crash_loop = document.get("crash_loop", {})
+    if not isinstance(crash_loop, dict):
+        crash_loop = {}
+    crash_stats = crash_loop.get("stats", {})
+    if not isinstance(crash_stats, dict):
+        crash_stats = {}
+    crash_entries = crash_loop.get("entries", [])
+    if not isinstance(crash_entries, list):
+        crash_entries = []
+    crash_rows = []
+    for item in crash_entries[-8:]:
+        if not isinstance(item, dict):
+            continue
+        event = str(item.get("event", "unknown"))
+        row_class = "fail" if event == "crash" else "ok"
+        reason = str(item.get("reason", ""))
+        crash_rows.append(
+            f'<tr class="{row_class}">'
+            f"<td>{html.escape(str(item.get('recorded_at', '')))}</td>"
+            f"<td>{html.escape(event)}</td>"
+            f"<td>{html.escape(reason)}</td>"
+            "</tr>"
+        )
+    crash_table = (
+        "\n".join(crash_rows)
+        if crash_rows
+        else '<tr><td colspan="3" class="empty">No crash loop history</td></tr>'
+    )
+
     validation = document.get("community_validation", {})
     if not isinstance(validation, dict):
         validation = {}
@@ -522,12 +662,14 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
         if isinstance(items, list)
     )
 
+    from .crash_loop import crash_loop_trend_svg
     from .hub_marketplace import community_validation_html_fragments
     from .notarization_history import notarization_history_trend_svg
     from .sparkle_benchmark_history import sparkle_benchmark_trend_svg
 
     notarize_svg = notarization_history_trend_svg(notarize_entries)
     sparkle_svg = sparkle_benchmark_trend_svg(sparkle_entries)
+    crash_svg = crash_loop_trend_svg(crash_entries)
     validation_tables = community_validation_html_fragments(validation)
 
     return f"""<!DOCTYPE html>
@@ -641,6 +783,9 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
         <tr><th>Input monitoring</th><td>{html.escape(str(permissions.get('input_monitoring', 'unknown')))}</td></tr>
         <tr><th>Injection ready</th><td>{html.escape(str(permissions.get('injection_ready', 'unknown')))}</td></tr>
         <tr><th>Runtime</th><td>{html.escape(str(runtime.get('mode', 'unknown')))}</td></tr>
+        <tr><th>Grant target</th><td><code>{html.escape(str(runtime.get('grant_label', '')))}</code></td></tr>
+        <tr><th>Grant hint</th><td>{html.escape(str(runtime.get('grant_hint', '')))}</td></tr>
+        <tr><th>Settings</th><td><a href="x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility">Accessibility</a> · <a href="x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent">Input Monitoring</a></td></tr>
       </tbody>
     </table>
     <h3>Warnings</h3>
@@ -675,6 +820,14 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
     <table>
       <thead><tr><th>Recorded</th><th>Version</th><th>Helper ms</th><th>Slow</th></tr></thead>
       <tbody>{sparkle_table}</tbody>
+    </table>
+
+    <h2>Crash loop history</h2>
+    <p class="meta">Events: {crash_stats.get('total', 0)} · Crashes: {crash_stats.get('crash_count', 0)} · Trend: <code>{html.escape(str(crash_stats.get('trend_sparkline', '')))}</code></p>
+    <div class="chart">{crash_svg}</div>
+    <table>
+      <thead><tr><th>Recorded</th><th>Event</th><th>Reason</th></tr></thead>
+      <tbody>{crash_table}</tbody>
     </table>
 
     <h2>Community validation</h2>

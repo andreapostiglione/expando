@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":hr-it"
+    replace: "Snippet from hr-it package"
+  - trigger: ":hr-it-2"
+    replace: "Second snippet from hr-it"

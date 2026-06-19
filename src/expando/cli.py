@@ -385,8 +385,12 @@ def sync_init_git(ctx: click.Context, commit: bool) -> None:
 @click.pass_context
 def sync_icloud(ctx: click.Context, folder_name: str, dry_run: bool) -> None:
     """Move config to iCloud Drive and symlink the default path."""
+    from .auto_backup import backup_before_mutation
     from .sync_assist import setup_icloud_symlink
 
+    if not dry_run:
+        pre_backup = backup_before_mutation(ctx.obj["config_dir"], "sync-icloud")
+        click.echo(tf("cli.pre_mutation_backup", path=pre_backup))
     try:
         messages = setup_icloud_symlink(
             ctx.obj["config_dir"],
@@ -639,14 +643,66 @@ def search(ctx: click.Context, query: str) -> None:
         click.echo(f"{package.id}: {package.name} — {package.description}")
 
 
+@hub.command("outdated")
+@click.pass_context
+def hub_outdated(ctx: click.Context) -> None:
+    """List installed hub packages with available updates."""
+    from .hub import hub_outdated_packages
+
+    outdated = hub_outdated_packages(ctx.obj["config_dir"])
+    if not outdated:
+        click.echo(t("cli.hub.up_to_date"))
+        return
+    for item in outdated:
+        click.echo(
+            tf(
+                "cli.hub.outdated_line",
+                package=item["package_id"],
+                local=item["local_version"],
+                remote=item["remote_version"],
+            )
+        )
+
+
+@hub.command("upgrade")
+@click.argument("package_id", required=False, default="")
+@click.pass_context
+def hub_upgrade(ctx: click.Context, package_id: str) -> None:
+    """Upgrade installed hub packages to the latest remote version."""
+    from .auto_backup import backup_before_mutation
+    from .hub import hub_outdated_packages, upgrade_hub_package
+
+    config_dir: Path = ctx.obj["config_dir"]
+    targets = (
+        [package_id]
+        if package_id
+        else [item["package_id"] for item in hub_outdated_packages(config_dir)]
+    )
+    if not targets:
+        click.echo(t("cli.hub.up_to_date"))
+        return
+    for target in targets:
+        pre_backup = backup_before_mutation(config_dir, f"hub-upgrade-{target}")
+        click.echo(tf("cli.pre_mutation_backup", path=pre_backup))
+        try:
+            path = upgrade_hub_package(config_dir, target)
+        except (ValueError, FileNotFoundError, RuntimeError) as exc:
+            raise click.ClickException(str(exc)) from exc
+        click.echo(tf("cli.hub.upgraded", package=target, path=path))
+
+
 @hub.command()
 @click.argument("package_id")
 @click.option("--force", is_flag=True, help="Overwrite an installed package")
 @click.pass_context
 def install(ctx: click.Context, package_id: str, force: bool) -> None:
     """Install a package from the hub."""
+    from .auto_backup import backup_before_mutation
     from .hub import install_hub_package
 
+    if force:
+        pre_backup = backup_before_mutation(ctx.obj["config_dir"], f"hub-force-{package_id}")
+        click.echo(tf("cli.pre_mutation_backup", path=pre_backup))
     try:
         path = install_hub_package(ctx.obj["config_dir"], package_id, force=force)
     except (ValueError, FileExistsError, FileNotFoundError, RuntimeError) as exc:
@@ -1189,11 +1245,58 @@ def backup(ctx: click.Context, output: str | None) -> None:
 
 
 @main.command()
+@click.option("--json", "as_json", is_flag=True, help="Output structured runtime health JSON")
+@click.pass_context
+def health(ctx: click.Context, as_json: bool) -> None:
+    """Show runtime health metrics for the daemon and listener."""
+    import json
+
+    from .health import build_health_document, format_health_report
+
+    config_dir: Path = ctx.obj["config_dir"]
+    document = build_health_document(config_dir)
+    if as_json:
+        click.echo(json.dumps(document, indent=2, ensure_ascii=False))
+        return
+    click.echo(format_health_report(document))
+
+
+@main.command("support-bundle")
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Destination .tar.gz path",
+)
+@click.pass_context
+def support_bundle_cmd(ctx: click.Context, output: str | None) -> None:
+    """Create a redacted support bundle for troubleshooting."""
+    from datetime import datetime
+
+    from .support_bundle import create_support_bundle
+
+    config_dir: Path = ctx.obj["config_dir"]
+    if output is None:
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        destination = config_dir.parent / f"expando-support-{stamp}.tar.gz"
+    else:
+        destination = Path(output)
+    archive = create_support_bundle(config_dir, destination)
+    click.echo(tf("cli.support_bundle_created", path=archive))
+
+
+@main.command()
 @click.argument("archive", type=click.Path(exists=True))
 @click.pass_context
 def restore(ctx: click.Context, archive: str) -> None:
     """Restore configuration from a backup archive."""
-    restore_config(ctx.obj["config_dir"], Path(archive))
+    from .auto_backup import backup_before_mutation
+
+    config_dir: Path = ctx.obj["config_dir"]
+    pre_backup = backup_before_mutation(config_dir, "restore")
+    click.echo(tf("cli.pre_mutation_backup", path=pre_backup))
+    restore_config(config_dir, Path(archive))
     click.echo(t("cli.restored"))
 
 
@@ -1221,13 +1324,14 @@ def setup(ctx: click.Context, force: bool) -> None:
     show_default=True,
     help="Number of lines to show before following.",
 )
+@click.option("--json", "as_json", is_flag=True, help="Output structured log JSON")
 @click.pass_context
-def logs(ctx: click.Context, tail: bool, lines: int) -> None:
+def logs(ctx: click.Context, tail: bool, lines: int, as_json: bool) -> None:
     """Show Expando log output."""
     config_dir: Path = ctx.obj["config_dir"]
     path = log_file(config_dir)
     try:
-        print_log_tail(path, lines=lines, follow=tail)
+        print_log_tail(path, lines=lines, follow=tail, as_json=as_json)
     except FileNotFoundError as exc:
         raise click.ClickException(str(exc)) from exc
     except KeyboardInterrupt:
@@ -1820,6 +1924,11 @@ def notarize_history_cmd(
     type=click.Path(path_type=Path),
     help="Override full health HTML output path (implies --full-html)",
 )
+@click.option(
+    "--repair",
+    is_flag=True,
+    help="Repair stale PID/lock files and orphan processes, then re-run doctor",
+)
 @click.pass_context
 def doctor(
     ctx: click.Context,
@@ -1831,11 +1940,21 @@ def doctor(
     full_output: Path | None,
     full_html: bool,
     full_html_output: Path | None,
+    repair: bool,
 ) -> None:
     """Validate configuration, permissions, and daemon health."""
     import json
 
     config_dir: Path = ctx.obj["config_dir"]
+    if repair:
+        from .doctor_repair import repair_daemon_state
+
+        result = repair_daemon_state(config_dir)
+        actions = result.get("actions") or []
+        if actions:
+            click.echo(t("doctor.repair.done").format(actions=", ".join(actions)))
+        else:
+            click.echo(t("doctor.repair.none"))
     report = run_doctor(config_dir)
     text_report = format_doctor_report(report)
 

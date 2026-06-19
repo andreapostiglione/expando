@@ -96,6 +96,19 @@ def start_daemon(config_dir: Path) -> int:
         starter_lock.release()
 
 
+def restart_daemon(config_dir: Path) -> int:
+    """Stop and start the background daemon; returns the new pid."""
+    stop_daemon(config_dir)
+    time.sleep(0.3)
+    return start_daemon(config_dir)
+
+
+def restart_foreground_daemon(config_dir: Path) -> None:
+    """Replace the current foreground daemon process (menu bar mode)."""
+    argv = [sys.executable, "-m", "expando.daemon", "foreground", str(config_dir)]
+    os.execve(sys.executable, argv, os.environ)
+
+
 def stop_daemon(config_dir: Path) -> bool:
     running, pid = is_running(config_dir)
     if not running or pid is None:
@@ -113,6 +126,7 @@ def stop_daemon(config_dir: Path) -> bool:
 
 
 def foreground(config_dir: Path) -> None:
+    from .crash_loop import record_daemon_crash
     from .crash_reporting import install_crash_handlers
     from .listener import run_service
 
@@ -137,6 +151,9 @@ def foreground(config_dir: Path) -> None:
     signal.signal(signal.SIGINT, cleanup)
     try:
         run_service(config_dir)
+    except Exception:
+        record_daemon_crash(config_dir, reason="foreground_exception")
+        raise
     finally:
         cleanup()
 

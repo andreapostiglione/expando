@@ -3,9 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from .snippet_editor_data import (
+    _parse_csv_field,
+    _parse_when_field,
     create_snippet_entry,
     delete_snippet_entry,
     entries_for_editor,
+    list_match_files,
     parse_form_from_editor,
     parse_vars_from_editor,
     update_snippet_entry,
@@ -13,35 +16,52 @@ from .snippet_editor_data import (
 from .snippet_editor_ui import run_snippet_editor
 
 
-def _parse_if_app(value: str) -> list[str] | None:
-    apps = [part.strip() for part in value.split(",") if part.strip()]
-    return apps or None
-
-
-def _parse_editor_payload(payload: dict[str, str]) -> tuple[list | None, list | None]:
+def _parse_editor_payload(payload: dict[str, str]) -> dict:
     try:
         form = parse_form_from_editor(payload.get("form", ""))
         variables = parse_vars_from_editor(payload.get("vars", ""))
+        when = _parse_when_field(payload.get("when", ""))
     except ValueError as exc:
         raise ValueError(str(exc)) from exc
-    return form or None, variables or None
+    priority_raw = payload.get("priority", "").strip()
+    priority = int(priority_raw) if priority_raw else 0
+    return {
+        "if_app": _parse_csv_field(payload.get("if_app", "")),
+        "unless_app": _parse_csv_field(payload.get("unless_app", "")),
+        "if_bundle": _parse_csv_field(payload.get("if_bundle", "")),
+        "unless_bundle": _parse_csv_field(payload.get("unless_bundle", "")),
+        "if_title": _parse_csv_field(payload.get("if_title", "")),
+        "unless_title": _parse_csv_field(payload.get("unless_title", "")),
+        "form": form or None,
+        "variables": variables or None,
+        "regex": payload.get("regex", "").strip() in {"1", "true", "yes"},
+        "when": when,
+        "image": payload.get("image", "").strip(),
+        "priority": priority,
+        "force_clipboard": payload.get("force_clipboard", "").strip() in {"1", "true", "yes"},
+        "target_file": payload.get("target_file", "").strip() or "dev.yml",
+    }
 
 
 def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
+    match_files = list_match_files(config_dir)
+
     def reload() -> list[dict[str, str]]:
-        return entries_for_editor(config_dir)
+        rows = entries_for_editor(config_dir)
+        for row in rows:
+            row["target_file"] = row.get("source_file", "dev.yml")
+        return rows
 
     def on_save(payload: dict[str, str]) -> str | None:
         try:
-            form, variables = _parse_editor_payload(payload)
+            parsed = _parse_editor_payload(payload)
             update_snippet_entry(
                 config_dir,
                 payload["id"],
                 trigger=payload["trigger"],
                 replace=payload["replace"],
-                if_app=_parse_if_app(payload.get("if_app", "")),
-                form=form,
-                variables=variables,
+                **{key: parsed[key] for key in parsed if key not in {"target_file", "variables"}},
+                variables=parsed["variables"],
             )
         except ValueError as exc:
             return str(exc)
@@ -49,14 +69,14 @@ def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
 
     def on_create(payload: dict[str, str]) -> str | None:
         try:
-            form, variables = _parse_editor_payload(payload)
+            parsed = _parse_editor_payload(payload)
             create_snippet_entry(
                 config_dir,
                 payload["trigger"],
                 payload["replace"],
-                if_app=_parse_if_app(payload.get("if_app", "")),
-                form=form,
-                variables=variables,
+                target_file=parsed["target_file"],
+                **{key: parsed[key] for key in parsed if key not in {"target_file", "variables"}},
+                variables=parsed["variables"],
             )
         except ValueError as exc:
             return str(exc)
@@ -69,10 +89,16 @@ def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
             return str(exc)
         return None
 
+    initial = reload()
+    for row in initial:
+        row.setdefault("target_file", row.get("source_file", match_files[0]))
+        row["match_files"] = ",".join(match_files)
     return run_snippet_editor(
-        reload(),
+        initial,
         on_save=on_save,
         on_create=on_create,
         on_delete=on_delete,
         reload_items=reload,
+        match_files=match_files,
+        config_dir=config_dir,
     )

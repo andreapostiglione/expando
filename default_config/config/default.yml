@@ -31,3 +31,12 @@ log_level: INFO
 # Sparkle-compatible update feed (checked once per day from menu bar)
 check_updates: true
 # update_feed_url: https://raw.githubusercontent.com/andreapostiglione/expando/main/appcast.xml
+
+# Plugin allowlist (empty = load all plugins/*.py; otherwise only listed modules)
+# plugins_allowlist:
+#   - example.py
+
+# Scheduled auto-backup on daemon start: off | daily | weekly
+auto_backup: weekly
+auto_backup_retention: 7
+auto_backup_stale_days: 14

@@ -11,12 +11,12 @@ from pynput.keyboard import Key, Listener
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .config import ConfigBundle, load_config
 from .engine import ExpansionEngine, build_engine
 from .hotkeys import shortcut_pressed
 from .logging_setup import setup_logging
 from .notifications import notify_toggle
 from .search import build_search_items, pick_snippet, resolve_snippet_text
+from .listener_watchdog import ListenerWatchdog
 from .ui_state import is_ui_active
 
 logger = logging.getLogger(__name__)
@@ -71,6 +71,15 @@ class KeyboardService:
         self._state_lock = threading.Lock()
         self._injecting = False
         self._pressed_modifiers: set = set()
+        self._listener_dead = False
+        self.on_listener_dead: Callable[[], None] | None = None
+        self.on_listener_recovered: Callable[[], None] | None = None
+        self._watchdog = ListenerWatchdog(
+            is_alive=self.is_listener_alive,
+            restart=self._restart_listener_with_health,
+            on_dead=self._notify_listener_dead,
+            on_recovered=self._notify_listener_recovered,
+        )
 
     def open_search(self) -> None:
         if not self.engine.enabled:
@@ -95,10 +104,17 @@ class KeyboardService:
             threading.Timer(0.15, lambda: self._set_injecting(False)).start()
 
     def apply_config_reload(self) -> None:
-        config = load_config(self.config_dir)
-        self.engine.reload(config)
+        from .config_reload_gate import safe_reload_config
+
+        safe_reload_config(self.config_dir, self.engine)
         self._toggle_key = self._resolve_toggle_key(self.engine._base_bundle.app.toggle_key)
         self._sync_file_watcher()
+        try:
+            from .health import record_config_reload
+
+            record_config_reload(self.config_dir)
+        except Exception:
+            logger.debug("Failed to record config reload health metric", exc_info=True)
         logger.info("Configuration reloaded")
 
     def _sync_file_watcher(self) -> None:
@@ -123,17 +139,73 @@ class KeyboardService:
         if self.on_toggle:
             self.on_toggle()
 
-    def start(self) -> None:
-        self._sync_file_watcher()
+    def is_listener_alive(self) -> bool:
+        listener = self._listener
+        if listener is None:
+            return False
+        running = getattr(listener, "running", None)
+        if running is not None:
+            return bool(running)
+        thread = getattr(listener, "_thread", None)
+        return bool(thread and thread.is_alive())
+
+    def listener_dead(self) -> bool:
+        return self._listener_dead or self._watchdog.listener_dead()
+
+    def restart_listener(self) -> None:
+        if self._listener:
+            try:
+                self._listener.stop()
+            except Exception:
+                logger.debug("Listener stop during restart failed", exc_info=True)
+            self._listener = None
         self._listener = Listener(
             on_press=self._on_press,
             on_release=self._on_release,
             suppress=False,
         )
         self._listener.start()
+        self._watchdog.touch()
+        self._listener_dead = False
+
+    def _record_listener_health(self, *, alive: bool, restarted: bool = False) -> None:
+        try:
+            from .health import (
+                record_listener_alive,
+                record_listener_restart,
+            )
+
+            if restarted:
+                record_listener_restart(self.config_dir)
+            else:
+                record_listener_alive(self.config_dir, alive=alive)
+        except Exception:
+            logger.debug("Failed to record listener health metric", exc_info=True)
+
+    def _restart_listener_with_health(self) -> None:
+        self.restart_listener()
+        self._record_listener_health(alive=True, restarted=True)
+
+    def _notify_listener_dead(self) -> None:
+        self._listener_dead = True
+        self._record_listener_health(alive=False)
+        if self.on_listener_dead:
+            self.on_listener_dead()
+
+    def _notify_listener_recovered(self) -> None:
+        self._listener_dead = False
+        self._record_listener_health(alive=True)
+        if self.on_listener_recovered:
+            self.on_listener_recovered()
+
+    def start(self) -> None:
+        self._sync_file_watcher()
+        self.restart_listener()
+        self._watchdog.start()
         logger.info("Expando keyboard listener started")
 
     def stop(self) -> None:
+        self._watchdog.stop()
         if self._listener:
             self._listener.stop()
             self._listener = None
@@ -241,21 +313,50 @@ def build_service(config_dir: Path) -> KeyboardService:
             record_expansion(config_dir, result.trigger)
         except Exception:
             logger.exception("Failed to record expansion stats")
+        try:
+            from .health import record_expansion as record_health_expansion
+
+            record_health_expansion(config_dir, result.trigger)
+        except Exception:
+            logger.debug("Failed to record expansion health metric", exc_info=True)
 
     engine = build_engine(config_dir, on_expand=_on_expand)
     return KeyboardService(config_dir=config_dir, engine=engine)
 
 
 def run_service(config_dir: Path) -> None:
+    from .crash_loop import apply_startup_crash_policy, is_safe_mode_active
     from .crash_reporting import install_crash_handlers
 
     setup_logging(config_dir)
     install_crash_handlers(config_dir)
+    try:
+        from .auto_backup import maybe_run_auto_backup
+
+        archive = maybe_run_auto_backup(config_dir)
+        if archive is not None:
+            logger.info("Automatic backup created: %s", archive)
+    except Exception:
+        logger.debug("Automatic backup check failed", exc_info=True)
+    try:
+        from .health import record_daemon_started
+
+        record_daemon_started(config_dir)
+    except Exception:
+        logger.debug("Failed to record daemon health metrics", exc_info=True)
+    startup = apply_startup_crash_policy(config_dir)
+    if startup.get("safe_mode"):
+        logger.warning(
+            "Expando safe mode active after repeated crashes (backoff=%ss)",
+            startup.get("backoff_seconds", 0),
+        )
     if platform.system() == "Darwin":
         from .onboarding import maybe_run_onboarding
 
         maybe_run_onboarding(config_dir)
     service = build_service(config_dir)
+    if is_safe_mode_active(config_dir):
+        service.engine.enabled = False
 
     if platform.system() == "Darwin":
         from .menubar import menubar_available, run_with_menubar

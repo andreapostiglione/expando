@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
@@ -174,6 +175,108 @@ def _download_package_file(package_id: str, filename: str) -> str:
     raise FileNotFoundError("; ".join(errors))
 
 
+def installed_manifest_path(config_dir: Path) -> Path:
+    return config_dir / "hub-installed.json"
+
+
+def _load_installed_manifest(config_dir: Path) -> dict[str, Any]:
+    path = installed_manifest_path(config_dir)
+    if not path.exists():
+        return {"version": 1, "packages": {}}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return {"version": 1, "packages": {}}
+    data.setdefault("packages", {})
+    return data
+
+
+def _save_installed_manifest(config_dir: Path, data: dict[str, Any]) -> None:
+    path = installed_manifest_path(config_dir)
+    config_dir.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def _remote_package_version(package_id: str) -> str:
+    for base in _remote_files_bases():
+        url = f"{base}/{package_id}/hub.json"
+        try:
+            with urlopen(url, timeout=15) as response:
+                data = json.loads(response.read().decode("utf-8"))
+        except URLError:
+            continue
+        version = data.get("version")
+        if isinstance(version, str) and version.strip():
+            return version.strip()
+    for local_source in _local_package_sources(package_id):
+        manifest = local_source / "hub.json"
+        if manifest.exists():
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+            version = data.get("version")
+            if isinstance(version, str) and version.strip():
+                return version.strip()
+    return "1.0.0"
+
+
+def record_hub_install(config_dir: Path, package_id: str, *, version: str | None = None) -> None:
+    data = _load_installed_manifest(config_dir)
+    packages = data.setdefault("packages", {})
+    if not isinstance(packages, dict):
+        packages = {}
+        data["packages"] = packages
+    packages[package_id] = {
+        "version": version or _remote_package_version(package_id),
+        "installed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+    }
+    _save_installed_manifest(config_dir, data)
+
+
+def list_installed_hub_versions(config_dir: Path) -> dict[str, str]:
+    packages = _load_installed_manifest(config_dir).get("packages", {})
+    if not isinstance(packages, dict):
+        return {}
+    result: dict[str, str] = {}
+    for package_id, payload in packages.items():
+        if isinstance(payload, dict):
+            version = payload.get("version")
+            if isinstance(version, str):
+                result[str(package_id)] = version
+    return result
+
+
+def hub_outdated_packages(config_dir: Path) -> list[dict[str, str]]:
+    installed = list_installed_hub_versions(config_dir)
+    outdated: list[dict[str, str]] = []
+    registry = {item.id: item for item in fetch_registry()}
+    for package_id, local_version in sorted(installed.items()):
+        remote_version = _remote_package_version(package_id)
+        if remote_version != local_version:
+            entry = registry.get(package_id)
+            outdated.append(
+                {
+                    "package_id": package_id,
+                    "name": entry.name if entry else package_id,
+                    "local_version": local_version,
+                    "remote_version": remote_version,
+                }
+            )
+    return outdated
+
+
+def hub_update_count(config_dir: Path) -> int:
+    return len(hub_outdated_packages(config_dir))
+
+
+def upgrade_hub_package(config_dir: Path, package_id: str) -> Path:
+    package_id = _validate_package_id(package_id)
+    installed = list_installed_hub_versions(config_dir)
+    if package_id not in installed:
+        raise ValueError(f"Package not installed: {package_id}")
+    uninstall_hub_package(config_dir, package_id)
+    destination = install_hub_package(config_dir, package_id, force=True)
+    record_hub_install(config_dir, package_id)
+    return destination
+
+
 def install_hub_package(config_dir: Path, package_id: str, *, force: bool = False) -> Path:
     package_id = _validate_package_id(package_id)
     registry = {item.id: item for item in fetch_registry()}
@@ -190,12 +293,14 @@ def install_hub_package(config_dir: Path, package_id: str, *, force: bool = Fals
             continue
         for path in sorted(local_source.glob("*.yml")) + sorted(local_source.glob("*.yaml")):
             shutil.copy2(path, destination / path.name)
+        record_hub_install(config_dir, package_id)
         return destination
 
     for filename in _remote_package_files(package_id):
         content = _download_package_file(package_id, filename)
         (destination / filename).write_text(content, encoding="utf-8")
 
+    record_hub_install(config_dir, package_id)
     return destination
 
 

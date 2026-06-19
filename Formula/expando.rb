@@ -1,7 +1,10 @@
+# DEPRECATED: use the Homebrew cask from andreapostiglione/homebrew-tap instead.
+#   brew tap andreapostiglione/tap
+#   brew install --cask expando
 class Expando < Formula
   include Language::Python::Virtualenv
 
-  desc "Privacy-first open-source text expander for macOS"
+  desc "DEPRECATED — use brew install --cask expando from andreapostiglione/tap"
   homepage "https://github.com/andreapostiglione/expando"
   url "https://github.com/andreapostiglione/expando/archive/refs/tags/v1.4.0.tar.gz"
   version "1.4.0"

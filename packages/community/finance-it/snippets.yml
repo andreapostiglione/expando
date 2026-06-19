@@ -1,0 +1,5 @@
+matches:
+  - trigger: ":finance-it"
+    replace: "Snippet from finance-it package"
+  - trigger: ":finance-it-2"
+    replace: "Second snippet from finance-it"

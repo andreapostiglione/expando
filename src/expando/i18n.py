@@ -147,12 +147,53 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "PROBLEMI NOTARIZZAZIONE",
         "en": "NOTARIZATION ISSUES",
     },
+    "menubar.title_enabled": {"it": "Expando ●", "en": "Expando ●"},
+    "menubar.title_disabled": {"it": "Expando ○", "en": "Expando ○"},
+    "menubar.title_listener_dead": {"it": "Expando ⚠", "en": "Expando ⚠"},
+    "menubar.listener_dead": {
+        "it": "Listener tastiera non attivo — riavvio automatico in corso",
+        "en": "Keyboard listener is down — auto-restart in progress",
+    },
     "menubar.disable": {"it": "Disattiva", "en": "Disable"},
     "menubar.enable": {"it": "Attiva", "en": "Enable"},
     "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
     "menubar.hub": {"it": "Package hub", "en": "Package hub"},
     "menubar.editor": {"it": "Editor snippet", "en": "Snippet editor"},
     "menubar.restart": {"it": "Riavvia", "en": "Restart"},
+    "menubar.backup": {"it": "Backup configurazione", "en": "Backup configuration"},
+    "menubar.restore": {"it": "Ripristina backup", "en": "Restore backup"},
+    "menubar.backup_created": {
+        "it": "Backup creato: {path}",
+        "en": "Backup created: {path}",
+    },
+    "menubar.backup_failed": {
+        "it": "Backup fallito: {error}",
+        "en": "Backup failed: {error}",
+    },
+    "menubar.no_backups": {
+        "it": "Nessun backup trovato.",
+        "en": "No backups found.",
+    },
+    "menubar.restored": {
+        "it": "Configurazione ripristinata da {path}",
+        "en": "Configuration restored from {path}",
+    },
+    "menubar.restore_failed": {
+        "it": "Ripristino fallito: {error}",
+        "en": "Restore failed: {error}",
+    },
+    "menubar.restart_failed": {
+        "it": "Riavvio fallito: {error}",
+        "en": "Restart failed: {error}",
+    },
+    "menubar.title_hub_updates": {
+        "it": "Expando ↑{count}",
+        "en": "Expando ↑{count}",
+    },
+    "menubar.update_manual_required": {
+        "it": "Aggiornamento manuale richiesto (Sparkle non disponibile in questa build).",
+        "en": "Manual update required (Sparkle unavailable in this build).",
+    },
     "menubar.updates": {"it": "Controlla aggiornamenti", "en": "Check for updates"},
     "menubar.quit": {"it": "Esci", "en": "Quit"},
     "menubar.installed": {
@@ -293,9 +334,73 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "{count} crash report negli ultimi 7 giorni — esegui `expando crashes`.",
         "en": "{count} crash report(s) in the last 7 days — run `expando crashes`.",
     },
+    "doctor.repair.hint": {
+        "it": "Stato daemon incoerente — esegui `expando doctor --repair`.",
+        "en": "Daemon state is inconsistent — run `expando doctor --repair`.",
+    },
+    "doctor.repair.needs_repair": {
+        "it": "Riparazione consigliata: PID/lock/processi orfani rilevati.",
+        "en": "Repair recommended: stale PID/lock/orphan processes detected.",
+    },
+    "doctor.repair.done": {
+        "it": "Riparazione completata: {actions}",
+        "en": "Repair completed: {actions}",
+    },
+    "doctor.repair.none": {
+        "it": "Nessuna azione di riparazione necessaria.",
+        "en": "No repair actions were needed.",
+    },
+    "doctor.injection_probe.skipped": {
+        "it": "Probe injection: saltato ({detail})",
+        "en": "Injection probe: skipped ({detail})",
+    },
+    "doctor.injection_probe.result": {
+        "it": "Probe injection ({method}): {status} — {detail}",
+        "en": "Injection probe ({method}): {status} — {detail}",
+    },
+    "doctor.injection_probe.failed": {
+        "it": "Probe injection fallito: {detail}",
+        "en": "Injection probe failed: {detail}",
+    },
+    "doctor.injection_degradation.status": {
+        "it": "Fallimenti injection consecutivi: {count}",
+        "en": "Consecutive injection failures: {count}",
+    },
+    "doctor.injection_degradation.warn": {
+        "it": "{count} fallimenti injection consecutivi — verifica permessi e probe doctor.",
+        "en": "{count} consecutive injection failures — check permissions and doctor probe.",
+    },
+    "doctor.injection_degradation.disabled": {
+        "it": "Injection disabilitata dopo troppi fallimenti consecutivi (EXPANDO_AUTO_DISABLE_INJECTION).",
+        "en": "Injection disabled after too many consecutive failures (EXPANDO_AUTO_DISABLE_INJECTION).",
+    },
+    "doctor.safe_mode.active": {
+        "it": "Safe mode attivo: {reason}",
+        "en": "Safe mode active: {reason}",
+    },
+    "doctor.safe_mode.line": {
+        "it": "Safe mode: {reason}",
+        "en": "Safe mode: {reason}",
+    },
+    "doctor.permissions.accessibility_missing": {
+        "it": "L'espansione automatica non funzionerà finché Accessibilità non è concessa per {grant_label}.",
+        "en": "Automatic expansion will not work until Accessibility is granted for {grant_label}.",
+    },
+    "doctor.permissions.input_monitoring_missing": {
+        "it": "Monitoraggio input mancante: i trigger potrebbero non essere rilevati.",
+        "en": "Input Monitoring is missing: triggers may not be detected.",
+    },
     "cli.import.header": {"it": "Importati:", "en": "Imported:"},
     "cli.import.item": {"it": "  - {name}", "en": "  - {name}"},
     "cli.backup_created": {"it": "Backup creato: {path}", "en": "Backup created: {path}"},
+    "cli.pre_mutation_backup": {
+        "it": "Backup pre-modifica: {path}",
+        "en": "Pre-mutation backup: {path}",
+    },
+    "cli.support_bundle_created": {
+        "it": "Support bundle creato: {path}",
+        "en": "Support bundle created: {path}",
+    },
     "cli.imported_from": {"it": "Importato da {source}", "en": "Imported from {source}"},
     "cli.config_merged": {"it": "  - config/default.yml unito", "en": "  - merged config/default.yml"},
     "cli.matches_imported": {
@@ -312,6 +417,26 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "cli.wrote_file": {"it": "  - scritto {name}", "en": "  - wrote {name}"},
     "cli.warning": {"it": "  ! {message}", "en": "  ! {message}"},
+    "cli.hub.up_to_date": {
+        "it": "Tutti i pacchetti hub installati sono aggiornati.",
+        "en": "All installed hub packages are up to date.",
+    },
+    "cli.hub.outdated_line": {
+        "it": "{package}: {local} → {remote}",
+        "en": "{package}: {local} → {remote}",
+    },
+    "cli.hub.upgraded": {
+        "it": "Aggiornato {package} in {path}",
+        "en": "Upgraded {package} to {path}",
+    },
+    "doctor.hub_updates.available": {
+        "it": "{count} aggiornamenti hub disponibili: {packages} (esegui `expando hub outdated`)",
+        "en": "{count} hub updates available: {packages} (run `expando hub outdated`)",
+    },
+    "wizard.install_launch_agent": {
+        "it": "Installa avvio automatico",
+        "en": "Install auto-start",
+    },
     "cli.hub.installed": {"it": "Installato {package} in {path}", "en": "Installed {package} to {path}"},
     "cli.hub.removed": {"it": "Rimosso pacchetto {package}", "en": "Removed package {package}"},
     "cli.hub.not_installed": {
@@ -455,6 +580,22 @@ _STRINGS: dict[str, dict[str, str]] = {
     "sync.icloud_hint": {
         "it": "Modifica snippet da un solo Mac alla volta per evitare conflitti YAML.",
         "en": "Edit snippets from one Mac at a time to avoid YAML merge conflicts.",
+    },
+    "sync.icloud_conflicts": {
+        "it": "Conflitti iCloud",
+        "en": "iCloud conflicts",
+    },
+    "sync.conflict.git_dirty": {
+        "it": "Repository git con modifiche non committate",
+        "en": "Git repository has uncommitted changes",
+    },
+    "sync.conflict.icloud_marker": {
+        "it": "Marker conflitto iCloud: {path}",
+        "en": "iCloud conflict marker: {path}",
+    },
+    "sync.conflict.blocked": {
+        "it": "Sync bloccata per conflitti: {detail}",
+        "en": "Sync blocked due to conflicts: {detail}",
     },
     "hub.submit.ok": {
         "it": "Package {package_id} valido ({matches} snippet).",

@@ -44,8 +44,24 @@ def sparkle_helper_path(app_bundle: Path) -> Path | None:
 def sparkle_available() -> bool:
     if platform.system() != "Darwin":
         return False
+    if os.environ.get("EXPANDO_SPARKLE_FORCE_PYTHON", "").lower() in {"1", "true", "yes"}:
+        return False
     bundle = resolve_distribution_app_bundle()
     return bundle is not None and sparkle_helper_path(bundle) is not None
+
+
+def sparkle_update_mode() -> str:
+    """Return native, python_fallback, or manual_required."""
+    if platform.system() != "Darwin":
+        return "manual_required"
+    if os.environ.get("EXPANDO_SPARKLE_FORCE_PYTHON", "").lower() in {"1", "true", "yes"}:
+        return "python_fallback"
+    if sparkle_available():
+        return "native"
+    bundle = resolve_distribution_app_bundle()
+    if bundle is not None:
+        return "manual_required"
+    return "python_fallback"
 
 
 @dataclass

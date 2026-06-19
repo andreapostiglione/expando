@@ -1,12 +1,61 @@
 {
   "version": 1,
-  "generated_at": "2026-06-19T07:49:47+00:00",
+  "generated_at": "2026-06-19T08:15:10+00:00",
   "ok": true,
   "packages": [
+    {
+      "package_id": "devops-it",
+      "ok": true,
+      "match_count": 2,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "finance-it",
+      "ok": true,
+      "match_count": 2,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "hr-it",
+      "ok": true,
+      "match_count": 2,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "legal-en",
+      "ok": true,
+      "match_count": 2,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "medical-en",
+      "ok": true,
+      "match_count": 2,
+      "errors": [],
+      "warnings": []
+    },
     {
       "package_id": "meeting-it",
       "ok": true,
       "match_count": 3,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "startup-it",
+      "ok": true,
+      "match_count": 2,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "package_id": "travel-it",
+      "ok": true,
+      "match_count": 2,
       "errors": [],
       "warnings": []
     },

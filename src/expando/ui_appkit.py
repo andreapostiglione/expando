@@ -24,7 +24,12 @@ from AppKit import (
     NSWindowStyleMaskTitled,
 )
 
-from .ui_appkit_runtime import close_appkit_session, run_appkit_session
+from .ui_appkit_runtime import (
+    close_appkit_session,
+    run_appkit_session,
+    select_first_table_row,
+    set_text_view_string,
+)
 
 
 class _SearchController(NSObject):
@@ -55,8 +60,7 @@ class _SearchController(NSObject):
 
         self.visible = fuzzy_filter_search_items(query, self.items)
         self.table_view.reloadData()
-        if self.visible:
-            self.table_view.selectRowIndexes_byExtendingSelection_(0, False)
+        select_first_table_row(self.table_view)
         self._update_preview()
 
     def _selected_item(self):
@@ -68,7 +72,7 @@ class _SearchController(NSObject):
     def _update_preview(self):
         item = self._selected_item()
         preview = item.get("preview", "") if item else ""
-        self.preview_view.setString_(preview)
+        set_text_view_string(self.preview_view, preview)
 
     def accept_(self, _sender):
         item = self._selected_item()
@@ -153,8 +157,7 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
     insert_button.setAction_("accept:")
     content.addSubview_(insert_button)
 
-    if controller.visible:
-        table.selectRowIndexes_byExtendingSelection_(0, False)
+    select_first_table_row(table)
     controller._update_preview()
     return controller
 

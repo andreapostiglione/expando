@@ -82,26 +82,32 @@ class KeyboardService:
         )
 
     def open_search(self) -> None:
-        if not self.engine.enabled:
-            return
-        config = self.engine.config
-        items = build_search_items(config.matches, config.app)
-        picked = pick_snippet(items, app_config=config.app)
-        if not picked:
-            return
-        text = resolve_snippet_text(picked.match, app_config=config.app)
-        if not text:
-            return
-        self._set_injecting(True)
+        from .ui_state import set_ui_active
+
         try:
-            self.engine.injector.inject(
-                text,
-                force_clipboard=picked.match.force_clipboard
-                or len(text) >= config.app.clipboard_threshold,
-            )
-            logger.info("Inserted snippet from search: %s", picked.trigger)
+            if not self.engine.enabled:
+                logger.info("Search ignored: Expando is disabled")
+                return
+            config = self.engine.config
+            items = build_search_items(config.matches, config.app)
+            picked = pick_snippet(items, app_config=config.app)
+            if not picked:
+                return
+            text = resolve_snippet_text(picked.match, app_config=config.app)
+            if not text:
+                return
+            self._set_injecting(True)
+            try:
+                self.engine.injector.inject(
+                    text,
+                    force_clipboard=picked.match.force_clipboard
+                    or len(text) >= config.app.clipboard_threshold,
+                )
+                logger.info("Inserted snippet from search: %s", picked.trigger)
+            finally:
+                threading.Timer(0.15, lambda: self._set_injecting(False)).start()
         finally:
-            threading.Timer(0.15, lambda: self._set_injecting(False)).start()
+            set_ui_active(False)
 
     def apply_config_reload(self) -> None:
         from .config_reload_gate import safe_reload_config
@@ -199,6 +205,9 @@ class KeyboardService:
             self.on_listener_recovered()
 
     def start(self) -> None:
+        from .ui_state import set_ui_active
+
+        set_ui_active(False)
         self._sync_file_watcher()
         self.restart_listener()
         self._watchdog.start()

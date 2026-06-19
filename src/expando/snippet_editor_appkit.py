@@ -21,7 +21,11 @@ from AppKit import (
 from pathlib import Path
 from typing import Callable
 
-from .ui_appkit_runtime import close_appkit_session, run_appkit_session
+from .ui_appkit_runtime import (
+    close_appkit_session,
+    run_appkit_session,
+    select_first_table_row,
+)
 
 
 class _SnippetEditorController(NSObject):
@@ -57,7 +61,7 @@ class _SnippetEditorController(NSObject):
         self.visible = fuzzy_filter_search_items(query, self.items)
         self.table_view.reloadData()
         if self.visible:
-            self.table_view.selectRowIndexes_byExtendingSelection_(0, False)
+            select_first_table_row(self.table_view)
             self._load_selection()
 
     def tableSelectionChanged_(self, _notification):
@@ -135,16 +139,16 @@ class _SnippetEditorController(NSObject):
     def save_(self, _sender):
         payload = self._payload()
         if not payload["trigger"]:
-            self._alert("Il trigger non può essere vuoto.")
+            self.showAlertMessage_("Il trigger non può essere vuoto.")
             return
         item = self._selected_item()
         if self.current_id and item and item.get("editable", "1") != "1":
-            self._alert("Questo snippet non è modificabile dall'editor.")
+            self.showAlertMessage_("Questo snippet non è modificabile dall'editor.")
             return
         handler = self.handlers["save"] if self.current_id else self.handlers["create"]
         error = handler(payload)
         if error:
-            self._alert(error)
+            self.showAlertMessage_(error)
             return
         self.result = {"saved": "1"}
         self.items[:] = self.reload_items()
@@ -153,15 +157,15 @@ class _SnippetEditorController(NSObject):
 
     def delete_(self, _sender):
         if not self.current_id:
-            self._alert("Seleziona uno snippet da eliminare.")
+            self.showAlertMessage_("Seleziona uno snippet da eliminare.")
             return
         item = self._selected_item()
         if item and item.get("editable", "1") != "1":
-            self._alert("I package hub non possono essere eliminati da qui.")
+            self.showAlertMessage_("I package hub non possono essere eliminati da qui.")
             return
         error = self.handlers["delete"](self.current_id)
         if error:
-            self._alert(error)
+            self.showAlertMessage_(error)
             return
         self.result = {"deleted": "1"}
         self.items[:] = self.reload_items()
@@ -196,10 +200,10 @@ class _SnippetEditorController(NSObject):
             "vars": str(self.vars_view.string()).strip(),
         }
 
-    def _alert(self, message: str) -> None:
+    def showAlertMessage_(self, message) -> None:
         alert = NSAlert.alloc().init()
         alert.setMessageText_("Expando")
-        alert.setInformativeText_(message)
+        alert.setInformativeText_(str(message))
         alert.addButtonWithTitle_("OK")
         alert.runModal()
 
@@ -409,7 +413,7 @@ def run_snippet_editor(
         window.center()
         window.makeKeyAndOrderFront_(None)
         if controller.visible:
-            table.selectRowIndexes_byExtendingSelection_(0, False)
+            select_first_table_row(table)
             controller._load_selection()
         return controller
 

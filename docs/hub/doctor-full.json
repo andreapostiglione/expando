@@ -1,38 +1,33 @@
 {
   "version": 1,
-  "generated_at": "2026-06-19T07:47:34+00:00",
+  "generated_at": "2026-06-19T07:49:43+00:00",
   "doctor": {
-    "ok": false,
-    "config_dir": "/Users/andreapostiglione/expando/default_config",
+    "ok": true,
+    "config_dir": "/Users/runner/Library/Application Support/expando",
     "running": false,
     "pid": null,
-    "process_count": 1,
-    "match_count": 43,
-    "duplicate_triggers": [
-      ":followup"
-    ],
-    "config_errors": [
-      "Conflicting literal triggers (duplicate without when:): :followup"
-    ],
+    "process_count": 0,
+    "match_count": 10,
+    "duplicate_triggers": [],
+    "config_errors": [],
     "warnings": [
-      "Trigger duplicati: :followup",
-      "Modalità dev: macOS autorizza «python3.14», non «Expando». Cerca Python o il terminale in Impostazioni → Privacy.",
-      "Monitoraggio input mancante: i trigger potrebbero non essere rilevati."
+      "Modalità dev: macOS autorizza «python3.12», non «Expando». Cerca Python o il terminale in Impostazioni → Privacy.",
+      "Impossibile verificare Monitoraggio input dal database TCC."
     ],
     "permissions": {
       "accessibility": true,
-      "input_monitoring": false,
+      "input_monitoring": null,
       "injection_ready": true
     },
     "runtime": {
       "mode": "dev",
-      "grant_label": "python3.14",
-      "grant_hint": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14"
+      "grant_label": "python3.12",
+      "grant_hint": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12"
     }
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-19T07:47:34+00:00",
+    "generated_at": "2026-06-19T07:49:43+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
     "approved_count": 3,
@@ -74,27 +69,101 @@
     "pending_sync_gaps": []
   },
   "notarization_history": {
-    "path": "/Users/andreapostiglione/expando/default_config/notarize-audit-history.json",
+    "path": "/Users/runner/Library/Application Support/expando/notarize-audit-history.json",
     "stats": {
-      "total": 0,
-      "ok": 0,
+      "total": 1,
+      "ok": 1,
       "failed": 0,
-      "last_ok": null,
-      "last_recorded_at": null,
-      "recent_ok_rate": null
+      "last_ok": true,
+      "last_recorded_at": "2026-06-19T07:49:41+00:00",
+      "recent_ok_rate": 1.0
     },
-    "entries": []
+    "entries": [
+      {
+        "recorded_at": "2026-06-19T07:49:41+00:00",
+        "ok": true,
+        "summary": {
+          "pass": 9,
+          "warn": 2,
+          "fail": 0
+        },
+        "targets": {
+          "app": "Expando.app",
+          "dmg": "Expando.dmg"
+        },
+        "report": {
+          "ok": true,
+          "findings": [
+            {
+              "check_id": "codesign.verify",
+              "status": "pass",
+              "message": "Deep codesign verification succeeded"
+            },
+            {
+              "check_id": "codesign.hardened_runtime",
+              "status": "pass",
+              "message": "Hardened runtime flag present"
+            },
+            {
+              "check_id": "codesign.team_id",
+              "status": "pass",
+              "message": "Developer Team ID 68Q8CQBQQV found in signature"
+            },
+            {
+              "check_id": "entitlements.read",
+              "status": "warn",
+              "message": "Could not read entitlements from Mach-O binaries in Expando.app; verify scripts/entitlements.plist on the signed app bundle"
+            },
+            {
+              "check_id": "gatekeeper.assess",
+              "status": "pass",
+              "message": "Gatekeeper assessment accepted"
+            },
+            {
+              "check_id": "sparkle.embedded",
+              "status": "pass",
+              "message": "Sparkle helper and framework present"
+            },
+            {
+              "check_id": "sparkle.helper.verify",
+              "status": "pass",
+              "message": "expando-sparkle codesign verification succeeded"
+            },
+            {
+              "check_id": "sparkle.helper.hardened_runtime",
+              "status": "pass",
+              "message": "expando-sparkle has hardened runtime"
+            },
+            {
+              "check_id": "sparkle.helper.team_id",
+              "status": "pass",
+              "message": "expando-sparkle signed with Team ID 68Q8CQBQQV"
+            },
+            {
+              "check_id": "sparkle.helper.entitlements",
+              "status": "warn",
+              "message": "Could not read entitlements from expando-sparkle"
+            },
+            {
+              "check_id": "notary.staple",
+              "status": "pass",
+              "message": "DMG stapler validation succeeded"
+            }
+          ]
+        }
+      }
+    ]
   },
   "sparkle_benchmark_history": {
-    "path": "/Users/andreapostiglione/expando/sparkle-benchmark-history.json",
+    "path": "/Users/runner/work/expando/expando/sparkle-benchmark-history.json",
     "version": 1,
     "stats": {
-      "total": 7,
+      "total": 8,
       "slow": 0,
       "failed": 0,
       "last_helper_ms": null,
-      "last_version": "3.17.0",
-      "last_recorded_at": "2026-06-19T07:34:36+00:00",
+      "last_version": "3.18.0",
+      "last_recorded_at": "2026-06-19T07:49:42+00:00",
       "trend_min_ms": null,
       "trend_max_ms": null,
       "trend_avg_ms": null,
@@ -271,12 +340,37 @@
           "warn_ms": 15000,
           "fail_ms": 30000
         }
+      },
+      {
+        "recorded_at": "2026-06-19T07:49:42+00:00",
+        "version": "3.18.0",
+        "tag": "v3.18.0",
+        "warn_ms": 15000,
+        "fail_ms": 30000,
+        "slow": false,
+        "failed": false,
+        "benchmark": {
+          "sparkle_available": true,
+          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
+          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
+          "framework_present": true,
+          "appcast_fetch_ms": 166.93,
+          "helper_check_ms": null,
+          "appcast_entries": 1,
+          "latest_version": "3.17.0",
+          "current_version": "3.18.0",
+          "update_available": false,
+          "helper_slow": false,
+          "helper_fail": false,
+          "warn_ms": 15000,
+          "fail_ms": 30000
+        }
       }
     ]
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-19T07:47:34+00:00",
+    "generated_at": "2026-06-19T07:49:43+00:00",
     "ok": true,
     "packages": [
       {
@@ -322,5 +416,6 @@
       }
     ]
   },
-  "publish_context": "github-pages"
+  "publish_context": "release-ci",
+  "release_context": "v3.18.0"
 }

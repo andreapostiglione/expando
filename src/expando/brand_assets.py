@@ -33,4 +33,23 @@ def brand_asset_path(name: str) -> Path | None:
 
 
 def menubar_template_icon() -> Path | None:
-    return brand_asset_path("logoTemplate.png") or brand_asset_path("menubar-icon.png")
+    base = brand_asset_path("logoTemplate.png")
+    if base is None:
+        return brand_asset_path("menubar-icon.png")
+
+    if sys.platform == "darwin":
+        try:
+            from AppKit import NSScreen
+
+            scale = NSScreen.mainScreen().backingScaleFactor()
+            if scale >= 3:
+                candidate = base.parent / "logoTemplate@3x.png"
+            elif scale >= 2:
+                candidate = base.parent / "logoTemplate@2x.png"
+            else:
+                candidate = base
+            if candidate.is_file():
+                return candidate
+        except Exception:
+            pass
+    return base

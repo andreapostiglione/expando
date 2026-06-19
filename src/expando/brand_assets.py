@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+MENUBAR_ICON_POINTS = 22.0
+
 
 def _candidate_dirs() -> list[Path]:
     module_root = Path(__file__).resolve().parent
@@ -24,6 +26,13 @@ def _candidate_dirs() -> list[Path]:
     return dirs
 
 
+def brand_assets_dir() -> Path | None:
+    for directory in _candidate_dirs():
+        if (directory / "logoTemplate.png").is_file() or (directory / "logo.png").is_file():
+            return directory
+    return None
+
+
 def brand_asset_path(name: str) -> Path | None:
     for directory in _candidate_dirs():
         path = directory / name
@@ -33,23 +42,42 @@ def brand_asset_path(name: str) -> Path | None:
 
 
 def menubar_template_icon() -> Path | None:
-    base = brand_asset_path("logoTemplate.png")
-    if base is None:
-        return brand_asset_path("menubar-icon.png")
+    return brand_asset_path("logoTemplate.png") or brand_asset_path("menubar-icon.png")
 
-    if sys.platform == "darwin":
-        try:
-            from AppKit import NSScreen
 
-            scale = NSScreen.mainScreen().backingScaleFactor()
-            if scale >= 3:
-                candidate = base.parent / "logoTemplate@3x.png"
-            elif scale >= 2:
-                candidate = base.parent / "logoTemplate@2x.png"
-            else:
-                candidate = base
-            if candidate.is_file():
-                return candidate
-        except Exception:
-            pass
-    return base
+def load_menubar_nsimage(points: float = MENUBAR_ICON_POINTS):
+    if sys.platform != "darwin":
+        return None
+
+    directory = brand_assets_dir()
+    if directory is None:
+        fallback = menubar_template_icon()
+        if fallback is None:
+            return None
+        directory = fallback.parent
+
+    from AppKit import NSBitmapImageRep, NSImage
+
+    image = NSImage.alloc().initWithSize_((points, points))
+    added = False
+    for suffix in ("", "@2x", "@3x"):
+        path = directory / f"logoTemplate{suffix}.png"
+        if not path.is_file():
+            continue
+        rep = NSBitmapImageRep.imageRepWithContentsOfFile_(str(path))
+        if rep is None:
+            continue
+        rep.setSize_((points, points))
+        image.addRepresentation_(rep)
+        added = True
+
+    if not added:
+        fallback = menubar_template_icon()
+        if fallback is None:
+            return None
+        image = NSImage.alloc().initByReferencingFile_(str(fallback))
+        image.setScalesWhenResized_(True)
+        image.setSize_((points, points))
+
+    image.setTemplate_(True)
+    return image

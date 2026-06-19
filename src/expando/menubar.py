@@ -4,7 +4,7 @@ import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .brand_assets import menubar_template_icon
+from .brand_assets import load_menubar_nsimage, menubar_template_icon
 from .i18n import t, tf
 from .ui_state import set_ui_active
 
@@ -55,6 +55,12 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             service.on_listener_recovered = self._sync_enabled_label
             service.start()
             threading.Thread(target=self._startup_tasks, daemon=True).start()
+
+        def run(self, **options):
+            image = load_menubar_nsimage()
+            if image is not None:
+                self._icon_nsimage = image
+            super().run(**options)
 
         def _hub_updates(self) -> int:
             try:

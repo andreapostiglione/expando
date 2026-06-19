@@ -213,6 +213,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Controllo aggiornamenti fallito: {error}",
         "en": "Update check failed: {error}",
     },
+    "menubar.ui_failed": {
+        "it": "Impossibile aprire la finestra (controlla expando.log).",
+        "en": "Could not open the window (check expando.log).",
+    },
+    "menubar.action_failed": {
+        "it": "Azione menu bar fallita ({action}): {error}",
+        "en": "Menu bar action failed ({action}): {error}",
+    },
     "doctor.notarize_history.title": {
         "it": "Audit notarizzazione (storico locale)",
         "en": "Notarization audit (local history)",

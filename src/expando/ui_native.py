@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 import platform
-import tkinter as tk
-from tkinter import ttk
 
 from .fuzzy import fuzzy_filter_search_items
 
 
-def _configure_style(root: tk.Tk) -> None:
+def _import_tk():
+    import tkinter as tk
+    from tkinter import ttk
+
+    return tk, ttk
+
+
+def _configure_style(root) -> None:
     root.option_add("*Font", "SF Pro Text 13")
     root.option_add("*Background", "#f5f5f7")
     root.option_add("*Foreground", "#1d1d1f")
@@ -15,6 +20,9 @@ def _configure_style(root: tk.Tk) -> None:
 
 class SearchPicker:
     def __init__(self, items: list[dict[str, str]]) -> None:
+        tk, _ttk = _import_tk()
+        self._tk = tk
+
         self.items = items
         self.result: dict[str, str] | None = None
         self.root = tk.Tk()
@@ -27,6 +35,9 @@ class SearchPicker:
         self.root.bind("<Escape>", lambda _event: self._cancel())
 
     def _build(self) -> None:
+        tk = self._tk
+        _, ttk = _import_tk()
+
         container = ttk.Frame(self.root, padding=12)
         container.pack(fill=tk.BOTH, expand=True)
 
@@ -72,6 +83,7 @@ class SearchPicker:
         return fuzzy_filter_search_items(query, self.items)
 
     def _refresh_list(self) -> None:
+        tk = self._tk
         self.listbox.delete(0, tk.END)
         self._visible = self._filtered_items()
         for item in self._visible:
@@ -90,6 +102,7 @@ class SearchPicker:
         return self._visible[selection[0]]
 
     def _update_preview(self) -> None:
+        tk = self._tk
         item = self._selected_item()
         preview_text = item.get("preview", "") if item else ""
         self.preview.configure(state=tk.NORMAL)
@@ -115,9 +128,12 @@ class SearchPicker:
 
 class FormDialog:
     def __init__(self, fields: list[dict[str, str]]) -> None:
+        tk, _ttk = _import_tk()
+        self._tk = tk
+
         self.fields = fields
         self.result: dict[str, str] | None = None
-        self.entries: dict[str, tk.Entry] = {}
+        self.entries: dict[str, object] = {}
         self.root = tk.Tk()
         _configure_style(self.root)
         self.root.title("Expando")
@@ -128,6 +144,9 @@ class FormDialog:
         self.root.bind("<Escape>", lambda _event: self._cancel())
 
     def _build(self) -> None:
+        tk = self._tk
+        _, ttk = _import_tk()
+
         container = ttk.Frame(self.root, padding=16)
         container.pack(fill=tk.BOTH, expand=True)
 

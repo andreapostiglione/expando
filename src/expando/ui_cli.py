@@ -5,9 +5,6 @@ import sys
 
 from pathlib import Path
 
-from .snippet_editor import open_snippet_editor
-from .ui_native import run_form_dialog, run_search_picker
-
 
 def main() -> None:
     if len(sys.argv) < 2:
@@ -17,10 +14,16 @@ def main() -> None:
     payload = json.loads(sys.stdin.read() or "{}")
 
     if command == "search":
+        from .ui_native import run_search_picker
+
         result = run_search_picker(payload.get("items", []))
     elif command == "form":
+        from .ui_native import run_form_dialog
+
         result = run_form_dialog(payload.get("fields", []))
     elif command == "editor":
+        from .snippet_editor import open_snippet_editor
+
         config_dir = payload.get("config_dir")
         if not config_dir:
             raise SystemExit(2)

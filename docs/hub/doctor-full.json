@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-19T10:58:58+00:00",
+  "generated_at": "2026-06-19T11:02:30+00:00",
   "doctor": {
     "ok": true,
     "config_dir": "/Users/runner/Library/Application Support/expando",
@@ -54,7 +54,7 @@
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-19T10:58:58+00:00",
+    "generated_at": "2026-06-19T11:02:30+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
     "approved_count": 10,
@@ -161,12 +161,12 @@
       "ok": 1,
       "failed": 0,
       "last_ok": true,
-      "last_recorded_at": "2026-06-19T10:58:57+00:00",
+      "last_recorded_at": "2026-06-19T11:02:29+00:00",
       "recent_ok_rate": 1.0
     },
     "entries": [
       {
-        "recorded_at": "2026-06-19T10:58:57+00:00",
+        "recorded_at": "2026-06-19T11:02:29+00:00",
         "ok": true,
         "summary": {
           "pass": 9,
@@ -248,8 +248,8 @@
       "slow": 0,
       "failed": 0,
       "last_helper_ms": null,
-      "last_version": "3.26.4",
-      "last_recorded_at": "2026-06-19T10:58:57+00:00",
+      "last_version": "3.26.5",
+      "last_recorded_at": "2026-06-19T11:02:29+00:00",
       "trend_min_ms": null,
       "trend_max_ms": null,
       "trend_avg_ms": null,
@@ -432,9 +432,9 @@
         }
       },
       {
-        "recorded_at": "2026-06-19T08:17:38+00:00",
-        "version": "3.26.0",
-        "tag": "v3.26.0",
+        "recorded_at": "2026-06-19T08:57:27+00:00",
+        "version": "3.26.1",
+        "tag": "v3.26.1",
         "warn_ms": 15000,
         "fail_ms": 30000,
         "slow": false,
@@ -444,11 +444,11 @@
           "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
           "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
           "framework_present": true,
-          "appcast_fetch_ms": 193.82,
+          "appcast_fetch_ms": 212.71,
           "helper_check_ms": null,
           "appcast_entries": 1,
-          "latest_version": "3.18.0",
-          "current_version": "3.26.0",
+          "latest_version": "3.26.0",
+          "current_version": "3.26.1",
           "update_available": false,
           "helper_slow": false,
           "helper_fail": false,
@@ -457,9 +457,9 @@
         }
       },
       {
-        "recorded_at": "2026-06-19T10:13:23+00:00",
-        "version": "3.26.2",
-        "tag": "v3.26.2",
+        "recorded_at": "2026-06-19T10:31:43+00:00",
+        "version": "3.26.3",
+        "tag": "v3.26.3",
         "warn_ms": 15000,
         "fail_ms": 30000,
         "slow": false,
@@ -469,11 +469,11 @@
           "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
           "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
           "framework_present": true,
-          "appcast_fetch_ms": 189.46,
+          "appcast_fetch_ms": 203.57,
           "helper_check_ms": null,
           "appcast_entries": 1,
-          "latest_version": "3.26.1",
-          "current_version": "3.26.2",
+          "latest_version": "3.26.2",
+          "current_version": "3.26.3",
           "update_available": false,
           "helper_slow": false,
           "helper_fail": false,
@@ -482,9 +482,9 @@
         }
       },
       {
-        "recorded_at": "2026-06-19T10:58:57+00:00",
-        "version": "3.26.4",
-        "tag": "v3.26.4",
+        "recorded_at": "2026-06-19T11:02:29+00:00",
+        "version": "3.26.5",
+        "tag": "v3.26.5",
         "warn_ms": 15000,
         "fail_ms": 30000,
         "slow": false,
@@ -494,11 +494,11 @@
           "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
           "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
           "framework_present": true,
-          "appcast_fetch_ms": 93.69,
+          "appcast_fetch_ms": 35.55,
           "helper_check_ms": null,
           "appcast_entries": 1,
           "latest_version": "3.26.3",
-          "current_version": "3.26.4",
+          "current_version": "3.26.5",
           "update_available": false,
           "helper_slow": false,
           "helper_fail": false,
@@ -510,7 +510,7 @@
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-19T10:58:59+00:00",
+    "generated_at": "2026-06-19T11:02:30+00:00",
     "ok": true,
     "packages": [
       {
@@ -606,5 +606,5 @@
     ]
   },
   "publish_context": "release-ci",
-  "release_context": "v3.26.4"
+  "release_context": "v3.26.5"
 }

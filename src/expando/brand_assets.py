@@ -14,7 +14,11 @@ def _candidate_dirs() -> list[Path]:
         argv0 = Path(sys.argv[0]).resolve()
         for parent in argv0.parents:
             resources = parent / "Resources"
-            if (resources / "menubar-icon.png").is_file() or (resources / "AppIcon.icns").is_file():
+            if (
+                (resources / "logoTemplate.png").is_file()
+                or (resources / "menubar-icon.png").is_file()
+                or (resources / "AppIcon.icns").is_file()
+            ):
                 dirs.append(resources)
                 break
     return dirs
@@ -26,3 +30,7 @@ def brand_asset_path(name: str) -> Path | None:
         if path.is_file():
             return path
     return None
+
+
+def menubar_template_icon() -> Path | None:
+    return brand_asset_path("logoTemplate.png") or brand_asset_path("menubar-icon.png")

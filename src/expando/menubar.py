@@ -4,7 +4,7 @@ import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .brand_assets import brand_asset_path
+from .brand_assets import menubar_template_icon
 from .i18n import t, tf
 from .ui_state import set_ui_active
 
@@ -27,10 +27,11 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
     class ExpandoMenuBar(rumps.App):
         def __init__(self) -> None:
-            icon = brand_asset_path("menubar-icon.png")
+            icon = menubar_template_icon()
             super().__init__(
                 "Expando",
                 icon=str(icon) if icon else None,
+                template=True if icon else None,
                 quit_button=None,
             )
             self.config_dir = config_dir
@@ -68,13 +69,13 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self.enabled_item.title = t("menubar.disable") if enabled else t("menubar.enable")
             hub_updates = self._hub_updates()
             if self.service.listener_dead():
-                self.title = t("menubar.title_listener_dead")
+                self.title = "⚠"
             elif hub_updates > 0:
-                self.title = tf("menubar.title_hub_updates", count=hub_updates)
-            elif enabled:
-                self.title = t("menubar.title_enabled")
+                self.title = f"↑{hub_updates}"
+            elif not enabled:
+                self.title = "○"
             else:
-                self.title = t("menubar.title_disabled")
+                self.title = None
 
         def _on_listener_dead(self) -> None:
             self._sync_enabled_label()

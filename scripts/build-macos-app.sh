@@ -12,9 +12,11 @@ mkdir -p "$MACOS" "$RESOURCES"
 if [[ -f "$ROOT/assets/AppIcon.icns" ]]; then
   cp "$ROOT/assets/AppIcon.icns" "$RESOURCES/AppIcon.icns"
 fi
-if [[ -f "$ROOT/assets/menubar-icon.png" ]]; then
-  cp "$ROOT/assets/menubar-icon.png" "$RESOURCES/menubar-icon.png"
-fi
+for template_icon in logoTemplate.png "logoTemplate@2x.png" "logoTemplate@3x.png" menubar-icon.png; do
+  if [[ -f "$ROOT/assets/$template_icon" ]]; then
+    cp "$ROOT/assets/$template_icon" "$RESOURCES/$template_icon"
+  fi
+done
 if [[ -f "$ROOT/assets/logo.png" ]]; then
   cp "$ROOT/assets/logo.png" "$RESOURCES/logo.png"
 fi

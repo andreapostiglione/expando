@@ -10,8 +10,10 @@ def test_ui_appkit_imports_search_picker() -> None:
 def test_brand_asset_logo_exists() -> None:
     from expando.brand_assets import brand_asset_path
 
+    from expando.brand_assets import menubar_template_icon
+
     assert brand_asset_path("logo.png") is not None
-    assert brand_asset_path("menubar-icon.png") is not None
+    assert menubar_template_icon() is not None
 
 
 def test_build_search_controller_does_not_raise() -> None:

@@ -138,19 +138,29 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
 
     html_path = tmp_path / "hub-marketplace.html"
     json_path = tmp_path / "hub" / "marketplace.json"
-    paths = publish_portal_site(html_path=html_path, json_path=json_path)
+    health_html_path = tmp_path / "doctor-health.html"
+    health_json_path = tmp_path / "hub" / "doctor-full.json"
+    paths = publish_portal_site(
+        html_path=html_path,
+        json_path=json_path,
+        health_html_path=health_html_path,
+        health_json_path=health_json_path,
+    )
 
     assert paths["html"] == html_path
     assert paths["json"] == json_path
     assert "suggestions_html" in paths
     assert "maintainer_html" in paths
     assert "validation_json" in paths
+    assert "health_html" in paths
+    assert "health_json" in paths
     html = html_path.read_text(encoding="utf-8")
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     suggestions = paths["suggestions_html"].read_text(encoding="utf-8")
     assert "Social" in html
     assert "hub-maintainer.html" in html
     assert "hub-trigger-suggestions.html" in html
+    assert "doctor-health.html" in html
     assert "Pending" not in html
     assert len(payload["packages"]) == 1
     assert payload["packages"][0]["id"] == "social"
@@ -158,6 +168,13 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     maintainer = paths["maintainer_html"].read_text(encoding="utf-8")
     assert "Maintainer Portal" in maintainer
     assert "hub-marketplace.html" in maintainer
+    assert "doctor-health.html" in maintainer
+    health_html = paths["health_html"].read_text(encoding="utf-8")
+    assert "Expando Health Dashboard" in health_html
+    assert "Publish-site snapshot" in health_html
+    health_json = json.loads(paths["health_json"].read_text(encoding="utf-8"))
+    assert health_json.get("publish_context") == "github-pages"
+    assert "doctor" in health_json
     validation = json.loads(paths["validation_json"].read_text(encoding="utf-8"))
     assert "packages" in validation
     assert "trigger_suggestions" in validation
@@ -178,6 +195,7 @@ def test_build_maintainer_hub_html_links_portal_pages():
     assert "hub-marketplace.html" in html
     assert "hub-trigger-suggestions.html" in html
     assert "community-validation.json" in html
+    assert "doctor-health.html" in html
     assert "similarity warnings=1" in html
     assert "publish-site" in html
 

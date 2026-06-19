@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.16.0
+**Versione attuale:** v3.17.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.16.0)
+## Stato attuale (baseline v3.17.0)
 
 | Area | Stato |
 |------|--------|
@@ -94,6 +94,9 @@
 | `doctor --full-html`: tabelle community validation complete | ✓ v3.16.0 |
 | Hub marketplace: badge validation + link `community-validation.json` | ✓ v3.16.0 |
 | CI/release: export `community-validation.json` in `release-health` | ✓ v3.16.0 |
+| `doctor-health.html` + `hub/doctor-full.json` su GitHub Pages (`publish-site`) | ✓ v3.17.0 |
+| Link health dashboard da index/maintainer/marketplace | ✓ v3.17.0 |
+| CI smoke `publish-site` health export | ✓ v3.17.0 |
 
 ### Gap noti oggi
 
@@ -359,7 +362,12 @@ flowchart LR
 2. Hub marketplace: badge validation + link `community-validation.json`
 3. CI/release: export `community-validation.json` nell'artifact `release-health`
 
-### Backlog (Sprint 26+)
+### Sprint 26 → v3.17.0 ✓
+1. `publish-site`: export `docs/doctor-health.html` + `docs/hub/doctor-full.json`
+2. Link health dashboard da index, maintainer portal e marketplace
+3. CI smoke `publish-site` health export
+
+### Backlog (Sprint 27+)
 - TBD
 
 ---

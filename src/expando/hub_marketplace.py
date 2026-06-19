@@ -1691,7 +1691,7 @@ def build_portal_site_html(
     <p><a href="index.html">← Expando home</a></p>
     <h1>Hub Marketplace</h1>
     <p class="lead">Approved community snippet packages for <code>expando hub install</code>.</p>
-    <p class="meta">Updated {updated_at} · Community validation <span class="badge {validation_class}">{validation_label}</span> · duplicates={duplicate_count} · similarity warnings={suggestion_count} · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub/community-validation.json">community-validation.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
+    <p class="meta">Updated {updated_at} · Community validation <span class="badge {validation_class}">{validation_label}</span> · duplicates={duplicate_count} · similarity warnings={suggestion_count} · <a href="doctor-health.html">Health dashboard</a> · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub/community-validation.json">community-validation.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
 
     <div class="grid">
       {packages_html}
@@ -1707,7 +1707,9 @@ expando hub review approve &lt;package-id&gt;
 expando hub portal publish-site</pre>
 
     <footer>
-      <a href="hub/community-validation.json">community-validation.json</a>
+      <a href="doctor-health.html">doctor-health.html</a>
+      · <a href="hub/doctor-full.json">doctor-full.json</a>
+      · <a href="hub/community-validation.json">community-validation.json</a>
       · <a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs</a>
       · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit via GitHub</a>
     </footer>
@@ -1851,8 +1853,8 @@ def build_maintainer_hub_html(
       </div>
       <div class="card">
         <h3>Health Dashboard</h3>
-        <p>Local snapshot from <code>expando doctor --full-html</code> with embedded release trend charts.</p>
-        <p><a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs →</a></p>
+        <p>Publish-site snapshot from <code>expando doctor --full-html</code> with embedded release trend charts.</p>
+        <p><a href="doctor-health.html">Open health dashboard →</a></p>
       </div>
     </div>
 
@@ -1866,7 +1868,9 @@ expando doctor --full-json
 expando doctor --full-html</pre>
 
     <footer>
-      <a href="hub/marketplace.json">marketplace.json</a>
+      <a href="doctor-health.html">doctor-health.html</a>
+      · <a href="hub/doctor-full.json">doctor-full.json</a>
+      · <a href="hub/marketplace.json">marketplace.json</a>
       · <a href="hub/community-validation.json">community-validation.json</a>
       · <a href="https://github.com/andreapostiglione/expando/issues/new?template=hub-package.yml">Submit package</a>
     </footer>
@@ -1883,6 +1887,9 @@ def publish_portal_site(
     suggestions_html_path: Path | None = None,
     maintainer_html_path: Path | None = None,
     validation_json_path: Path | None = None,
+    health_html_path: Path | None = None,
+    health_json_path: Path | None = None,
+    root: Path | None = None,
 ) -> dict[str, Path]:
     default_html, default_json = default_portal_site_paths()
     html_destination = (html_path or default_html).expanduser().resolve()
@@ -1917,13 +1924,22 @@ def publish_portal_site(
         ),
         encoding="utf-8",
     )
-    export_community_validation_json(validation_destination)
+    export_community_validation_json(validation_destination, root=root)
+    from .doctor_checks import export_publish_site_health
+
+    health_paths = export_publish_site_health(
+        root,
+        html_destination=health_html_path,
+        json_destination=health_json_path,
+    )
     return {
         "html": html_destination,
         "json": json_destination,
         "suggestions_html": suggestions_destination,
         "maintainer_html": maintainer_destination,
         "validation_json": validation_destination,
+        "health_html": health_paths["health_html"],
+        "health_json": health_paths["health_json"],
     }
 
 

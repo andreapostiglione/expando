@@ -90,6 +90,21 @@ def test_build_doctor_full_html_includes_sections():
     assert "polyline" in html_text
 
 
+def test_build_doctor_full_html_publish_site_banner():
+    document = {
+        "generated_at": "2026-06-18T10:00:00+00:00",
+        "publish_context": "github-pages",
+        "doctor": {"ok": True, "warnings": [], "config_errors": []},
+        "marketplace": {},
+        "notarization_history": {"stats": {}, "entries": []},
+        "sparkle_benchmark_history": {"stats": {}, "entries": []},
+        "community_validation": {"ok": True, "packages": [], "trigger_suggestions": []},
+    }
+    html_text = build_doctor_full_html(document)
+    assert "Publish-site snapshot" in html_text
+    assert "default_config" in html_text
+
+
 def test_write_doctor_full_html(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("EXPANDO_HUB_MARKETPLACE_DISABLE", "1")
     with patch(

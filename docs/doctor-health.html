@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expando — Health Dashboard</title>
+  <meta name="description" content="Full Expando health snapshot from expando doctor --full-html." />
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #141820;
+      --text: #f4f6fb;
+      --muted: #9aa3b2;
+      --accent: #4f8cff;
+      --border: #232a36;
+      --ok: #3ecf8e;
+      --fail: #ff6b6b;
+      --warn: #f5c542;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2240 0%, transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 24px 80px; }
+    h1, h2 { letter-spacing: -0.03em; }
+    h2 { margin-top: 40px; font-size: 1.2rem; }
+    .lead { color: var(--muted); max-width: 760px; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin: 12px 0 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+    .card {
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card strong { display: block; font-size: 1.4rem; margin-bottom: 4px; }
+    .card span { color: var(--muted); font-size: 0.9rem; }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .badge.ok { color: var(--ok); border-color: rgba(62, 207, 142, 0.35); }
+    .badge.fail { color: var(--fail); border-color: rgba(255, 107, 107, 0.35); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 8px;
+      background: rgba(20, 24, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.92rem;
+    }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; background: var(--panel); }
+    tr.ok td:nth-child(2) { color: var(--ok); }
+    tr.fail td:nth-child(2) { color: var(--fail); }
+    tr.warn td:nth-child(4) { color: var(--warn); }
+    td.empty { color: var(--muted); text-align: center; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    li.empty { color: var(--muted); list-style: none; margin-left: -20px; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88rem;
+    }
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      font-size: 0.88rem;
+    }
+    .chart { margin: 16px 0; max-width: 100%; overflow-x: auto; }
+    .chart svg { display: block; max-width: 100%; height: auto; }
+    footer { margin-top: 48px; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Expando Health Dashboard</h1>
+    <p class="lead">Snapshot from <code>expando doctor --full-html</code>: daemon, marketplace, release histories, and community validation.</p>
+    <p class="meta">Publish-site snapshot using bundled <code>default_config</code> and repo release histories (not a live local daemon).</p>
+    <p class="meta">Generated 2026-06-19T07:32:30+00:00 · Doctor <span class="badge fail">Issues</span> · Community <span class="badge ok">OK</span></p>
+
+    <div class="grid">
+      <div class="card"><strong>no</strong><span>Daemon running</span></div>
+      <div class="card"><strong>43</strong><span>Loaded snippets</span></div>
+      <div class="card"><strong>3</strong><span>Community packages</span></div>
+      <div class="card"><strong>2</strong><span>Trigger similarity warnings</span></div>
+    </div>
+
+    <h2>Doctor</h2>
+    <table>
+      <tbody>
+        <tr><th>Config dir</th><td><code>/Users/andreapostiglione/expando/default_config</code></td></tr>
+        <tr><th>PID</th><td>None</td></tr>
+        <tr><th>Accessibility</th><td>True</td></tr>
+        <tr><th>Input monitoring</th><td>False</td></tr>
+        <tr><th>Injection ready</th><td>True</td></tr>
+        <tr><th>Runtime</th><td>dev</td></tr>
+      </tbody>
+    </table>
+    <h3>Warnings</h3>
+    <ul><li>Trigger duplicati: :followup</li><li>Modalità dev: macOS autorizza «python3.14», non «Expando». Cerca Python o il terminale in Impostazioni → Privacy.</li><li>Monitoraggio input mancante: i trigger potrebbero non essere rilevati.</li></ul>
+    <h3>Config errors</h3>
+    <ul><li>Conflicting literal triggers (duplicate without when:): :followup</li></ul>
+
+    <h2>Marketplace</h2>
+    <table>
+      <tbody>
+        <tr><th>Remote URL</th><td>https://andreapostiglione.github.io/expando/hub/marketplace.json</td></tr>
+        <tr><th>Approved</th><td>3</td></tr>
+        <tr><th>Pending diffs</th><td>0</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Community package</th><th>Name</th></tr></thead>
+      <tbody><tr><td><code>meeting-it</code></td><td>Meeting IT</td></tr>
+<tr><td><code>typing-it</code></td><td>Typing IT</td></tr>
+<tr><td><code>writing-it</code></td><td>Writing IT</td></tr></tbody>
+    </table>
+
+    <h2>Notarization history</h2>
+    <p class="meta">Runs: 0 · OK: 0 · Failed: 0</p>
+    <div class="chart"><svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><text x="240" y="80" text-anchor="middle" fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="12">No notarization history</text></svg></div>
+    <table>
+      <thead><tr><th>Recorded</th><th>Status</th><th>Pass</th><th>Warn</th><th>Fail</th></tr></thead>
+      <tbody><tr><td colspan="5" class="empty">No notarization history</td></tr></tbody>
+    </table>
+
+    <h2>Sparkle benchmark history</h2>
+    <p class="meta">Runs: 5 · Trend: <code></code></p>
+    <div class="chart"><svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><text x="240" y="80" text-anchor="middle" fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="12">No benchmark data</text></svg></div>
+    <table>
+      <thead><tr><th>Recorded</th><th>Version</th><th>Helper ms</th><th>Slow</th></tr></thead>
+      <tbody><tr class="ok"><td>2026-06-18T08:17:05+00:00</td><td>3.8.0</td><td>n/a</td><td>no</td></tr>
+<tr class="ok"><td>2026-06-18T08:21:57+00:00</td><td>3.9.0</td><td>n/a</td><td>no</td></tr>
+<tr class="ok"><td>2026-06-18T08:59:36+00:00</td><td>3.11.0</td><td>n/a</td><td>no</td></tr>
+<tr class="ok"><td>2026-06-18T09:19:15+00:00</td><td>3.13.0</td><td>n/a</td><td>no</td></tr>
+<tr class="ok"><td>2026-06-18T10:56:04+00:00</td><td>3.15.0</td><td>n/a</td><td>no</td></tr></tbody>
+    </table>
+
+    <h2>Community validation</h2>
+    <p class="meta">Packages validated: 3 · Duplicates: 0 · Official collisions: 0 · Similarity warnings: 2</p>
+    <h3>Packages</h3>
+    <table>
+      <thead><tr><th>Package</th><th>Snippets</th><th>Status</th></tr></thead>
+      <tbody><tr class="ok"><td><code>meeting-it</code></td><td>3</td><td>✓</td></tr>
+<tr class="ok"><td><code>typing-it</code></td><td>4</td><td>✓</td></tr>
+<tr class="ok"><td><code>writing-it</code></td><td>3</td><td>✓</td></tr></tbody>
+    </table>
+    <h3>Cross-package duplicates</h3>
+    <table>
+      <thead><tr><th>Trigger</th><th>Packages</th></tr></thead>
+      <tbody><tr><td colspan="2" class="empty">No cross-package duplicates</td></tr></tbody>
+    </table>
+    <h3>Official collisions</h3>
+    <table>
+      <thead><tr><th>Trigger</th><th>Community</th><th>Official</th></tr></thead>
+      <tbody><tr><td colspan="3" class="empty">No official collisions</td></tr></tbody>
+    </table>
+    <h3>Similarity suggestions</h3>
+    <table>
+      <thead><tr><th>Community</th><th>Official</th><th>Score</th><th>Reason</th><th>Community pkg</th><th>Official pkg</th></tr></thead>
+      <tbody><tr><td><code>:follow</code></td><td><code>:followup</code></td><td>94%</td><td>prefix</td><td><code>meeting-it</code></td><td><code>email-it</code></td></tr>
+<tr><td><code>:follow</code></td><td><code>:followup</code></td><td>94%</td><td>prefix</td><td><code>meeting-it</code></td><td><code>sales-it</code></td></tr></tbody>
+    </table>
+
+    <h2>Regenerate</h2>
+    <pre>expando doctor --full-html
+expando doctor --full-html --full-html-output doctor-health.html
+expando doctor --full-json --full-output doctor-full.json</pre>
+
+    <footer>
+      <a href="hub/community-validation.json">community-validation.json</a>
+      · <a href="hub-maintainer.html">Maintainer portal</a>
+      · <a href="hub-trigger-suggestions.html">Trigger dashboard</a>
+      · <a href="hub-marketplace.html">Hub marketplace</a>
+    </footer>
+  </div>
+</body>
+</html>

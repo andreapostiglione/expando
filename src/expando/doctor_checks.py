@@ -321,6 +321,52 @@ def default_doctor_full_html_path(root: Path | None = None) -> Path:
     return base / "doctor-health.html"
 
 
+def publish_site_config_dir(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    return (root or package_root()) / "default_config"
+
+
+def default_publish_site_health_html_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    return (root or package_root()) / "docs" / "doctor-health.html"
+
+
+def default_publish_site_health_json_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    return (root or package_root()) / "docs" / "hub" / "doctor-full.json"
+
+
+def export_publish_site_health(
+    root: Path | None = None,
+    *,
+    html_destination: Path | None = None,
+    json_destination: Path | None = None,
+    history_limit: int = 10,
+) -> dict[str, Path]:
+    import json
+
+    config_dir = publish_site_config_dir(root)
+    document = doctor_full_document(config_dir, history_limit=history_limit)
+    document["publish_context"] = "github-pages"
+    html_dest = (
+        html_destination or default_publish_site_health_html_path(root)
+    ).expanduser().resolve()
+    json_dest = (
+        json_destination or default_publish_site_health_json_path(root)
+    ).expanduser().resolve()
+    html_dest.parent.mkdir(parents=True, exist_ok=True)
+    json_dest.parent.mkdir(parents=True, exist_ok=True)
+    html_dest.write_text(build_doctor_full_html(document), encoding="utf-8")
+    json_dest.write_text(
+        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return {"health_html": html_dest, "health_json": json_dest}
+
+
 def _html_status_badge(ok: bool) -> tuple[str, str]:
     if ok:
         return "OK", "ok"
@@ -335,6 +381,14 @@ def _html_list_items(items: list[str]) -> str:
 
 def build_doctor_full_html(document: dict[str, Any]) -> str:
     generated_at = html.escape(str(document.get("generated_at", "")))
+    publish_context = str(document.get("publish_context", "") or "")
+    publish_note = ""
+    if publish_context == "github-pages":
+        publish_note = (
+            '<p class="meta">Publish-site snapshot using bundled '
+            "<code>default_config</code> and repo release histories "
+            "(not a live local daemon).</p>"
+        )
     doctor = document.get("doctor", {})
     if not isinstance(doctor, dict):
         doctor = {}
@@ -551,6 +605,7 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
   <div class="wrap">
     <h1>Expando Health Dashboard</h1>
     <p class="lead">Snapshot from <code>expando doctor --full-html</code>: daemon, marketplace, release histories, and community validation.</p>
+    {publish_note}
     <p class="meta">Generated {generated_at} · Doctor <span class="badge {doctor_class}">{doctor_label}</span> · Community <span class="badge {validation_class}">{validation_label}</span></p>
 
     <div class="grid">

@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.16.0 | **Release:** v3.16.0 (doctor validation tables, marketplace badge, release-health JSON)
+**Versione:** 3.17.0 | **Release:** v3.17.0 (doctor-health on Pages, doctor-full.json, CI publish-site smoke)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.17.0** ✓ Sprint 26
+  - `doctor-health.html` + `hub/doctor-full.json` su Pages
+  - Link health dashboard da index/maintainer/marketplace
+  - CI smoke publish-site health export
 - **v3.16.0** ✓ Sprint 25
   - Tabelle community validation in `doctor --full-html`
   - Badge validation su hub marketplace
@@ -81,6 +85,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 26)
+## Prossimi item (Sprint 27)
 
 - [ ] TBD — vedi ROADMAP.md

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Community packages queue. status: pending | approved | rejected",
-  "updated_at": "2026-06-18T17:04:06+00:00",
+  "updated_at": "2026-06-19T07:32:29+00:00",
   "packages": [
     {
       "id": "meeting-it",

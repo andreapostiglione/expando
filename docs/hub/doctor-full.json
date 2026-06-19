@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-19T07:35:55+00:00",
+  "generated_at": "2026-06-19T07:47:34+00:00",
   "doctor": {
     "ok": false,
     "config_dir": "/Users/andreapostiglione/expando/default_config",
@@ -32,7 +32,7 @@
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-19T07:35:55+00:00",
+    "generated_at": "2026-06-19T07:47:34+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
     "approved_count": 3,
@@ -89,12 +89,12 @@
     "path": "/Users/andreapostiglione/expando/sparkle-benchmark-history.json",
     "version": 1,
     "stats": {
-      "total": 6,
+      "total": 7,
       "slow": 0,
       "failed": 0,
       "last_helper_ms": null,
-      "last_version": "3.16.0",
-      "last_recorded_at": "2026-06-18T17:06:05+00:00",
+      "last_version": "3.17.0",
+      "last_recorded_at": "2026-06-19T07:34:36+00:00",
       "trend_min_ms": null,
       "trend_max_ms": null,
       "trend_avg_ms": null,
@@ -246,12 +246,37 @@
           "warn_ms": 15000,
           "fail_ms": 30000
         }
+      },
+      {
+        "recorded_at": "2026-06-19T07:34:36+00:00",
+        "version": "3.17.0",
+        "tag": "v3.17.0",
+        "warn_ms": 15000,
+        "fail_ms": 30000,
+        "slow": false,
+        "failed": false,
+        "benchmark": {
+          "sparkle_available": true,
+          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
+          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
+          "framework_present": true,
+          "appcast_fetch_ms": 277.91,
+          "helper_check_ms": null,
+          "appcast_entries": 1,
+          "latest_version": "3.16.0",
+          "current_version": "3.17.0",
+          "update_available": false,
+          "helper_slow": false,
+          "helper_fail": false,
+          "warn_ms": 15000,
+          "fail_ms": 30000
+        }
       }
     ]
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-19T07:35:55+00:00",
+    "generated_at": "2026-06-19T07:47:34+00:00",
     "ok": true,
     "packages": [
       {

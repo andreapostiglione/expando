@@ -339,6 +339,17 @@ def default_publish_site_health_json_path(root: Path | None = None) -> Path:
     return (root or package_root()) / "docs" / "hub" / "doctor-full.json"
 
 
+def annotate_release_health_document(
+    document: dict[str, Any],
+    *,
+    release_tag: str,
+) -> dict[str, Any]:
+    annotated = dict(document)
+    annotated["publish_context"] = "release-ci"
+    annotated["release_context"] = release_tag
+    return annotated
+
+
 def export_publish_site_health(
     root: Path | None = None,
     *,
@@ -388,6 +399,12 @@ def build_doctor_full_html(document: dict[str, Any]) -> str:
             '<p class="meta">Publish-site snapshot using bundled '
             "<code>default_config</code> and repo release histories "
             "(not a live local daemon).</p>"
+        )
+    elif publish_context == "release-ci":
+        release_tag = html.escape(str(document.get("release_context", "")))
+        publish_note = (
+            f'<p class="meta">Release CI snapshot from signed build '
+            f"<code>{release_tag}</code> (post-sparkle doctor).</p>"
         )
     doctor = document.get("doctor", {})
     if not isinstance(doctor, dict):

@@ -32,5 +32,7 @@ jobs:
           test -f docs/doctor-health.html
           test -f docs/hub/doctor-full.json
           grep -Fq "Expando Health Dashboard" docs/doctor-health.html
+          test -f docs/hub/index.json
+          python -c "import json; d=json.load(open('docs/hub/index.json')); assert d['artifacts']"
       - name: Run E2E tests (headless-safe)
         run: pytest -q tests/e2e -m "not clipboard and not image and not integration"

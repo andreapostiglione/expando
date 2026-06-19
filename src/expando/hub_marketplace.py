@@ -1691,7 +1691,7 @@ def build_portal_site_html(
     <p><a href="index.html">← Expando home</a></p>
     <h1>Hub Marketplace</h1>
     <p class="lead">Approved community snippet packages for <code>expando hub install</code>.</p>
-    <p class="meta">Updated {updated_at} · Community validation <span class="badge {validation_class}">{validation_label}</span> · duplicates={duplicate_count} · similarity warnings={suggestion_count} · <a href="doctor-health.html">Health dashboard</a> · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub/community-validation.json">community-validation.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
+    <p class="meta">Updated {updated_at} · Community validation <span class="badge {validation_class}">{validation_label}</span> · duplicates={duplicate_count} · similarity warnings={suggestion_count} · <a href="doctor-health.html">Health dashboard</a> · <a href="hub/index.json">hub index</a> · <a href="hub/marketplace.json">marketplace.json</a> · <a href="hub/community-validation.json">community-validation.json</a> · <a href="hub-maintainer.html">Maintainer portal</a> · <a href="hub-trigger-suggestions.html">Trigger dashboard</a></p>
 
     <div class="grid">
       {packages_html}
@@ -1707,7 +1707,8 @@ expando hub review approve &lt;package-id&gt;
 expando hub portal publish-site</pre>
 
     <footer>
-      <a href="doctor-health.html">doctor-health.html</a>
+      <a href="hub/index.json">hub/index.json</a>
+      · <a href="doctor-health.html">doctor-health.html</a>
       · <a href="hub/doctor-full.json">doctor-full.json</a>
       · <a href="hub/community-validation.json">community-validation.json</a>
       · <a href="https://github.com/andreapostiglione/expando/blob/main/docs/HUB_MARKETPLACE.md">Maintainer docs</a>
@@ -1868,7 +1869,8 @@ expando doctor --full-json
 expando doctor --full-html</pre>
 
     <footer>
-      <a href="doctor-health.html">doctor-health.html</a>
+      <a href="hub/index.json">hub/index.json</a>
+      · <a href="doctor-health.html">doctor-health.html</a>
       · <a href="hub/doctor-full.json">doctor-full.json</a>
       · <a href="hub/marketplace.json">marketplace.json</a>
       · <a href="hub/community-validation.json">community-validation.json</a>
@@ -1880,6 +1882,117 @@ expando doctor --full-html</pre>
 """
 
 
+def _publish_site_skip_health() -> bool:
+    import os
+
+    return os.environ.get("EXPANDO_PUBLISH_SITE_SKIP_HEALTH", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def default_hub_index_json_path(root: Path | None = None) -> Path:
+    from .paths import package_root
+
+    base = root or package_root()
+    return base / "docs" / "hub" / "index.json"
+
+
+def build_hub_index_document(
+    *,
+    marketplace_payload: dict[str, Any],
+    validation_document: dict[str, Any],
+    health_json_path: Path,
+) -> dict[str, Any]:
+    packages = marketplace_payload.get("packages", [])
+    package_count = len(packages) if isinstance(packages, list) else 0
+    health_meta: dict[str, Any] = {}
+    if health_json_path.exists():
+        try:
+            health_doc = json.loads(health_json_path.read_text(encoding="utf-8"))
+            if isinstance(health_doc, dict):
+                doctor = health_doc.get("doctor", {})
+                health_meta = {
+                    "generated_at": health_doc.get("generated_at"),
+                    "publish_context": health_doc.get("publish_context"),
+                    "release_context": health_doc.get("release_context"),
+                    "doctor_ok": doctor.get("ok") if isinstance(doctor, dict) else None,
+                }
+        except (OSError, json.JSONDecodeError):
+            health_meta = {}
+
+    return {
+        "version": 1,
+        "generated_at": _utc_now(),
+        "artifacts": [
+            {
+                "id": "marketplace",
+                "path": "hub/marketplace.json",
+                "title": "Hub Marketplace",
+                "updated_at": marketplace_payload.get("updated_at"),
+                "package_count": package_count,
+            },
+            {
+                "id": "community-validation",
+                "path": "hub/community-validation.json",
+                "title": "Community Validation",
+                "updated_at": validation_document.get("generated_at"),
+                "ok": validation_document.get("ok"),
+            },
+            {
+                "id": "doctor-full",
+                "path": "hub/doctor-full.json",
+                "title": "Release Health",
+                **health_meta,
+            },
+        ],
+        "pages": [
+            {
+                "id": "doctor-health",
+                "path": "doctor-health.html",
+                "title": "Health Dashboard",
+            },
+            {
+                "id": "hub-marketplace",
+                "path": "hub-marketplace.html",
+                "title": "Hub Marketplace",
+            },
+            {
+                "id": "hub-maintainer",
+                "path": "hub-maintainer.html",
+                "title": "Maintainer Portal",
+            },
+            {
+                "id": "hub-trigger-suggestions",
+                "path": "hub-trigger-suggestions.html",
+                "title": "Trigger Dashboard",
+            },
+        ],
+    }
+
+
+def export_hub_index_json(
+    destination: Path,
+    *,
+    marketplace_payload: dict[str, Any],
+    validation_document: dict[str, Any],
+    health_json_path: Path,
+) -> Path:
+    destination = destination.expanduser().resolve()
+    document = build_hub_index_document(
+        marketplace_payload=marketplace_payload,
+        validation_document=validation_document,
+        health_json_path=health_json_path,
+    )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return destination
+
+
 def publish_portal_site(
     *,
     html_path: Path | None = None,
@@ -1889,6 +2002,7 @@ def publish_portal_site(
     validation_json_path: Path | None = None,
     health_html_path: Path | None = None,
     health_json_path: Path | None = None,
+    hub_index_json_path: Path | None = None,
     root: Path | None = None,
 ) -> dict[str, Path]:
     default_html, default_json = default_portal_site_paths()
@@ -1925,12 +2039,37 @@ def publish_portal_site(
         encoding="utf-8",
     )
     export_community_validation_json(validation_destination, root=root)
-    from .doctor_checks import export_publish_site_health
+    from .doctor_checks import (
+        default_publish_site_health_html_path,
+        default_publish_site_health_json_path,
+        export_publish_site_health,
+    )
 
-    health_paths = export_publish_site_health(
-        root,
-        html_destination=health_html_path,
-        json_destination=health_json_path,
+    resolved_health_html = (
+        health_html_path or default_publish_site_health_html_path(root)
+    ).expanduser().resolve()
+    resolved_health_json = (
+        health_json_path or default_publish_site_health_json_path(root)
+    ).expanduser().resolve()
+    if _publish_site_skip_health():
+        health_paths = {
+            "health_html": resolved_health_html,
+            "health_json": resolved_health_json,
+        }
+    else:
+        health_paths = export_publish_site_health(
+            root,
+            html_destination=resolved_health_html,
+            json_destination=resolved_health_json,
+        )
+    hub_index_destination = (
+        hub_index_json_path or default_hub_index_json_path(root)
+    ).expanduser().resolve()
+    export_hub_index_json(
+        hub_index_destination,
+        marketplace_payload=payload,
+        validation_document=validation_document,
+        health_json_path=health_paths["health_json"],
     )
     return {
         "html": html_destination,
@@ -1940,6 +2079,7 @@ def publish_portal_site(
         "validation_json": validation_destination,
         "health_html": health_paths["health_html"],
         "health_json": health_paths["health_json"],
+        "hub_index_json": hub_index_destination,
     }
 
 

@@ -90,6 +90,22 @@ def test_build_doctor_full_html_includes_sections():
     assert "polyline" in html_text
 
 
+def test_build_doctor_full_html_release_ci_banner():
+    document = {
+        "generated_at": "2026-06-19T10:00:00+00:00",
+        "publish_context": "release-ci",
+        "release_context": "v3.18.0",
+        "doctor": {"ok": True, "warnings": [], "config_errors": []},
+        "marketplace": {},
+        "notarization_history": {"stats": {}, "entries": []},
+        "sparkle_benchmark_history": {"stats": {}, "entries": []},
+        "community_validation": {"ok": True, "packages": [], "trigger_suggestions": []},
+    }
+    html_text = build_doctor_full_html(document)
+    assert "Release CI snapshot" in html_text
+    assert "v3.18.0" in html_text
+
+
 def test_build_doctor_full_html_publish_site_banner():
     document = {
         "generated_at": "2026-06-18T10:00:00+00:00",

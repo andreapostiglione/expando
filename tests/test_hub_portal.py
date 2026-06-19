@@ -5,6 +5,7 @@ import pytest
 
 from expando.hub_marketplace import (
     DEFAULT_MARKETPLACE_URL,
+    build_hub_index_document,
     build_maintainer_hub_html,
     build_portal_site_html,
     build_publishable_portal_index,
@@ -140,11 +141,13 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     json_path = tmp_path / "hub" / "marketplace.json"
     health_html_path = tmp_path / "doctor-health.html"
     health_json_path = tmp_path / "hub" / "doctor-full.json"
+    hub_index_path = tmp_path / "hub" / "index.json"
     paths = publish_portal_site(
         html_path=html_path,
         json_path=json_path,
         health_html_path=health_html_path,
         health_json_path=health_json_path,
+        hub_index_json_path=hub_index_path,
     )
 
     assert paths["html"] == html_path
@@ -154,6 +157,7 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     assert "validation_json" in paths
     assert "health_html" in paths
     assert "health_json" in paths
+    assert "hub_index_json" in paths
     html = html_path.read_text(encoding="utf-8")
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     suggestions = paths["suggestions_html"].read_text(encoding="utf-8")
@@ -161,6 +165,7 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     assert "hub-maintainer.html" in html
     assert "hub-trigger-suggestions.html" in html
     assert "doctor-health.html" in html
+    assert "hub/index.json" in html
     assert "Pending" not in html
     assert len(payload["packages"]) == 1
     assert payload["packages"][0]["id"] == "social"
@@ -175,6 +180,9 @@ def test_publish_portal_site_writes_html_and_json(marketplace_file: Path, tmp_pa
     health_json = json.loads(paths["health_json"].read_text(encoding="utf-8"))
     assert health_json.get("publish_context") == "github-pages"
     assert "doctor" in health_json
+    hub_index = json.loads(paths["hub_index_json"].read_text(encoding="utf-8"))
+    assert len(hub_index["artifacts"]) == 3
+    assert hub_index["artifacts"][2]["id"] == "doctor-full"
     validation = json.loads(paths["validation_json"].read_text(encoding="utf-8"))
     assert "packages" in validation
     assert "trigger_suggestions" in validation
@@ -217,6 +225,80 @@ def test_build_portal_site_html_escapes_markup():
     assert "<script>" not in html
     assert "&lt;script&gt;" in html
     assert "A &amp; B" in html
+
+
+def test_publish_portal_site_skips_health_when_env_set(
+    marketplace_file: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    marketplace_file.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "packages": [
+                    {
+                        "id": "social",
+                        "name": "Social",
+                        "description": "Social snippets",
+                        "status": "approved",
+                    }
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    health_html_path = tmp_path / "doctor-health.html"
+    health_json_path = tmp_path / "hub" / "doctor-full.json"
+    health_html_path.write_text("<html>release snapshot</html>", encoding="utf-8")
+    health_json_path.parent.mkdir(parents=True, exist_ok=True)
+    health_json_path.write_text(
+        json.dumps(
+            {
+                "publish_context": "release-ci",
+                "release_context": "v3.18.0",
+                "generated_at": "2026-06-19T00:00:00+00:00",
+                "doctor": {"ok": True},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("EXPANDO_PUBLISH_SITE_SKIP_HEALTH", "1")
+    paths = publish_portal_site(
+        html_path=tmp_path / "hub-marketplace.html",
+        json_path=tmp_path / "hub" / "marketplace.json",
+        health_html_path=health_html_path,
+        health_json_path=health_json_path,
+        hub_index_json_path=tmp_path / "hub" / "index.json",
+    )
+    assert paths["health_html"].read_text(encoding="utf-8") == "<html>release snapshot</html>"
+    hub_index = json.loads(paths["hub_index_json"].read_text(encoding="utf-8"))
+    assert hub_index["artifacts"][2]["release_context"] == "v3.18.0"
+
+
+def test_build_hub_index_document_includes_health_metadata(tmp_path: Path):
+    health_json_path = tmp_path / "doctor-full.json"
+    health_json_path.write_text(
+        json.dumps(
+            {
+                "generated_at": "2026-06-19T08:00:00+00:00",
+                "publish_context": "release-ci",
+                "release_context": "v3.18.0",
+                "doctor": {"ok": True},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    document = build_hub_index_document(
+        marketplace_payload={"updated_at": "2026-06-19T07:00:00+00:00", "packages": [{"id": "a"}]},
+        validation_document={"generated_at": "2026-06-19T07:30:00+00:00", "ok": True},
+        health_json_path=health_json_path,
+    )
+    assert document["artifacts"][0]["package_count"] == 1
+    assert document["artifacts"][2]["release_context"] == "v3.18.0"
 
 
 def test_build_portal_site_html_includes_validation_badge():

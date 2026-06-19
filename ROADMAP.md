@@ -1,12 +1,12 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.17.0
+**Versione attuale:** v3.18.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
 ---
 
-## Stato attuale (baseline v3.17.0)
+## Stato attuale (baseline v3.18.0)
 
 | Area | Stato |
 |------|--------|
@@ -97,6 +97,9 @@
 | `doctor-health.html` + `hub/doctor-full.json` su GitHub Pages (`publish-site`) | ✓ v3.17.0 |
 | Link health dashboard da index/maintainer/marketplace | ✓ v3.17.0 |
 | CI smoke `publish-site` health export | ✓ v3.17.0 |
+| `hub/index.json` manifest su GitHub Pages (`publish-site`) | ✓ v3.18.0 |
+| Release CI sync `doctor-health.html` + `hub/doctor-full.json` su main | ✓ v3.18.0 |
+| Pages deploy preserva release health (`EXPANDO_PUBLISH_SITE_SKIP_HEALTH`) | ✓ v3.18.0 |
 
 ### Gap noti oggi
 
@@ -367,7 +370,12 @@ flowchart LR
 2. Link health dashboard da index, maintainer portal e marketplace
 3. CI smoke `publish-site` health export
 
-### Backlog (Sprint 27+)
+### Sprint 27 → v3.18.0 ✓
+1. `publish-site`: export `docs/hub/index.json` manifest (marketplace, validation, health)
+2. Release CI: sync release health docs su `main` + banner `release-ci`
+3. Pages deploy: `EXPANDO_PUBLISH_SITE_SKIP_HEALTH=1` preserva snapshot release
+
+### Backlog (Sprint 28+)
 - TBD
 
 ---

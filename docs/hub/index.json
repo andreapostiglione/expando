@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "generated_at": "2026-06-19T07:47:34+00:00",
+  "artifacts": [
+    {
+      "id": "marketplace",
+      "path": "hub/marketplace.json",
+      "title": "Hub Marketplace",
+      "updated_at": "2026-06-19T07:47:34+00:00",
+      "package_count": 3
+    },
+    {
+      "id": "community-validation",
+      "path": "hub/community-validation.json",
+      "title": "Community Validation",
+      "updated_at": "2026-06-19T07:47:34+00:00",
+      "ok": true
+    },
+    {
+      "id": "doctor-full",
+      "path": "hub/doctor-full.json",
+      "title": "Release Health",
+      "generated_at": "2026-06-19T07:47:34+00:00",
+      "publish_context": "github-pages",
+      "release_context": null,
+      "doctor_ok": false
+    }
+  ],
+  "pages": [
+    {
+      "id": "doctor-health",
+      "path": "doctor-health.html",
+      "title": "Health Dashboard"
+    },
+    {
+      "id": "hub-marketplace",
+      "path": "hub-marketplace.html",
+      "title": "Hub Marketplace"
+    },
+    {
+      "id": "hub-maintainer",
+      "path": "hub-maintainer.html",
+      "title": "Maintainer Portal"
+    },
+    {
+      "id": "hub-trigger-suggestions",
+      "path": "hub-trigger-suggestions.html",
+      "title": "Trigger Dashboard"
+    }
+  ]
+}

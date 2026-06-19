@@ -71,7 +71,7 @@ expando hub portal sync --dry-run
 expando hub portal sync
 ```
 
-`publish-site` writes `docs/hub-marketplace.html`, `docs/hub/marketplace.json`, `docs/hub-trigger-suggestions.html`, `docs/hub-maintainer.html`, `docs/hub/community-validation.json`, `docs/doctor-health.html`, and `docs/hub/doctor-full.json` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`). The marketplace page links to the maintainer portal, trigger dashboard, and health dashboard.
+`publish-site` writes `docs/hub-marketplace.html`, `docs/hub/marketplace.json`, `docs/hub-trigger-suggestions.html`, `docs/hub-maintainer.html`, `docs/hub/community-validation.json`, `docs/hub/index.json`, `docs/doctor-health.html`, and `docs/hub/doctor-full.json` for GitHub Pages (also regenerated in `.github/workflows/pages.yml`). Release CI syncs the signed-build health snapshot to `docs/` on `main`; Pages deploy sets `EXPANDO_PUBLISH_SITE_SKIP_HEALTH=1` so publish-site does not overwrite that release health JSON/HTML.
 
 ## Community packages (approved)
 

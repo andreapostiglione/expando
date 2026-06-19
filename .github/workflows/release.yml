@@ -138,6 +138,46 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update sparkle benchmark history for ${GITHUB_REF_NAME}"
           git push origin HEAD:main
 
+      - name: Sync release health docs to main
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp doctor-health.html /tmp/doctor-health-release.html
+          cp doctor-full.json /tmp/doctor-full-release.json
+          git fetch origin main
+          git switch -C main origin/main
+          mkdir -p docs/hub
+          RELEASE_TAG="$RELEASE_TAG" .venv/bin/python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          from expando.doctor_checks import (
+              annotate_release_health_document,
+              build_doctor_full_html,
+          )
+
+          release_tag = os.environ["RELEASE_TAG"]
+          document = json.loads(
+              Path("/tmp/doctor-full-release.json").read_text(encoding="utf-8")
+          )
+          annotated = annotate_release_health_document(document, release_tag=release_tag)
+          Path("docs/hub/doctor-full.json").write_text(
+              json.dumps(annotated, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+          Path("docs/doctor-health.html").write_text(
+              build_doctor_full_html(annotated),
+              encoding="utf-8",
+          )
+          PY
+          EXPANDO_PUBLISH_SITE_SKIP_HEALTH=1 .venv/bin/expando hub portal publish-site
+          git add docs/
+          git diff --staged --quiet || git commit -m "chore: sync release health docs for ${RELEASE_TAG}"
+          git push origin HEAD:main
+
       - name: Generate Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}

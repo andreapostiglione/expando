@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.17.0 | **Release:** v3.17.0 (doctor-health on Pages, doctor-full.json, CI publish-site smoke)
+**Versione:** 3.18.0 | **Release:** v3.18.0 (hub/index.json manifest, release health sync, Pages skip health)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.18.0** ✓ Sprint 27
+  - `hub/index.json` manifest su Pages
+  - Release CI sync health docs su main
+  - Pages preserva snapshot release (`SKIP_HEALTH`)
 - **v3.17.0** ✓ Sprint 26
   - `doctor-health.html` + `hub/doctor-full.json` su Pages
   - Link health dashboard da index/maintainer/marketplace
@@ -85,6 +89,6 @@
 - **v2.8.0** ✓ Sprint 7 (notarize-audit, E2E clipboard, hub review)
 - Vedi **[ROADMAP.md](ROADMAP.md)**
 
-## Prossimi item (Sprint 27)
+## Prossimi item (Sprint 28)
 
 - [ ] TBD — vedi ROADMAP.md

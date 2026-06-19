@@ -198,9 +198,9 @@
       }
     },
     {
-      "recorded_at": "2026-06-19T08:17:38+00:00",
-      "version": "3.26.0",
-      "tag": "v3.26.0",
+      "recorded_at": "2026-06-19T08:57:27+00:00",
+      "version": "3.26.1",
+      "tag": "v3.26.1",
       "warn_ms": 15000,
       "fail_ms": 30000,
       "slow": false,
@@ -210,11 +210,11 @@
         "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
         "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
         "framework_present": true,
-        "appcast_fetch_ms": 193.82,
+        "appcast_fetch_ms": 212.71,
         "helper_check_ms": null,
         "appcast_entries": 1,
-        "latest_version": "3.18.0",
-        "current_version": "3.26.0",
+        "latest_version": "3.26.0",
+        "current_version": "3.26.1",
         "update_available": false,
         "helper_slow": false,
         "helper_fail": false,
@@ -223,9 +223,9 @@
       }
     },
     {
-      "recorded_at": "2026-06-19T10:13:23+00:00",
-      "version": "3.26.2",
-      "tag": "v3.26.2",
+      "recorded_at": "2026-06-19T10:31:43+00:00",
+      "version": "3.26.3",
+      "tag": "v3.26.3",
       "warn_ms": 15000,
       "fail_ms": 30000,
       "slow": false,
@@ -235,11 +235,11 @@
         "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
         "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
         "framework_present": true,
-        "appcast_fetch_ms": 189.46,
+        "appcast_fetch_ms": 203.57,
         "helper_check_ms": null,
         "appcast_entries": 1,
-        "latest_version": "3.26.1",
-        "current_version": "3.26.2",
+        "latest_version": "3.26.2",
+        "current_version": "3.26.3",
         "update_available": false,
         "helper_slow": false,
         "helper_fail": false,
@@ -248,5 +248,5 @@
       }
     }
   ],
-  "updated_at": "2026-06-19T10:13:23+00:00"
+  "updated_at": "2026-06-19T10:31:43+00:00"
 }

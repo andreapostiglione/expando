@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-19T07:49:43+00:00",
+  "generated_at": "2026-06-19T08:17:39+00:00",
   "doctor": {
     "ok": true,
     "config_dir": "/Users/runner/Library/Application Support/expando",
@@ -12,7 +12,8 @@
     "config_errors": [],
     "warnings": [
       "Modalità dev: macOS autorizza «python3.12», non «Expando». Cerca Python o il terminale in Impostazioni → Privacy.",
-      "Impossibile verificare Monitoraggio input dal database TCC."
+      "Impossibile verificare Monitoraggio input dal database TCC.",
+      "No automatic backup found — consider `expando backup` or enable auto_backup."
     ],
     "permissions": {
       "accessibility": true,
@@ -23,20 +24,95 @@
       "mode": "dev",
       "grant_label": "python3.12",
       "grant_hint": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12"
+    },
+    "injection_probe": {
+      "ok": true,
+      "method": "clipboard",
+      "detail": "clipboard round-trip OK",
+      "skipped": false
+    },
+    "injection_degradation": {
+      "consecutive_failures": 0,
+      "warn_threshold": 3,
+      "disable_threshold": 10,
+      "auto_disable_enabled": false,
+      "should_warn": false,
+      "should_disable": false,
+      "last_success_at": null,
+      "last_failure_at": null
+    },
+    "safe_mode": null,
+    "repair": {
+      "running": false,
+      "pid": null,
+      "process_count": 0,
+      "stale_pid_file": false,
+      "orphan_processes": [],
+      "stale_locks": [],
+      "needs_repair": false
     }
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-19T07:49:43+00:00",
+    "generated_at": "2026-06-19T08:17:39+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
-    "approved_count": 3,
-    "community_count": 3,
+    "approved_count": 10,
+    "community_count": 10,
     "community_packages": [
+      {
+        "id": "devops-it",
+        "name": "DevOps IT",
+        "description": "Snippet DevOps, deploy e incident",
+        "author": "Community",
+        "status": "approved"
+      },
+      {
+        "id": "finance-it",
+        "name": "Finance IT",
+        "description": "Template finanza, fatture e report",
+        "author": "Community",
+        "status": "approved"
+      },
+      {
+        "id": "hr-it",
+        "name": "HR IT",
+        "description": "Comunicazioni HR e onboarding",
+        "author": "Community",
+        "status": "approved"
+      },
+      {
+        "id": "legal-en",
+        "name": "Legal EN",
+        "description": "Legal templates in English",
+        "author": "Community",
+        "status": "approved"
+      },
+      {
+        "id": "medical-en",
+        "name": "Medical EN",
+        "description": "Medical correspondence in English",
+        "author": "Community",
+        "status": "approved"
+      },
       {
         "id": "meeting-it",
         "name": "Meeting IT",
         "description": "Template per inviti, agenda e follow-up riunioni",
+        "author": "Community",
+        "status": "approved"
+      },
+      {
+        "id": "startup-it",
+        "name": "Startup IT",
+        "description": "Pitch, investor update e product",
+        "author": "Community",
+        "status": "approved"
+      },
+      {
+        "id": "travel-it",
+        "name": "Travel IT",
+        "description": "Viaggi, prenotazioni e itinerari",
         "author": "Community",
         "status": "approved"
       },
@@ -59,14 +135,24 @@
       "sync": {
         "added": 0,
         "updated": 0,
-        "unchanged": 3
+        "unchanged": 10
       },
-      "local_total": 3,
-      "local_approved": 3,
-      "remote_approved": 3
+      "local_total": 10,
+      "local_approved": 10,
+      "remote_approved": 10
     },
     "pending_diffs": [],
     "pending_sync_gaps": []
+  },
+  "crash_loop": {
+    "path": "/Users/runner/Library/Application Support/expando/crash-loop.json",
+    "stats": {
+      "total": 0,
+      "crash_count": 0,
+      "start_count": 0,
+      "trend_sparkline": ""
+    },
+    "entries": []
   },
   "notarization_history": {
     "path": "/Users/runner/Library/Application Support/expando/notarize-audit-history.json",
@@ -75,12 +161,12 @@
       "ok": 1,
       "failed": 0,
       "last_ok": true,
-      "last_recorded_at": "2026-06-19T07:49:41+00:00",
+      "last_recorded_at": "2026-06-19T08:17:37+00:00",
       "recent_ok_rate": 1.0
     },
     "entries": [
       {
-        "recorded_at": "2026-06-19T07:49:41+00:00",
+        "recorded_at": "2026-06-19T08:17:37+00:00",
         "ok": true,
         "summary": {
           "pass": 9,
@@ -158,12 +244,12 @@
     "path": "/Users/runner/work/expando/expando/sparkle-benchmark-history.json",
     "version": 1,
     "stats": {
-      "total": 8,
+      "total": 9,
       "slow": 0,
       "failed": 0,
       "last_helper_ms": null,
-      "last_version": "3.18.0",
-      "last_recorded_at": "2026-06-19T07:49:42+00:00",
+      "last_version": "3.26.0",
+      "last_recorded_at": "2026-06-19T08:17:38+00:00",
       "trend_min_ms": null,
       "trend_max_ms": null,
       "trend_avg_ms": null,
@@ -365,18 +451,92 @@
           "warn_ms": 15000,
           "fail_ms": 30000
         }
+      },
+      {
+        "recorded_at": "2026-06-19T08:17:38+00:00",
+        "version": "3.26.0",
+        "tag": "v3.26.0",
+        "warn_ms": 15000,
+        "fail_ms": 30000,
+        "slow": false,
+        "failed": false,
+        "benchmark": {
+          "sparkle_available": true,
+          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
+          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
+          "framework_present": true,
+          "appcast_fetch_ms": 193.82,
+          "helper_check_ms": null,
+          "appcast_entries": 1,
+          "latest_version": "3.18.0",
+          "current_version": "3.26.0",
+          "update_available": false,
+          "helper_slow": false,
+          "helper_fail": false,
+          "warn_ms": 15000,
+          "fail_ms": 30000
+        }
       }
     ]
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-19T07:49:43+00:00",
+    "generated_at": "2026-06-19T08:17:39+00:00",
     "ok": true,
     "packages": [
+      {
+        "package_id": "devops-it",
+        "ok": true,
+        "match_count": 2,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "package_id": "finance-it",
+        "ok": true,
+        "match_count": 2,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "package_id": "hr-it",
+        "ok": true,
+        "match_count": 2,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "package_id": "legal-en",
+        "ok": true,
+        "match_count": 2,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "package_id": "medical-en",
+        "ok": true,
+        "match_count": 2,
+        "errors": [],
+        "warnings": []
+      },
       {
         "package_id": "meeting-it",
         "ok": true,
         "match_count": 3,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "package_id": "startup-it",
+        "ok": true,
+        "match_count": 2,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "package_id": "travel-it",
+        "ok": true,
+        "match_count": 2,
         "errors": [],
         "warnings": []
       },
@@ -417,5 +577,5 @@
     ]
   },
   "publish_context": "release-ci",
-  "release_context": "v3.18.0"
+  "release_context": "v3.26.0"
 }

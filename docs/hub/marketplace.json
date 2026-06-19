@@ -1,8 +1,68 @@
 {
   "version": 1,
   "description": "Community packages queue. status: pending | approved | rejected",
-  "updated_at": "2026-06-19T07:49:47+00:00",
+  "updated_at": "2026-06-19T08:17:43+00:00",
   "packages": [
+    {
+      "id": "devops-it",
+      "name": "DevOps IT",
+      "description": "Snippet DevOps, deploy e incident",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
+      "reviewer": "maintainer"
+    },
+    {
+      "id": "finance-it",
+      "name": "Finance IT",
+      "description": "Template finanza, fatture e report",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
+      "reviewer": "maintainer"
+    },
+    {
+      "id": "hr-it",
+      "name": "HR IT",
+      "description": "Comunicazioni HR e onboarding",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
+      "reviewer": "maintainer"
+    },
+    {
+      "id": "legal-en",
+      "name": "Legal EN",
+      "description": "Legal templates in English",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
+      "reviewer": "maintainer"
+    },
+    {
+      "id": "medical-en",
+      "name": "Medical EN",
+      "description": "Medical correspondence in English",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
+      "reviewer": "maintainer"
+    },
     {
       "id": "meeting-it",
       "name": "Meeting IT",
@@ -15,6 +75,30 @@
       ],
       "status": "approved",
       "reviewed_at": "2026-06-18T06:00:00+00:00",
+      "reviewer": "maintainer"
+    },
+    {
+      "id": "startup-it",
+      "name": "Startup IT",
+      "description": "Pitch, investor update e product",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
+      "reviewer": "maintainer"
+    },
+    {
+      "id": "travel-it",
+      "name": "Travel IT",
+      "description": "Viaggi, prenotazioni e itinerari",
+      "author": "Community",
+      "tags": [
+        "community"
+      ],
+      "status": "approved",
+      "reviewed_at": "2026-06-19T12:00:00+00:00",
       "reviewer": "maintainer"
     },
     {

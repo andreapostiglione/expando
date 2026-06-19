@@ -90,13 +90,13 @@
   <div class="wrap">
     <h1>Expando Health Dashboard</h1>
     <p class="lead">Snapshot from <code>expando doctor --full-html</code>: daemon, marketplace, release histories, and community validation.</p>
-    <p class="meta">Release CI snapshot from signed build <code>v3.18.0</code> (post-sparkle doctor).</p>
-    <p class="meta">Generated 2026-06-19T07:49:43+00:00 · Doctor <span class="badge ok">OK</span> · Community <span class="badge ok">OK</span></p>
+    <p class="meta">Release CI snapshot from signed build <code>v3.26.0</code> (post-sparkle doctor).</p>
+    <p class="meta">Generated 2026-06-19T08:17:39+00:00 · Doctor <span class="badge ok">OK</span> · Community <span class="badge ok">OK</span></p>
 
     <div class="grid">
       <div class="card"><strong>no</strong><span>Daemon running</span></div>
       <div class="card"><strong>10</strong><span>Loaded snippets</span></div>
-      <div class="card"><strong>3</strong><span>Community packages</span></div>
+      <div class="card"><strong>10</strong><span>Community packages</span></div>
       <div class="card"><strong>2</strong><span>Trigger similarity warnings</span></div>
     </div>
 
@@ -109,10 +109,13 @@
         <tr><th>Input monitoring</th><td>None</td></tr>
         <tr><th>Injection ready</th><td>True</td></tr>
         <tr><th>Runtime</th><td>dev</td></tr>
+        <tr><th>Grant target</th><td><code>python3.12</code></td></tr>
+        <tr><th>Grant hint</th><td>/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12</td></tr>
+        <tr><th>Settings</th><td><a href="x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility">Accessibility</a> · <a href="x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent">Input Monitoring</a></td></tr>
       </tbody>
     </table>
     <h3>Warnings</h3>
-    <ul><li>Modalità dev: macOS autorizza «python3.12», non «Expando». Cerca Python o il terminale in Impostazioni → Privacy.</li><li>Impossibile verificare Monitoraggio input dal database TCC.</li></ul>
+    <ul><li>Modalità dev: macOS autorizza «python3.12», non «Expando». Cerca Python o il terminale in Impostazioni → Privacy.</li><li>Impossibile verificare Monitoraggio input dal database TCC.</li><li>No automatic backup found — consider `expando backup` or enable auto_backup.</li></ul>
     <h3>Config errors</h3>
     <ul><li class="empty">None</li></ul>
 
@@ -120,13 +123,20 @@
     <table>
       <tbody>
         <tr><th>Remote URL</th><td>https://andreapostiglione.github.io/expando/hub/marketplace.json</td></tr>
-        <tr><th>Approved</th><td>3</td></tr>
+        <tr><th>Approved</th><td>10</td></tr>
         <tr><th>Pending diffs</th><td>0</td></tr>
       </tbody>
     </table>
     <table>
       <thead><tr><th>Community package</th><th>Name</th></tr></thead>
-      <tbody><tr><td><code>meeting-it</code></td><td>Meeting IT</td></tr>
+      <tbody><tr><td><code>devops-it</code></td><td>DevOps IT</td></tr>
+<tr><td><code>finance-it</code></td><td>Finance IT</td></tr>
+<tr><td><code>hr-it</code></td><td>HR IT</td></tr>
+<tr><td><code>legal-en</code></td><td>Legal EN</td></tr>
+<tr><td><code>medical-en</code></td><td>Medical EN</td></tr>
+<tr><td><code>meeting-it</code></td><td>Meeting IT</td></tr>
+<tr><td><code>startup-it</code></td><td>Startup IT</td></tr>
+<tr><td><code>travel-it</code></td><td>Travel IT</td></tr>
 <tr><td><code>typing-it</code></td><td>Typing IT</td></tr>
 <tr><td><code>writing-it</code></td><td>Writing IT</td></tr></tbody>
     </table>
@@ -142,30 +152,45 @@
 </svg></div>
     <table>
       <thead><tr><th>Recorded</th><th>Status</th><th>Pass</th><th>Warn</th><th>Fail</th></tr></thead>
-      <tbody><tr class="ok"><td>2026-06-19T07:49:41+00:00</td><td>OK</td><td>9</td><td>2</td><td>0</td></tr></tbody>
+      <tbody><tr class="ok"><td>2026-06-19T08:17:37+00:00</td><td>OK</td><td>9</td><td>2</td><td>0</td></tr></tbody>
     </table>
 
     <h2>Sparkle benchmark history</h2>
-    <p class="meta">Runs: 8 · Trend: <code></code></p>
+    <p class="meta">Runs: 9 · Trend: <code></code></p>
     <div class="chart"><svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><text x="240" y="80" text-anchor="middle" fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="12">No benchmark data</text></svg></div>
     <table>
       <thead><tr><th>Recorded</th><th>Version</th><th>Helper ms</th><th>Slow</th></tr></thead>
-      <tbody><tr class="ok"><td>2026-06-18T08:17:05+00:00</td><td>3.8.0</td><td>n/a</td><td>no</td></tr>
-<tr class="ok"><td>2026-06-18T08:21:57+00:00</td><td>3.9.0</td><td>n/a</td><td>no</td></tr>
+      <tbody><tr class="ok"><td>2026-06-18T08:21:57+00:00</td><td>3.9.0</td><td>n/a</td><td>no</td></tr>
 <tr class="ok"><td>2026-06-18T08:59:36+00:00</td><td>3.11.0</td><td>n/a</td><td>no</td></tr>
 <tr class="ok"><td>2026-06-18T09:19:15+00:00</td><td>3.13.0</td><td>n/a</td><td>no</td></tr>
 <tr class="ok"><td>2026-06-18T10:56:04+00:00</td><td>3.15.0</td><td>n/a</td><td>no</td></tr>
 <tr class="ok"><td>2026-06-18T17:06:05+00:00</td><td>3.16.0</td><td>n/a</td><td>no</td></tr>
 <tr class="ok"><td>2026-06-19T07:34:36+00:00</td><td>3.17.0</td><td>n/a</td><td>no</td></tr>
-<tr class="ok"><td>2026-06-19T07:49:42+00:00</td><td>3.18.0</td><td>n/a</td><td>no</td></tr></tbody>
+<tr class="ok"><td>2026-06-19T07:49:42+00:00</td><td>3.18.0</td><td>n/a</td><td>no</td></tr>
+<tr class="ok"><td>2026-06-19T08:17:38+00:00</td><td>3.26.0</td><td>n/a</td><td>no</td></tr></tbody>
+    </table>
+
+    <h2>Crash loop history</h2>
+    <p class="meta">Events: 0 · Crashes: 0 · Trend: <code></code></p>
+    <div class="chart"><svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160"><text x="240" y="80" text-anchor="middle" fill="#9aa3b2" font-family="system-ui,sans-serif" font-size="12">No crash loop history</text></svg></div>
+    <table>
+      <thead><tr><th>Recorded</th><th>Event</th><th>Reason</th></tr></thead>
+      <tbody><tr><td colspan="3" class="empty">No crash loop history</td></tr></tbody>
     </table>
 
     <h2>Community validation</h2>
-    <p class="meta">Packages validated: 3 · Duplicates: 0 · Official collisions: 0 · Similarity warnings: 2</p>
+    <p class="meta">Packages validated: 10 · Duplicates: 0 · Official collisions: 0 · Similarity warnings: 2</p>
     <h3>Packages</h3>
     <table>
       <thead><tr><th>Package</th><th>Snippets</th><th>Status</th></tr></thead>
-      <tbody><tr class="ok"><td><code>meeting-it</code></td><td>3</td><td>✓</td></tr>
+      <tbody><tr class="ok"><td><code>devops-it</code></td><td>2</td><td>✓</td></tr>
+<tr class="ok"><td><code>finance-it</code></td><td>2</td><td>✓</td></tr>
+<tr class="ok"><td><code>hr-it</code></td><td>2</td><td>✓</td></tr>
+<tr class="ok"><td><code>legal-en</code></td><td>2</td><td>✓</td></tr>
+<tr class="ok"><td><code>medical-en</code></td><td>2</td><td>✓</td></tr>
+<tr class="ok"><td><code>meeting-it</code></td><td>3</td><td>✓</td></tr>
+<tr class="ok"><td><code>startup-it</code></td><td>2</td><td>✓</td></tr>
+<tr class="ok"><td><code>travel-it</code></td><td>2</td><td>✓</td></tr>
 <tr class="ok"><td><code>typing-it</code></td><td>4</td><td>✓</td></tr>
 <tr class="ok"><td><code>writing-it</code></td><td>3</td><td>✓</td></tr></tbody>
     </table>

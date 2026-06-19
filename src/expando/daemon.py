@@ -21,7 +21,7 @@ def is_running(config_dir: Path) -> tuple[bool, int | None]:
         return False, None
     try:
         pid = int(path.read_text().strip())
-    except ValueError:
+    except (ValueError, FileNotFoundError):
         return False, None
     try:
         os.kill(pid, 0)

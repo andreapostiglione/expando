@@ -4,14 +4,10 @@ import html
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .benchmark import (
-    SparkleBenchmarkResult,
-    sparkle_benchmark_result_to_dict,
-    sparkle_helper_latency_fail,
-    sparkle_helper_latency_slow,
-)
+if TYPE_CHECKING:
+    from .benchmark import SparkleBenchmarkResult
 
 HISTORY_VERSION = 1
 MAX_HISTORY_ENTRIES = 50
@@ -52,6 +48,12 @@ def build_sparkle_benchmark_entry(
     fail_ms: int | None = None,
     tag: str | None = None,
 ) -> dict[str, Any]:
+    from .benchmark import (
+        sparkle_benchmark_result_to_dict,
+        sparkle_helper_latency_fail,
+        sparkle_helper_latency_slow,
+    )
+
     slow = sparkle_helper_latency_slow(result.helper_check_ms, warn_ms)
     failed = sparkle_helper_latency_fail(result.helper_check_ms, fail_ms)
     return {

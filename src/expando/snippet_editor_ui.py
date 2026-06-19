@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import platform
 from pathlib import Path
-import tkinter as tk
-from tkinter import messagebox, ttk
 from typing import Callable
 
 from .fuzzy import fuzzy_filter_search_items
+
+
+def _import_tk():
+    import tkinter as tk
+    from tkinter import messagebox, ttk
+
+    return tk, ttk, messagebox
 
 
 class SnippetEditor:
@@ -24,6 +29,11 @@ class SnippetEditor:
         self.on_delete = on_delete
         self.result: dict[str, str] | None = None
         self._visible: list[dict[str, str]] = []
+        tk, ttk, messagebox = _import_tk()
+        self._tk = tk
+        self._ttk = ttk
+        self._messagebox = messagebox
+
         self.root = tk.Tk()
         self._configure_style()
         self.root.title("Expando — Snippet editor")
@@ -39,6 +49,9 @@ class SnippetEditor:
         self.root.option_add("*Foreground", "#1d1d1f")
 
     def _build(self) -> None:
+        tk = self._tk
+        ttk = self._ttk
+
         container = ttk.Frame(self.root, padding=12)
         container.pack(fill=tk.BOTH, expand=True)
 
@@ -148,6 +161,7 @@ class SnippetEditor:
         return fuzzy_filter_search_items(query, self.items)
 
     def _refresh_list(self) -> None:
+        tk = self._tk
         self.listbox.delete(0, tk.END)
         self._visible = self._filtered_items()
         for item in self._visible:
@@ -168,6 +182,7 @@ class SnippetEditor:
         return self._visible[selection[0]]
 
     def _clear_form(self) -> None:
+        tk = self._tk
         self._current_id = None
         self.trigger_var.set("")
         self.if_app_var.set("")
@@ -177,6 +192,7 @@ class SnippetEditor:
         self._update_preview()
 
     def _load_selection(self) -> None:
+        tk = self._tk
         item = self._selected_item()
         if not item:
             self._clear_form()
@@ -203,6 +219,7 @@ class SnippetEditor:
         self._update_preview()
 
     def _update_preview(self) -> None:
+        tk = self._tk
         preview = self.replace_text.get("1.0", tk.END).strip()
         self.preview_text.configure(state=tk.NORMAL)
         self.preview_text.delete("1.0", tk.END)
@@ -210,6 +227,7 @@ class SnippetEditor:
         self.preview_text.configure(state=tk.DISABLED)
 
     def _payload(self) -> dict[str, str]:
+        tk = self._tk
         return {
             "id": self._current_id or "",
             "trigger": self.trigger_var.get().strip(),
@@ -220,6 +238,7 @@ class SnippetEditor:
         }
 
     def _new_snippet(self) -> None:
+        tk = self._tk
         self._current_id = None
         self.trigger_var.set(":nuovo")
         self.if_app_var.set("")
@@ -233,6 +252,7 @@ class SnippetEditor:
         self._update_preview()
 
     def _save_snippet(self) -> None:
+        messagebox = self._messagebox
         payload = self._payload()
         if not payload["trigger"]:
             messagebox.showerror("Expando", "Il trigger non può essere vuoto.")
@@ -251,6 +271,7 @@ class SnippetEditor:
         self._refresh_list()
 
     def _delete_snippet(self) -> None:
+        messagebox = self._messagebox
         if not self._current_id:
             messagebox.showinfo("Expando", "Seleziona uno snippet da eliminare.")
             return

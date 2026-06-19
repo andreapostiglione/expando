@@ -79,17 +79,26 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self._sync_enabled_label()
 
         def search_snippets(self, _sender) -> None:
-            threading.Thread(target=self.service.open_search, daemon=True).start()
+            try:
+                self.service.open_search()
+            except Exception as exc:
+                self._notify_action_failed("search", exc)
 
         def browse_packages(self, _sender) -> None:
-            threading.Thread(target=self._browse_packages, daemon=True).start()
+            try:
+                self._browse_packages()
+            except Exception as exc:
+                self._notify_action_failed("hub", exc)
 
         def _browse_packages(self) -> None:
             from .hub import hub_packages_for_picker, install_hub_package
             from .ui_bridge import show_search_picker
 
             picked = show_search_picker(hub_packages_for_picker(self.config_dir))
-            if not picked or picked.get("installed") == "1":
+            if not picked:
+                rumps.notification("Expando", "", t("menubar.ui_failed"))
+                return
+            if picked.get("installed") == "1":
                 return
             package_id = picked.get("package_id") or picked.get("trigger")
             if not package_id:
@@ -110,13 +119,26 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 )
 
         def edit_snippets(self, _sender) -> None:
-            threading.Thread(target=self._open_snippet_editor, daemon=True).start()
+            try:
+                self._open_snippet_editor()
+            except Exception as exc:
+                self._notify_action_failed("editor", exc)
 
         def _open_snippet_editor(self) -> None:
             from .ui_bridge import show_snippet_editor
 
-            show_snippet_editor(str(self.config_dir))
+            result = show_snippet_editor(str(self.config_dir))
+            if result is None:
+                rumps.notification("Expando", "", t("menubar.ui_failed"))
+                return
             self.service.apply_config_reload()
+
+        def _notify_action_failed(self, action: str, exc: Exception) -> None:
+            rumps.notification(
+                "Expando",
+                "",
+                tf("menubar.action_failed", action=action, error=exc),
+            )
 
         def backup_config(self, _sender) -> None:
             threading.Thread(target=self._backup_config, daemon=True).start()

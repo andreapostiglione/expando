@@ -1,22 +1,19 @@
 from __future__ import annotations
 
 import objc
-from Foundation import NSControlTextDidChangeNotification, NSNotificationCenter, NSObject
+from Foundation import NSNotificationCenter, NSObject
 from AppKit import (
     NSAlert,
     NSAlertFirstButtonReturn,
-    NSApplication,
-    NSApplicationActivationPolicyAccessory,
     NSBackingStoreBuffered,
     NSBezelBorder,
     NSButton,
+    NSControlTextDidChangeNotification,
     NSMakeRect,
     NSScrollView,
     NSTableView,
     NSTextField,
     NSTextView,
-    NSViewHeightSizable,
-    NSViewWidthSizable,
     NSWindow,
     NSWindowStyleMaskClosable,
     NSWindowStyleMaskTitled,
@@ -24,14 +21,7 @@ from AppKit import (
 from pathlib import Path
 from typing import Callable
 
-
-def _run_appkit_app(builder) -> dict[str, str] | None:
-    app = NSApplication.sharedApplication()
-    app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
-    controller = builder()
-    app.activateIgnoringOtherApps_(True)
-    app.run()
-    return controller.result
+from .ui_appkit_runtime import close_appkit_session, run_appkit_session
 
 
 class _SnippetEditorController(NSObject):
@@ -179,7 +169,7 @@ class _SnippetEditorController(NSObject):
         self.table_view.reloadData()
 
     def close_(self, _sender):
-        NSApplication.sharedApplication().terminate_(None)
+        close_appkit_session(self)
 
     def windowShouldClose_(self, _sender):
         self.close_(None)
@@ -241,6 +231,7 @@ def run_snippet_editor(
         )
         window.setTitle_("Expando — Snippet editor")
         window.setDelegate_(controller)
+        controller.window = window
 
         content = window.contentView()
         search = NSTextField.alloc().initWithFrame_(NSMakeRect(16, 672, 888, 28))
@@ -422,4 +413,4 @@ def run_snippet_editor(
             controller._load_selection()
         return controller
 
-    return _run_appkit_app(builder)
+    return run_appkit_session(builder)

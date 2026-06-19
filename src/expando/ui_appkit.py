@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import objc
-from Foundation import NSControlTextDidChangeNotification, NSNotificationCenter, NSObject
+from Foundation import NSNotificationCenter, NSObject
 from AppKit import (
     NSAlert,
     NSAlertFirstButtonReturn,
-    NSAlertSecondButtonReturn,
     NSApplication,
     NSApplicationActivationPolicyAccessory,
     NSBackingStoreBuffered,
     NSBezelBorder,
     NSButton,
+    NSControlTextDidChangeNotification,
     NSMakeRect,
     NSScrollView,
     NSSearchField,
@@ -18,21 +18,13 @@ from AppKit import (
     NSTableViewSolidHorizontalGridLineMask,
     NSTextField,
     NSTextView,
-    NSViewHeightSizable,
-    NSViewWidthSizable,
+    NSView,
     NSWindow,
     NSWindowStyleMaskClosable,
     NSWindowStyleMaskTitled,
 )
 
-
-def _run_appkit_app(builder) -> dict[str, str] | None:
-    app = NSApplication.sharedApplication()
-    app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
-    controller = builder()
-    app.activateIgnoringOtherApps_(True)
-    app.run()
-    return controller.result
+from .ui_appkit_runtime import close_appkit_session, run_appkit_session
 
 
 class _SearchController(NSObject):
@@ -43,6 +35,7 @@ class _SearchController(NSObject):
         self.items = items
         self.visible = list(items)
         self.result = None
+        self.window = None
         return self
 
     def numberOfRowsInTableView_(self, _table_view):
@@ -51,6 +44,9 @@ class _SearchController(NSObject):
     def tableView_objectValueForTableColumn_row_(self, _table_view, _column, row):
         item = self.visible[row]
         return item.get("label", item.get("trigger", ""))
+
+    def tableViewSelectionDidChange_(self, _notification):
+        self._update_preview()
 
     def searchChanged_(self, notification):
         sender = notification.object()
@@ -61,9 +57,6 @@ class _SearchController(NSObject):
         self.table_view.reloadData()
         if self.visible:
             self.table_view.selectRowIndexes_byExtendingSelection_(0, False)
-        self._update_preview()
-
-    def tableSelectionChanged_(self, _notification):
         self._update_preview()
 
     def _selected_item(self):
@@ -88,11 +81,11 @@ class _SearchController(NSObject):
                 self.result["package_id"] = item["package_id"]
             if "installed" in item:
                 self.result["installed"] = item["installed"]
-        NSApplication.sharedApplication().terminate_(None)
+        close_appkit_session(self)
 
     def cancel_(self, _sender):
         self.result = None
-        NSApplication.sharedApplication().terminate_(None)
+        close_appkit_session(self)
 
     def windowShouldClose_(self, _sender):
         self.cancel_(None)
@@ -111,6 +104,7 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
     )
     window.setTitle_("Expando")
     window.setDelegate_(controller)
+    controller.window = window
 
     content = window.contentView()
     search = NSSearchField.alloc().initWithFrame_(NSMakeRect(16, 372, 688, 28))
@@ -159,8 +153,6 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
     insert_button.setAction_("accept:")
     content.addSubview_(insert_button)
 
-    window.center()
-    window.makeKeyAndOrderFront_(None)
     if controller.visible:
         table.selectRowIndexes_byExtendingSelection_(0, False)
     controller._update_preview()
@@ -168,7 +160,7 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
 
 
 def run_search_picker(items: list[dict[str, str]]) -> dict[str, str] | None:
-    return _run_appkit_app(lambda: _build_search_controller(items))
+    return run_appkit_session(lambda: _build_search_controller(items))
 
 
 def run_form_dialog(fields: list[dict[str, str]]) -> dict[str, str] | None:

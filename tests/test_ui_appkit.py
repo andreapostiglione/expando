@@ -12,3 +12,13 @@ def test_brand_asset_logo_exists() -> None:
 
     assert brand_asset_path("logo.png") is not None
     assert brand_asset_path("menubar-icon.png") is not None
+
+
+def test_build_search_controller_does_not_raise() -> None:
+    from expando.ui_appkit import _build_search_controller
+
+    controller = _build_search_controller(
+        [{"id": "0", "trigger": ":claude", "label": ":claude", "preview": "claude"}]
+    )
+    assert controller.window is not None
+    assert controller.table_view.numberOfRows() == 1

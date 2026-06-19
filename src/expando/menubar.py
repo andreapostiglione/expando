@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from .brand_assets import brand_asset_path
 from .i18n import t, tf
+from .ui_state import set_ui_active
 
 if TYPE_CHECKING:
     from .listener import KeyboardService
@@ -89,12 +90,16 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 self.service.open_search()
             except Exception as exc:
                 self._notify_action_failed("search", exc)
+            finally:
+                set_ui_active(False)
 
         def browse_packages(self, _sender) -> None:
             try:
                 self._browse_packages()
             except Exception as exc:
                 self._notify_action_failed("hub", exc)
+            finally:
+                set_ui_active(False)
 
         def _browse_packages(self) -> None:
             from .hub import hub_packages_for_picker, install_hub_package
@@ -128,6 +133,8 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 self._open_snippet_editor()
             except Exception as exc:
                 self._notify_action_failed("editor", exc)
+            finally:
+                set_ui_active(False)
 
         def _open_snippet_editor(self) -> None:
             from .ui_bridge import show_snippet_editor

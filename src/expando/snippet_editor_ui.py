@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import logging
 import platform
 from pathlib import Path
 from typing import Callable
-
-logger = logging.getLogger(__name__)
 
 from .fuzzy import fuzzy_filter_search_items
 
@@ -328,20 +325,17 @@ def run_snippet_editor(
     config_dir: Path | None = None,
 ) -> dict[str, str] | None:
     if _use_appkit():
-        try:
-            from .snippet_editor_appkit import run_snippet_editor as appkit_editor
+        from .snippet_editor_appkit import run_snippet_editor as appkit_editor
 
-            return appkit_editor(
-                items,
-                on_save=on_save,
-                on_create=on_create,
-                on_delete=on_delete,
-                reload_items=reload_items,
-                match_files=match_files,
-                config_dir=config_dir,
-            )
-        except Exception as exc:
-            logger.warning("AppKit snippet editor unavailable, falling back to tkinter: %s", exc)
+        return appkit_editor(
+            items,
+            on_save=on_save,
+            on_create=on_create,
+            on_delete=on_delete,
+            reload_items=reload_items,
+            match_files=match_files,
+            config_dir=config_dir,
+        )
     editor = SnippetEditor(
         items,
         on_save=on_save,

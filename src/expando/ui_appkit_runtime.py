@@ -1,6 +1,25 @@
 from __future__ import annotations
 
-from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
+from AppKit import (
+    NSApplication,
+    NSApplicationActivationPolicyAccessory,
+    NSRunContinuesResponse,
+)
+from Foundation import NSIndexSet
+
+
+def select_first_table_row(table) -> None:
+    if table.numberOfRows() > 0:
+        table.selectRowIndexes_byExtendingSelection_(
+            NSIndexSet.indexSetWithIndex_(0),
+            False,
+        )
+
+
+def set_text_view_string(text_view, value: str) -> None:
+    text_view.setEditable_(True)
+    text_view.setString_(value)
+    text_view.setEditable_(False)
 
 
 def run_appkit_session(builder) -> object | None:
@@ -12,7 +31,12 @@ def run_appkit_session(builder) -> object | None:
     window.makeKeyAndOrderFront_(None)
 
     if app.isRunning():
-        app.runModalForWindow_(window)
+        session = app.beginModalSessionForWindow_(window)
+        try:
+            while app.runModalSession_(session) == NSRunContinuesResponse:
+                pass
+        finally:
+            app.endModalSession_(session)
     else:
         app.run()
     return controller.result

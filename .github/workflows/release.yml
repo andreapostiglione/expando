@@ -203,12 +203,18 @@ jobs:
           generate_release_notes: true
 
       - name: Open Homebrew tap PR
-        if: success()
+        if: success() && secrets.HOMEBREW_TAP_TOKEN != ''
         env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           chmod +x scripts/push-homebrew-tap-pr.sh
+          gh auth setup-git
           ./scripts/push-homebrew-tap-pr.sh Expando.dmg
+
+      - name: Homebrew tap PR (manual)
+        if: success() && secrets.HOMEBREW_TAP_TOKEN == ''
+        run: |
+          echo "::notice title=Homebrew tap::HOMEBREW_TAP_TOKEN not configured — merge homebrew-tap PR manually or add repo secret."
 
       - name: Update appcast on main
         run: |

@@ -202,19 +202,18 @@ jobs:
             homebrew-cask-sha256.txt
           generate_release_notes: true
 
-      - name: Open Homebrew tap PR
-        if: success() && secrets.HOMEBREW_TAP_TOKEN != ''
+      - name: Homebrew tap PR
         env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          chmod +x scripts/push-homebrew-tap-pr.sh
-          gh auth setup-git
-          ./scripts/push-homebrew-tap-pr.sh Expando.dmg
-
-      - name: Homebrew tap PR (manual)
-        if: success() && secrets.HOMEBREW_TAP_TOKEN == ''
-        run: |
-          echo "::notice title=Homebrew tap::HOMEBREW_TAP_TOKEN not configured — merge homebrew-tap PR manually or add repo secret."
+          if [[ -n "${HOMEBREW_TAP_TOKEN}" ]]; then
+            chmod +x scripts/push-homebrew-tap-pr.sh
+            gh auth setup-git
+            ./scripts/push-homebrew-tap-pr.sh Expando.dmg
+          else
+            echo "::notice title=Homebrew tap::HOMEBREW_TAP_TOKEN not configured — merge homebrew-tap PR manually or add repo secret."
+          fi
 
       - name: Update appcast on main
         run: |

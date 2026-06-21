@@ -4,7 +4,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DMG="${1:-$ROOT/Expando.dmg}"
 TAP_REPO="${EXPANDO_HOMEBREW_TAP_REPO:-andreapostiglione/homebrew-tap}"
-TAP_BRANCH="${EXPANDO_HOMEBREW_TAP_BRANCH:-main}"
+TAP_BRANCH="${EXPANDO_HOMEBREW_TAP_BRANCH:-}"
+
+if [[ -z "$TAP_BRANCH" ]]; then
+  TAP_BRANCH="$(gh api "repos/${TAP_REPO}" --jq '.default_branch' 2>/dev/null || true)"
+fi
+TAP_BRANCH="${TAP_BRANCH:-master}"
 
 if [[ ! -f "$DMG" ]]; then
   echo "DMG not found: $DMG" >&2

@@ -41,17 +41,30 @@ class ConfigReloader(FileSystemEventHandler):
     def __init__(self, on_reload: Callable[[], None]) -> None:
         self._on_reload = on_reload
         self._debounce = 0.3
-        self._last_reload = 0.0
+        self._lock = threading.Lock()
+        self._timer: threading.Timer | None = None
+
+    def cancel(self) -> None:
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+                self._timer = None
 
     def on_any_event(self, event) -> None:
         if event.is_directory:
             return
         if not str(event.src_path).endswith((".yml", ".yaml")):
             return
-        now = time.time()
-        if now - self._last_reload < self._debounce:
-            return
-        self._last_reload = now
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+            self._timer = threading.Timer(self._debounce, self._run_reload)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _run_reload(self) -> None:
+        with self._lock:
+            self._timer = None
         try:
             self._on_reload()
         except Exception:
@@ -65,11 +78,13 @@ class KeyboardService:
         self.on_toggle: Callable[[], None] | None = None
         self._listener: Listener | None = None
         self._observer: Observer | None = None
+        self._reload_handler: ConfigReloader | None = None
         self._toggle_key = self._resolve_toggle_key(engine._base_bundle.app.toggle_key)
         self._last_toggle_press = 0.0
         self._toggle_window = 0.45
         self._state_lock = threading.Lock()
-        self._injecting = False
+        self._injecting_depth = 0
+        self._injecting_timers: list[threading.Timer] = []
         self._pressed_modifiers: set = set()
         self._listener_dead = False
         self.on_listener_dead: Callable[[], None] | None = None
@@ -82,8 +97,15 @@ class KeyboardService:
         )
 
     def open_search(self) -> None:
-        from .ui_state import set_ui_active
+        from .app_context import capture_frontmost_application_pid, restore_frontmost_application
+        from .ui_state import is_ui_active, set_ui_active
 
+        if is_ui_active():
+            logger.debug("Search ignored: another UI session is active")
+            return
+
+        target_pid = capture_frontmost_application_pid()
+        set_ui_active(True)
         try:
             if not self.engine.enabled:
                 logger.info("Search ignored: Expando is disabled")
@@ -96,6 +118,8 @@ class KeyboardService:
             text = resolve_snippet_text(picked.match, app_config=config.app)
             if not text:
                 return
+            restore_frontmost_application(target_pid)
+            time.sleep(0.08)
             self._set_injecting(True)
             try:
                 self.engine.injector.inject(
@@ -105,7 +129,7 @@ class KeyboardService:
                 )
                 logger.info("Inserted snippet from search: %s", picked.trigger)
             finally:
-                threading.Timer(0.15, lambda: self._set_injecting(False)).start()
+                self._schedule_injecting_end()
         finally:
             set_ui_active(False)
 
@@ -126,11 +150,14 @@ class KeyboardService:
     def _sync_file_watcher(self) -> None:
         wants_observer = self.engine._base_bundle.app.auto_restart
         if wants_observer and self._observer is None:
-            handler = ConfigReloader(self.apply_config_reload)
+            self._reload_handler = ConfigReloader(self.apply_config_reload)
             self._observer = Observer()
-            self._observer.schedule(handler, str(self.config_dir), recursive=True)
+            self._observer.schedule(self._reload_handler, str(self.config_dir), recursive=True)
             self._observer.start()
         elif not wants_observer and self._observer is not None:
+            if getattr(self, "_reload_handler", None) is not None:
+                self._reload_handler.cancel()
+                self._reload_handler = None
             self._observer.stop()
             self._observer.join(timeout=2)
             self._observer = None
@@ -211,16 +238,75 @@ class KeyboardService:
         self._sync_file_watcher()
         self.restart_listener()
         self._watchdog.start()
+        self._schedule_permission_check()
         logger.info("Expando keyboard listener started")
+
+    def _schedule_permission_check(self) -> None:
+        def _check() -> None:
+            time.sleep(0.5)
+            listener = self._listener
+            accessibility_ok = listener is None or getattr(listener, "IS_TRUSTED", True)
+            label = "Expando"
+            input_monitoring_ok = True
+
+            if platform.system() == "Darwin":
+                try:
+                    from .permissions import check_permissions
+
+                    status = check_permissions()
+                    if status.runtime is not None:
+                        label = status.runtime.grant_label
+                    input_monitoring_ok = status.input_monitoring is not False
+                except Exception:
+                    logger.debug(
+                        "Permission check after listener start failed",
+                        exc_info=True,
+                    )
+
+            from .i18n import tf
+            from .notifications import notify
+
+            if not accessibility_ok:
+                logger.warning(
+                    "Accessibility not granted for the keyboard listener "
+                    "(pynput IS_TRUSTED=False)"
+                )
+                notify(
+                    "Expando",
+                    tf("listener.permissions.accessibility", grant_label=label),
+                )
+            if not input_monitoring_ok:
+                logger.warning(
+                    "Input Monitoring not granted for %s — snippet triggers may not "
+                    "be detected. Enable it in System Settings → Privacy → "
+                    "Input Monitoring.",
+                    label,
+                )
+                notify(
+                    "Expando",
+                    tf("listener.permissions.input_monitoring", grant_label=label),
+                )
+
+        threading.Thread(target=_check, daemon=True, name="expando-perm-check").start()
 
     def stop(self) -> None:
         self._watchdog.stop()
+        with self._state_lock:
+            for timer in self._injecting_timers:
+                timer.cancel()
+            self._injecting_timers.clear()
+            self._injecting_depth = 0
+        if getattr(self, "_reload_handler", None) is not None:
+            self._reload_handler.cancel()
+            self._reload_handler = None
         if self._listener:
             self._listener.stop()
             self._listener = None
         if self._observer:
             self._observer.stop()
             self._observer.join(timeout=2)
+            if self._observer.is_alive():
+                logger.warning("Config file watcher did not stop within 2s")
             self._observer = None
 
     def join(self) -> None:
@@ -229,11 +315,28 @@ class KeyboardService:
 
     def _set_injecting(self, value: bool) -> None:
         with self._state_lock:
-            self._injecting = value
+            if value:
+                self._injecting_depth += 1
+            else:
+                self._injecting_depth = max(0, self._injecting_depth - 1)
 
     def _is_injecting(self) -> bool:
         with self._state_lock:
-            return self._injecting
+            return self._injecting_depth > 0
+
+    def _schedule_injecting_end(self, delay: float = 0.15) -> None:
+        timer = threading.Timer(delay, self._finish_injecting)
+        timer.daemon = True
+        with self._state_lock:
+            self._injecting_timers.append(timer)
+        timer.start()
+
+    def _finish_injecting(self) -> None:
+        with self._state_lock:
+            self._injecting_depth = max(0, self._injecting_depth - 1)
+            self._injecting_timers = [
+                item for item in self._injecting_timers if item.is_alive()
+            ]
 
     def _track_modifier_press(self, key) -> None:
         if key in {
@@ -275,7 +378,7 @@ class KeyboardService:
         if config.search_shortcut and shortcut_pressed(
             config.search_shortcut, self._pressed_modifiers, key
         ):
-            threading.Thread(target=self.open_search, daemon=True).start()
+            self._schedule_open_search()
             return
 
         if self._toggle_key and key == self._toggle_key:
@@ -307,10 +410,21 @@ class KeyboardService:
         except Exception:
             logger.exception("Expansion failed")
 
+    def _schedule_open_search(self) -> None:
+        if platform.system() == "Darwin":
+            try:
+                from .ui_main_thread import call_on_main_thread
+
+                call_on_main_thread(self.open_search, wait=False)
+                return
+            except Exception:
+                logger.debug("Failed to schedule snippet search on main thread", exc_info=True)
+        threading.Thread(target=self.open_search, daemon=True).start()
+
     def _maybe_expand(self, expanded: bool) -> None:
         if expanded:
             self._set_injecting(True)
-            threading.Timer(0.15, lambda: self._set_injecting(False)).start()
+            self._schedule_injecting_end()
 
 
 def build_service(config_dir: Path) -> KeyboardService:
@@ -372,7 +486,10 @@ def run_service(config_dir: Path) -> None:
 
         if menubar_available():
             logger.info("Starting Expando with menu bar")
-            run_with_menubar(config_dir, service)
+            try:
+                run_with_menubar(config_dir, service)
+            finally:
+                service.stop()
             return
 
     service.start()

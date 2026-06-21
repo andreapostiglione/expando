@@ -7,8 +7,10 @@ from .snippet_editor_data import (
     _parse_when_field,
     create_snippet_entry,
     delete_snippet_entry,
+    duplicate_snippet_entry,
     entries_for_editor,
     list_match_files,
+    move_snippet_entry,
     parse_form_from_editor,
     parse_vars_from_editor,
     update_snippet_entry,
@@ -89,6 +91,20 @@ def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
             return str(exc)
         return None
 
+    def on_duplicate(entry_id: str, target_file: str) -> str | None:
+        try:
+            duplicate_snippet_entry(config_dir, entry_id, target_file=target_file)
+        except ValueError as exc:
+            return str(exc)
+        return None
+
+    def on_move(entry_id: str, target_file: str) -> str | None:
+        try:
+            move_snippet_entry(config_dir, entry_id, target_file=target_file)
+        except ValueError as exc:
+            return str(exc)
+        return None
+
     initial = reload()
     for row in initial:
         row.setdefault("target_file", row.get("source_file", match_files[0]))
@@ -98,6 +114,8 @@ def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
         on_save=on_save,
         on_create=on_create,
         on_delete=on_delete,
+        on_duplicate=on_duplicate,
+        on_move=on_move,
         reload_items=reload,
         match_files=match_files,
         config_dir=config_dir,

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import logging
 import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .brand_assets import load_menubar_nsimage, menubar_template_icon
 from .i18n import t, tf
+from .menubar_feedback import backup_label, user_confirm, user_error, user_info, user_success
 from .ui_state import set_ui_active
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .listener import KeyboardService
@@ -54,6 +58,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             service.on_listener_dead = self._on_listener_dead
             service.on_listener_recovered = self._sync_enabled_label
             service.start()
+            set_ui_active(False)
             threading.Thread(target=self._startup_tasks, daemon=True).start()
 
         def run(self, **options):
@@ -71,21 +76,29 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 return 0
 
         def _sync_enabled_label(self, *_args) -> None:
-            enabled = self.service.engine.enabled
-            self.enabled_item.title = t("menubar.disable") if enabled else t("menubar.enable")
-            hub_updates = self._hub_updates()
-            if self.service.listener_dead():
-                self.title = "⚠"
-            elif hub_updates > 0:
-                self.title = f"↑{hub_updates}"
-            elif not enabled:
-                self.title = "○"
-            else:
-                self.title = None
+            def _apply() -> None:
+                enabled = self.service.engine.enabled
+                self.enabled_item.title = t("menubar.disable") if enabled else t("menubar.enable")
+                hub_updates = self._hub_updates()
+                if self.service.listener_dead():
+                    self.title = "⚠"
+                elif hub_updates > 0:
+                    self.title = f"↑{hub_updates}"
+                elif not enabled:
+                    self.title = "○"
+                else:
+                    self.title = None
+
+            try:
+                from .ui_main_thread import call_on_main_thread
+
+                call_on_main_thread(_apply, wait=False)
+            except Exception:
+                logger.debug("Menubar label sync skipped", exc_info=True)
 
         def _on_listener_dead(self) -> None:
             self._sync_enabled_label()
-            rumps.notification("Expando", "", t("menubar.listener_dead"))
+            user_info(t("menubar.listener_dead"))
 
         def toggle_enabled(self, _sender) -> None:
             self.service.engine.toggle_enabled()
@@ -96,7 +109,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             try:
                 self.service.open_search()
             except Exception as exc:
-                self._notify_action_failed("search", exc)
+                self._notify_action_failed(exc)
             finally:
                 set_ui_active(False)
 
@@ -104,7 +117,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             try:
                 self._browse_packages()
             except Exception as exc:
-                self._notify_action_failed("hub", exc)
+                self._notify_action_failed(exc)
             finally:
                 set_ui_active(False)
 
@@ -122,86 +135,117 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 return
             try:
                 install_hub_package(self.config_dir, str(package_id))
-                rumps.notification(
-                    "Expando",
-                    "",
-                    tf("menubar.installed", package=package_id),
-                )
+                user_success(tf("menubar.installed", package=package_id))
                 self._sync_enabled_label()
             except Exception as exc:
-                rumps.notification(
-                    "Expando",
-                    "",
-                    tf("menubar.install_failed", error=exc),
-                )
+                user_error(tf("menubar.install_failed", error=exc))
 
         def edit_snippets(self, _sender) -> None:
             try:
                 self._open_snippet_editor()
             except Exception as exc:
-                self._notify_action_failed("editor", exc)
+                self._notify_action_failed(exc)
             finally:
                 set_ui_active(False)
 
         def _open_snippet_editor(self) -> None:
+            from .config_reload_gate import ConfigReloadError
             from .ui_bridge import show_snippet_editor
 
             result = show_snippet_editor(str(self.config_dir))
             if result is None:
-                rumps.notification("Expando", "", t("menubar.ui_failed"))
+                user_error(t("menubar.ui_failed"))
                 return
-            self.service.apply_config_reload()
+            try:
+                self.service.apply_config_reload()
+            except ConfigReloadError as exc:
+                if exc.rolled_back:
+                    user_error(t("menubar.restore_invalid_rolled_back"))
+                    return
+                raise
 
-        def _notify_action_failed(self, action: str, exc: Exception) -> None:
-            rumps.notification(
-                "Expando",
-                "",
-                tf("menubar.action_failed", action=action, error=exc),
-            )
+        def _notify_action_failed(self, exc: Exception) -> None:
+            logger.exception("Menubar action failed")
+            user_error(tf("menubar.action_failed", error=exc))
 
         def backup_config(self, _sender) -> None:
-            threading.Thread(target=self._backup_config, daemon=True).start()
-
-        def _backup_config(self) -> None:
             from .backup import backup_config
 
             try:
                 archive = backup_config(self.config_dir)
-                rumps.notification("Expando", "", tf("menubar.backup_created", path=archive))
+                logger.info("Manual backup created: %s", archive)
+                user_success(
+                    tf("menubar.backup_saved", label=backup_label(archive)),
+                    reveal=archive,
+                )
             except Exception as exc:
-                rumps.notification("Expando", "", tf("menubar.backup_failed", error=exc))
+                logger.exception("Backup failed")
+                user_error(tf("menubar.backup_failed", error=exc))
 
         def restore_config(self, _sender) -> None:
-            threading.Thread(target=self._restore_config, daemon=True).start()
+            from .backup import backups_for_picker, restore_config
+            from .config_reload_gate import ConfigReloadError
+            from .ui_bridge import show_search_picker
 
-        def _restore_config(self) -> None:
-            from .backup import restore_config
-
-            backups = sorted(
-                self.config_dir.parent.glob("expando-backup-*.tar.gz"),
-                reverse=True,
-            )
-            if not backups:
-                rumps.notification("Expando", "", t("menubar.no_backups"))
+            items = backups_for_picker(self.config_dir)
+            if not items:
+                user_info(t("menubar.no_backups"))
                 return
-            latest = backups[0]
+
+            picked = show_search_picker(items)
+            if not picked:
+                return
+
+            archive = Path(picked.get("archive_path", ""))
+            if not archive.is_file():
+                user_error(t("menubar.no_backups"))
+                return
+
+            label = backup_label(archive)
+            if not user_confirm(
+                t("menubar.restore_confirm_title"),
+                tf("menubar.restore_confirm_body", label=label),
+            ):
+                return
+
             try:
-                restore_config(self.config_dir, latest)
-                self.service.apply_config_reload()
-                rumps.notification("Expando", "", tf("menubar.restored", path=latest))
+                restore_config(self.config_dir, archive)
+                try:
+                    self.service.apply_config_reload()
+                except ConfigReloadError as exc:
+                    if exc.rolled_back:
+                        user_error(t("menubar.restore_invalid_rolled_back"))
+                        return
+                    raise
+                logger.info("Restored config from %s", archive)
+                user_success(tf("menubar.restored_ok", label=label))
+            except ConfigReloadError:
+                raise
             except Exception as exc:
-                rumps.notification("Expando", "", tf("menubar.restore_failed", error=exc))
+                logger.exception("Restore failed")
+                user_error(tf("menubar.restore_failed", error=exc))
+            finally:
+                set_ui_active(False)
 
         def restart_service(self, _sender) -> None:
-            threading.Thread(target=self._restart_service, daemon=True).start()
+            try:
+                self._restart_service()
+            except Exception as exc:
+                user_error(tf("menubar.restart_failed", error=exc))
 
         def _restart_service(self) -> None:
+            import os
+
             from .daemon import restart_foreground_daemon
 
+            logger.info("Menu bar restart requested")
+            self.service.stop()
             try:
-                restart_foreground_daemon(self.config_dir)
-            except Exception as exc:
-                rumps.notification("Expando", "", tf("menubar.restart_failed", error=exc))
+                restart_foreground_daemon(self.config_dir, wait_for_pid=os.getpid())
+            except Exception:
+                self.service.start()
+                raise
+            rumps.quit_application()
 
         def _startup_tasks(self) -> None:
             from .changelog import maybe_show_whats_new
@@ -212,7 +256,10 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self._sync_enabled_label()
 
         def check_updates(self, _sender) -> None:
-            threading.Thread(target=self._check_updates, daemon=True).start()
+            try:
+                self._check_updates()
+            except Exception as exc:
+                self._notify_action_failed(exc)
 
         def _check_updates(self) -> None:
             from .config import load_config
@@ -220,7 +267,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 check_for_updates_via_sparkle,
                 sparkle_update_mode,
             )
-            from .updater import _notify_update_available, check_for_updates
+            from .updater import check_for_updates, open_download_url
 
             mode = sparkle_update_mode()
             if mode == "native":
@@ -235,17 +282,15 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 notify_user=False,
             )
             if result.error:
-                rumps.notification(
-                    "Expando",
-                    "",
-                    tf("menubar.update_failed", error=result.error),
-                )
+                user_error(tf("menubar.update_failed", error=result.error))
             elif result.available:
-                _notify_update_available(result.available, open_download=True)
+                message = t("update.available").format(version=result.available.version)
+                user_info(message)
+                open_download_url(result.available.download_url)
             elif mode == "manual_required":
-                rumps.notification("Expando", "", t("menubar.update_manual_required"))
+                user_info(t("menubar.update_manual_required"))
             else:
-                rumps.notification("Expando", "", t("menubar.up_to_date"))
+                user_info(t("menubar.up_to_date"))
 
         def quit_app(self, _sender) -> None:
             self.service.stop()

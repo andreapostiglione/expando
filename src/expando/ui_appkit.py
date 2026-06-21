@@ -24,11 +24,14 @@ from AppKit import (
     NSWindowStyleMaskTitled,
 )
 
+from .i18n import t
 from .ui_appkit_runtime import (
     close_appkit_session,
+    configure_single_column_table,
     run_appkit_session,
     select_first_table_row,
     set_text_view_string,
+    style_readonly_text_view,
 )
 
 
@@ -41,6 +44,7 @@ class _SearchController(NSObject):
         self.visible = list(items)
         self.result = None
         self.window = None
+        self._focused_item = items[0] if items else None
         return self
 
     def numberOfRowsInTableView_(self, _table_view):
@@ -51,6 +55,7 @@ class _SearchController(NSObject):
         return item.get("label", item.get("trigger", ""))
 
     def tableViewSelectionDidChange_(self, _notification):
+        self._remember_selection()
         self._update_preview()
 
     def searchChanged_(self, notification):
@@ -61,13 +66,24 @@ class _SearchController(NSObject):
         self.visible = fuzzy_filter_search_items(query, self.items)
         self.table_view.reloadData()
         select_first_table_row(self.table_view)
+        self._remember_selection()
         self._update_preview()
 
-    def _selected_item(self):
-        row = self.table_view.selectedRow()
+    def _item_at_row(self, row: int):
         if row < 0 or row >= len(self.visible):
             return None
         return self.visible[row]
+
+    def _remember_selection(self) -> None:
+        item = self._item_at_row(self.table_view.selectedRow())
+        if item is not None:
+            self._focused_item = item
+
+    def _selected_item(self):
+        item = self._item_at_row(self.table_view.selectedRow())
+        if item is not None:
+            return item
+        return self._focused_item
 
     def _update_preview(self):
         item = self._selected_item()
@@ -83,6 +99,8 @@ class _SearchController(NSObject):
             }
             if "package_id" in item:
                 self.result["package_id"] = item["package_id"]
+            if "archive_path" in item:
+                self.result["archive_path"] = item["archive_path"]
             if "installed" in item:
                 self.result["installed"] = item["installed"]
         close_appkit_session(self)
@@ -112,7 +130,7 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
 
     content = window.contentView()
     search = NSSearchField.alloc().initWithFrame_(NSMakeRect(16, 372, 688, 28))
-    search.setPlaceholderString_("Search snippets")
+    search.setPlaceholderString_(t("menubar.search"))
     NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
         controller,
         "searchChanged:",
@@ -126,6 +144,7 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
     table_scroll.setBorderType_(NSBezelBorder)
     table_scroll.setHasVerticalScroller_(True)
     table = NSTableView.alloc().initWithFrame_(table_scroll.bounds())
+    configure_single_column_table(table)
     table.setDelegate_(controller)
     table.setDataSource_(controller)
     table.setGridStyleMask_(NSTableViewSolidHorizontalGridLineMask)
@@ -139,25 +158,26 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
     preview_scroll.setBorderType_(NSBezelBorder)
     preview_scroll.setHasVerticalScroller_(True)
     preview = NSTextView.alloc().initWithFrame_(preview_scroll.bounds())
-    preview.setEditable_(False)
-    preview.setDrawsBackground_(True)
+    style_readonly_text_view(preview)
     controller.preview_view = preview
     preview_scroll.setDocumentView_(preview)
     content.addSubview_(preview_scroll)
 
     cancel_button = NSButton.alloc().initWithFrame_(NSMakeRect(548, 16, 80, 28))
-    cancel_button.setTitle_("Cancel")
+    cancel_button.setTitle_(t("ui.cancel"))
     cancel_button.setTarget_(controller)
     cancel_button.setAction_("cancel:")
     content.addSubview_(cancel_button)
 
     insert_button = NSButton.alloc().initWithFrame_(NSMakeRect(636, 16, 68, 28))
-    insert_button.setTitle_("Insert")
+    insert_button.setTitle_(t("ui.insert"))
     insert_button.setTarget_(controller)
     insert_button.setAction_("accept:")
     content.addSubview_(insert_button)
 
+    table.reloadData()
     select_first_table_row(table)
+    controller._remember_selection()
     controller._update_preview()
     return controller
 
@@ -168,9 +188,9 @@ def run_search_picker(items: list[dict[str, str]]) -> dict[str, str] | None:
 
 def run_form_dialog(fields: list[dict[str, str]]) -> dict[str, str] | None:
     alert = NSAlert.alloc().init()
-    alert.setMessageText_("Fill in the snippet fields")
-    alert.addButtonWithTitle_("OK")
-    alert.addButtonWithTitle_("Cancel")
+    alert.setMessageText_(t("ui.form.title"))
+    alert.addButtonWithTitle_(t("ui.ok"))
+    alert.addButtonWithTitle_(t("ui.cancel"))
 
     stack = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 360, max(24 * len(fields), 24)))
     entries: dict[str, NSTextField] = {}

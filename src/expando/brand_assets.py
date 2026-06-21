@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-MENUBAR_ICON_POINTS = 22.0
+MENUBAR_ICON_POINTS = 24.0
 
 
 def _candidate_dirs() -> list[Path]:

@@ -74,3 +74,18 @@ def test_repair_releases_stale_lock(tmp_path: Path, monkeypatch):
 
     assert not lock_path.exists()
     assert any(action.startswith("released_stale_lock:") for action in result["actions"])
+
+
+def test_repair_clears_safe_mode(tmp_path: Path):
+    config_dir = _setup_config_dir(tmp_path)
+    from expando.crash_loop import activate_safe_mode, safe_mode_file
+
+    activate_safe_mode(config_dir, reason="test")
+    assert safe_mode_file(config_dir).exists()
+
+    with patch("expando.doctor_repair.is_running", return_value=(False, None)):
+        with patch("expando.doctor_repair._find_expando_processes", return_value=[]):
+            result = repair_daemon_state(config_dir)
+
+    assert "cleared_safe_mode" in result["actions"]
+    assert not safe_mode_file(config_dir).exists()

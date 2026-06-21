@@ -129,6 +129,42 @@ def get_frontmost_app() -> str | None:
     return get_frontmost_context().name
 
 
+def capture_frontmost_application_pid() -> int | None:
+    """Remember the app to refocus after Expando UI closes (not this process)."""
+    if platform.system() != "Darwin":
+        return None
+    try:
+        import os
+
+        from AppKit import NSWorkspace
+
+        app = NSWorkspace.sharedWorkspace().frontmostApplication()
+        if app is None:
+            return None
+        pid = int(app.processIdentifier())
+        if pid == os.getpid():
+            return None
+        return pid
+    except Exception:
+        logger.debug("Failed to capture frontmost application", exc_info=True)
+        return None
+
+
+def restore_frontmost_application(pid: int | None) -> bool:
+    if pid is None or platform.system() != "Darwin":
+        return False
+    try:
+        from AppKit import NSApplicationActivateIgnoringOtherApps, NSRunningApplication
+
+        app = NSRunningApplication.runningApplicationWithProcessIdentifier_(pid)
+        if app is None:
+            return False
+        return bool(app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps))
+    except Exception:
+        logger.debug("Failed to restore frontmost application", exc_info=True)
+        return False
+
+
 def pattern_matches(value: str | None, patterns: list[str]) -> bool:
     return _pattern_matches(value, patterns)
 

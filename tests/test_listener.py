@@ -108,14 +108,26 @@ def test_listener_open_search_injects_picked_snippet(keyboard_service: KeyboardS
     keyboard_service.engine.injector.inject.assert_called_once()
 
 
-def test_config_reloader_invokes_callback():
+def test_config_reloader_invokes_callback_after_debounce():
+    import time
+
     calls: list[str] = []
-
-    class Handler(ConfigReloader):
-        def on_any_event(self, event) -> None:
-            super().on_any_event(event)
-
     handler = ConfigReloader(lambda: calls.append("reload"))
     event = SimpleNamespace(is_directory=False, src_path="/tmp/match/base.yml")
     handler.on_any_event(event)
+    assert calls == []
+    time.sleep(0.35)
+    assert calls == ["reload"]
+
+
+def test_config_reloader_coalesces_rapid_events():
+    import time
+
+    calls: list[str] = []
+    handler = ConfigReloader(lambda: calls.append("reload"))
+    event = SimpleNamespace(is_directory=False, src_path="/tmp/match/base.yml")
+    handler.on_any_event(event)
+    time.sleep(0.1)
+    handler.on_any_event(event)
+    time.sleep(0.35)
     assert calls == ["reload"]

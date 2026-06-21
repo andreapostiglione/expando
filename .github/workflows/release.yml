@@ -202,6 +202,14 @@ jobs:
             homebrew-cask-sha256.txt
           generate_release_notes: true
 
+      - name: Open Homebrew tap PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/push-homebrew-tap-pr.sh
+          ./scripts/push-homebrew-tap-pr.sh Expando.dmg
+
       - name: Update appcast on main
         run: |
           git config user.name "github-actions[bot]"

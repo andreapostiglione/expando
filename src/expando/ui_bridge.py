@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .ui_main_thread import call_on_main_thread
 from .ui_state import set_ui_active
 
 logger = logging.getLogger(__name__)
@@ -56,25 +57,32 @@ def _ui_subprocess_argv(command: str) -> list[str]:
     return [sys.executable, "-m", "expando.ui_cli", command]
 
 
+def _run_ui_inprocess_body(command: str, payload: dict[str, Any]) -> dict[str, str] | None:
+    if command == "search":
+        from .ui_native import run_search_picker
+
+        return run_search_picker(payload.get("items", []))
+    if command == "form":
+        from .ui_native import run_form_dialog
+
+        return run_form_dialog(payload.get("fields", []))
+    if command == "editor":
+        from .snippet_editor import open_snippet_editor
+
+        config_dir = payload.get("config_dir")
+        if not config_dir:
+            raise UiBridgeError("Missing config_dir for editor UI")
+        return open_snippet_editor(Path(config_dir))
+    raise UiBridgeError(f"Unknown UI command: {command}")
+
+
 def _run_ui_inprocess(command: str, payload: dict[str, Any]) -> dict[str, str] | None:
     set_ui_active(True)
     try:
-        if command == "search":
-            from .ui_native import run_search_picker
-
-            return run_search_picker(payload.get("items", []))
-        if command == "form":
-            from .ui_native import run_form_dialog
-
-            return run_form_dialog(payload.get("fields", []))
-        if command == "editor":
-            from .snippet_editor import open_snippet_editor
-
-            config_dir = payload.get("config_dir")
-            if not config_dir:
-                raise UiBridgeError("Missing config_dir for editor UI")
-            return open_snippet_editor(Path(config_dir))
-        raise UiBridgeError(f"Unknown UI command: {command}")
+        return call_on_main_thread(
+            lambda: _run_ui_inprocess_body(command, payload),
+            wait=True,
+        )
     except UiBridgeError:
         raise
     except Exception as exc:

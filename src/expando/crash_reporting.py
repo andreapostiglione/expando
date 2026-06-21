@@ -87,8 +87,16 @@ def write_crash_report(
         exc_value=exc_value,
         exc_tb=exc_tb,
     )
-    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    from .atomic_io import atomic_write_text
+
+    atomic_write_text(path, json.dumps(payload, indent=2))
     _prune_old_reports(directory)
+    try:
+        from .crash_loop import record_daemon_crash
+
+        record_daemon_crash(config_dir, reason=source)
+    except Exception:
+        pass
     return path
 
 

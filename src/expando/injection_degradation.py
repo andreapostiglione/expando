@@ -53,8 +53,12 @@ def _load_document(path: Path) -> dict[str, Any]:
 
 
 def _save_document(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    from .atomic_io import atomic_write_text
+
+    atomic_write_text(
+        path,
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+    )
 
 
 def record_injection_success(config_dir: Path) -> dict[str, Any]:

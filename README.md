@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.18.0"><img src="https://img.shields.io/badge/version-3.18.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.28.0"><img src="https://img.shields.io/badge/version-3.28.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -19,34 +19,40 @@
 
 ---
 
-## What's new (v3.7)
+## What's new
 
-Recent releases focused on the **hub marketplace**, **release quality**, and **diagnostics**:
+Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://github.com/andreapostiglione/expando/releases)
+
+### v3.28 — Stability hardening (latest)
+
+Production-focused reliability for the daemon, listener, and menu bar:
+
+| Area | What's improved |
+|------|-----------------|
+| **Listener** | Watchdog retries every 30s if pynput dies — no permanent dead listener |
+| **Engine** | Lock released before render/inject/undo — fixes freeze with form snippets + menu bar |
+| **Restart** | Menu bar restart waits for old PID to exit — no duplicate listeners |
+| **Crash recovery** | Crash reports feed `crash-loop.json`; safe mode + `doctor --repair` clears it |
+| **Config reload** | Waits for stable YAML files; last-good snapshot before applying changes |
+| **Daemon start** | Fails clearly if pid file never appears (no fake parent pid) |
+| **Permissions** | macOS notification on startup when Accessibility or Input Monitoring is missing |
+| **State files** | Atomic JSON writes for health, crash-loop, injection-health |
+| **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
+
+**355** automated tests. Dev mode: grant **python3.14** (or **Expando.app**) in Accessibility **and** Input Monitoring.
+
+### Recent feature releases
 
 | Version | Highlights |
 |---------|------------|
-| **v3.18** | `hub/index.json` manifest on Pages · release CI syncs health docs to `main` · Pages preserves release health snapshot |
-| **v3.17** | `doctor-health.html` + `hub/doctor-full.json` on GitHub Pages (`publish-site`) · health links on hub pages · CI publish-site smoke |
-| **v3.16** | Community validation tables in `doctor --full-html` · marketplace validation badge · `community-validation.json` in `release-health` artifact |
-| **v3.15** | `hub/community-validation.json` on Pages · maintainer validation badge · unified `release-health` CI artifact (doctor after sparkle) |
-| **v3.14** | Inline SVG trends in `doctor --full-html` · `hub-maintainer.html` on Pages · CI smoke doctor HTML + `sparkle-benchmark-history --svg` |
-| **v3.13** | `doctor --full-html` health dashboard · CI `validate-community --html` gate · release artifact `doctor-health.html` |
-| **v3.12** | `doctor --full-json` health export · notarization trend SVG · release CI artifacts (`doctor-full.json`, `notarize-audit-trend.svg`) |
-| **v3.11** | Trigger dashboard on GitHub Pages (`publish-site`) · `doctor --doctor-json` · Sparkle benchmark SVG trend in release artifact |
-| **v3.10** | Trigger suggestions HTML dashboard · doctor text + marketplace JSON · `EXPANDO_SPARKLE_HELPER_STRICT` release CI |
-| **v3.9** | Fuzzy trigger score/reason in `validate-community` · `doctor --marketplace-json` · `--sparkle-fail-ms` + sparkline trend |
-| **v3.8** | Trigger similarity warnings in `validate-community` · `hub portal pending-diff` JSON export · `sparkle-benchmark-history` release artifact |
-| **v3.7** | Community vs official trigger lint · doctor pending metadata diff · `SPARKLE_HELPER_SLOW` warning in release CI (15s threshold) |
-| **v3.6** | Cross-package trigger lint in CI · doctor alert for unsynced remote pending submissions · Sparkle benchmark artifact on release |
-| **v3.5** | `hub validate-community` in CI · doctor marketplace sync preview · `benchmark --sparkle` helper latency |
-| **v3.4** | `hub submit init` scaffold · doctor remote marketplace section · `sparkle-smoke` + release CI smoke test |
-| **v3.3** | `hub submit run` / `status` · doctor notarization hint · `benchmark --sparkle` |
-| **v3.2** | 3 approved community packages on Hub Pages · notarization history in doctor · Sparkle helper signing audit |
-| **v3.1** | Default GitHub Pages marketplace URL · headless-safe CI E2E · `notarize-history --json` |
-| **v3.0** | `hub portal publish-site` · `notarize-audit --record` · E2E image trigger (`:img`) |
+| **v3.27** | Snippet editor: duplicate/move between YAML files · Homebrew tap PR in release CI · native menu bar dialogs |
+| **v3.26** | Scheduled auto-backup · sync conflict detection · plugin allowlist · docs (YAML, Troubleshooting, Architecture) |
+| **v3.25** | `expando health` · support bundle · E2E secure-input + listener watchdog |
+| **v3.24** | `hub upgrade` / `hub outdated` · hub update badge in menu bar · 10 community packages |
+| **v3.18–v3.23** | Hub marketplace Pages · doctor full HTML/JSON · Sparkle/notarization CI · snippet editor AppKit |
 
-Community packages (install via `expando hub install`): `typing-it`, `meeting-it`, `writing-it`.  
-Hub marketplace site: [andreapostiglione.github.io/expando/hub-marketplace.html](https://andreapostiglione.github.io/expando/hub-marketplace.html)
+Community packages: `typing-it`, `meeting-it`, `writing-it`, `devops-it`, `finance-it`, and more — `expando hub list`.  
+Hub site: [andreapostiglione.github.io/expando/hub-marketplace.html](https://andreapostiglione.github.io/expando/hub-marketplace.html)
 
 ---
 
@@ -73,7 +79,8 @@ Expando:      claude --dangerously-skip-permissions
 | 📝 | **Multi-field forms** | Single-window input for dynamic snippets |
 | 🎯 | **Advanced app rules** | Filter by app name, bundle ID, or window title |
 | 📦 | **Packages** | Organize snippets in reusable bundles |
-| 🩺 | **Built-in doctor** | Permissions, marketplace sync, notarization history |
+| 🩺 | **Built-in doctor** | Permissions, repair mode, marketplace sync, crash/safe-mode status |
+| 🔄 | **Self-healing** | Listener watchdog, crash-loop backoff, config rollback to last-good |
 | 📡 | **Hub marketplace** | Community packages, submit/review workflow, GitHub Pages |
 | ✨ | **Native Sparkle updates** | Signed DMG, appcast, helper smoke test in release CI |
 | 💾 | **Backup / restore** | One-command config export |
@@ -108,13 +115,17 @@ Website: [andreapostiglione.github.io/expando](https://andreapostiglione.github.
 
 ### 2. Grant permissions
 
-Open **System Settings → Privacy & Security → Accessibility** and enable **Expando.app**.
+Open **System Settings → Privacy & Security** and enable:
+
+1. **Accessibility** — Expando.app (DMG) or `python3.14` (dev/from source)
+2. **Input Monitoring** — same binary as above (required for global key listening)
 
 Verify:
 
 ```bash
 source .venv/bin/activate
 expando doctor
+expando doctor --repair   # fix stale pid/locks, safe mode, orphan processes
 ```
 
 ### 3. Run
@@ -157,7 +168,8 @@ Or install auto-start at login:
 | `expando search` | Open snippet picker |
 | `expando match :trigger` | Test-render a trigger |
 | `expando edit` | Open `match/base.yml` |
-| `expando doctor` | Full health check |
+| `expando doctor` | Full health check (permissions, listener, marketplace) |
+| `expando doctor --repair` | Repair stale pid, locks, orphans, safe mode |
 | `expando setup` | Permission onboarding wizard (macOS) |
 | `expando editor` | Graphical snippet editor (AppKit on macOS) |
 | `expando check-updates` | Check Sparkle appcast for new releases |
@@ -541,7 +553,8 @@ expando/
 │   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 227+ pytest tests (incl. tests/e2e)
+├── tests/                # 355+ pytest tests (incl. tests/e2e)
+├── CHANGELOG.md          # Release notes
 ├── packages/
 │   ├── hub/              # Official hub index + marketplace queue
 │   └── community/        # Approved community snippet bundles
@@ -557,23 +570,29 @@ expando/
 
 | Problem | Fix |
 |---------|-----|
-| Snippets don't expand | Run `expando doctor`, check Accessibility permission |
-| `python3.14` in Privacy settings | Run `./scripts/build-macos-app.sh`, grant permission to **Expando.app** |
-| Multiple instances running | `expando stop` then restart LaunchAgent |
-| Config not reloading | Check `auto_restart: true` in `config/default.yml` |
+| Snippets don't expand | `expando doctor` — enable **Accessibility** and **Input Monitoring** for your runtime (`python3.14` in dev, `Expando.app` in DMG) |
+| Worked yesterday, dead today | `expando doctor --repair && expando restart` |
+| Menu bar restart broke snippets | Fixed in v3.28 — update and use **Riavvia servizio** (no duplicate listener) |
+| `python3.14` in Privacy settings | Normal in dev mode; grant both permissions to that binary |
+| Multiple instances / stale lock | `expando stop` · `expando doctor --repair` · `expando start` |
+| Config not reloading | `auto_restart: true` in `config/default.yml`; invalid YAML rolls back to `.last-good/` |
+| Expando disabled after crashes | Safe mode — `expando doctor --repair` clears it |
 
 ```bash
-expando doctor              # permissions, config, marketplace, notarization history
-expando notarize-history    # recent signed-build audit runs (maintainers)
+expando doctor              # permissions, listener, marketplace, crash warnings
+expando doctor --repair     # stale pid, locks, orphan PIDs, safe mode
+expando crashes list        # local crash reports (never uploaded)
+expando logs --tail         # follow live log
 ```
 
-Logs: `~/Library/Application Support/expando/expando.log`
+Logs: `~/Library/Application Support/expando/expando.log`  
+More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ---
 
 ## Roadmap
 
-Current baseline: **v3.7.0**. See [ROADMAP.md](ROADMAP.md) for completed sprints and Sprint 17+ backlog.
+Current release: **v3.28.0** (Sprint 37 — stability). See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

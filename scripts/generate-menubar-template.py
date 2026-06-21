@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 try:
-    from PIL import Image, ImageFilter
+    from PIL import Image
 except ImportError:
     print("Install Pillow first: pip install pillow", file=sys.stderr)
     raise SystemExit(1)
@@ -19,13 +19,13 @@ SOURCE_CANDIDATES = [
     ASSETS / "logo.png",
 ]
 OUT_DIR = ASSETS
-# 22pt logical size — matches crisp third-party menubar apps (e.g. Granola-scale)
+# 24pt logical size — large, crisp menubar glyph (E only, no icon frame)
 SIZES = {
-    "logoTemplate.png": 22,
-    "logoTemplate@2x.png": 44,
-    "logoTemplate@3x.png": 66,
+    "logoTemplate.png": 24,
+    "logoTemplate@2x.png": 48,
+    "logoTemplate@3x.png": 72,
 }
-FILL_RATIO = 0.94
+FILL_RATIO = 0.98
 
 
 def _resolve_source() -> Path:
@@ -35,10 +35,19 @@ def _resolve_source() -> Path:
     raise SystemExit("No source logo found (expected assets/logo-source.jpg or assets/logo.png)")
 
 
-def _is_logo_mark(r: int, g: int, b: int) -> bool:
+def _is_purple_e_glyph(r: int, g: int, b: int) -> bool:
+    """Keep only the purple E letter — no dark rounded square, no white motion bars."""
     if r > 228 and g > 228 and b > 228:
         return False
     if r < 58 and g < 58 and b < 72:
+        return False
+    if r > 175 and g > 175 and b > 175:
+        return False
+    if b <= g or r <= g:
+        return False
+    if r < 75 or g < 48 or b < 78:
+        return False
+    if r > 170 or g > 130 or b > 200:
         return False
     return True
 
@@ -52,12 +61,10 @@ def _extract_mark_rgba(image: Image.Image) -> Image.Image:
     for y in range(height):
         for x in range(width):
             r, g, b = src[x, y]
-            if not _is_logo_mark(r, g, b):
+            if not _is_purple_e_glyph(r, g, b):
                 continue
             dst[x, y] = (0, 0, 0, 255)
     alpha = rgba.split()[3]
-    # Slight dilation keeps thin strokes readable at menubar size
-    alpha = alpha.filter(ImageFilter.MaxFilter(3))
     rgba.putalpha(alpha)
     bbox = alpha.getbbox()
     if not bbox:

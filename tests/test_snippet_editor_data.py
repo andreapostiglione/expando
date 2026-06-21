@@ -5,10 +5,12 @@ import pytest
 from expando.snippet_editor_data import (
     create_snippet_entry,
     delete_snippet_entry,
+    duplicate_snippet_entry,
     entries_for_editor,
     format_form_for_editor,
     format_vars_for_editor,
     list_snippet_entries,
+    move_snippet_entry,
     parse_form_from_editor,
     parse_vars_from_editor,
     update_snippet_entry,
@@ -112,3 +114,34 @@ def test_entries_for_editor_marks_packages_readonly(tmp_path: Path):
     package_rows = [row for row in rows if row["source_file"] == "packages"]
     assert package_rows
     assert package_rows[0]["editable"] == "0"
+
+
+def test_duplicate_snippet_entry_to_other_file(tmp_path: Path):
+    config_dir = _setup_config(tmp_path)
+    (config_dir / "match" / "work.yml").write_text("matches: []\n", encoding="utf-8")
+    source = list_snippet_entries(config_dir)[0]
+
+    duplicated = duplicate_snippet_entry(config_dir, source.entry_id, target_file="work.yml")
+    assert duplicated.source_file == "work.yml"
+    assert duplicated.match.triggers == [":old-copy"]
+
+    dev_matches = (config_dir / "match" / "dev.yml").read_text(encoding="utf-8")
+    work_matches = (config_dir / "match" / "work.yml").read_text(encoding="utf-8")
+    assert ":old" in dev_matches
+    assert ":old-copy" in work_matches
+
+
+def test_move_snippet_entry_between_files(tmp_path: Path):
+    config_dir = _setup_config(tmp_path)
+    (config_dir / "match" / "work.yml").write_text("matches: []\n", encoding="utf-8")
+    source = list_snippet_entries(config_dir)[0]
+
+    moved = move_snippet_entry(config_dir, source.entry_id, target_file="work.yml")
+    assert moved.source_file == "work.yml"
+    assert moved.match.triggers == [":old"]
+
+    dev_data = (config_dir / "match" / "dev.yml").read_text(encoding="utf-8")
+    work_data = (config_dir / "match" / "work.yml").read_text(encoding="utf-8")
+    assert "matches: []" in dev_data or "matches:\n  []" in dev_data or dev_data.strip().endswith("matches: []")
+    assert ":old" in work_data
+    assert len(list_snippet_entries(config_dir)) == 1

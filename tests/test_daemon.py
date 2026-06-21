@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from expando.daemon import foreground, is_running, start_daemon, stop_daemon
+from expando.daemon import foreground, is_running, restart_foreground_daemon, start_daemon, stop_daemon
 from expando.lock import SingleInstanceLock
 from expando.paths import lock_file, pid_file
 
@@ -86,3 +86,50 @@ def test_foreground_exits_when_already_running(tmp_path: Path, monkeypatch: pyte
     with pytest.raises(SystemExit) as exc:
         foreground(config_dir)
     assert exc.value.code == 0
+
+
+def test_start_daemon_raises_when_pid_missing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    config_dir = tmp_path / "expando"
+    config_dir.mkdir()
+    hang_script = tmp_path / "hang.py"
+    hang_script.write_text(
+        "import time\nfor _ in range(200):\n    time.sleep(0.01)\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "expando.daemon._daemon_command",
+        lambda _d: [sys.executable, str(hang_script)],
+    )
+    monkeypatch.setattr("expando.daemon._START_WAIT_ATTEMPTS", 2)
+    monkeypatch.setattr("expando.daemon._START_WAIT_INTERVAL_SECONDS", 0.0)
+    monkeypatch.setattr("expando.daemon.time.sleep", lambda _seconds: None)
+
+    with pytest.raises(RuntimeError, match="pid file not written"):
+        start_daemon(config_dir)
+
+
+def test_restart_foreground_daemon_waits_for_old_pid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config_dir = tmp_path / "expando"
+    config_dir.mkdir()
+    popen_calls: list[tuple] = []
+
+    def fake_popen(args, **kwargs):
+        popen_calls.append((args, kwargs))
+        return object()
+
+    monkeypatch.setattr("expando.daemon._daemon_command", lambda _d: ["python", "-m", "expando"])
+    monkeypatch.setattr("expando.daemon.release_foreground_instance", lambda _d: None)
+    monkeypatch.setattr("expando.daemon.subprocess.Popen", fake_popen)
+
+    restart_foreground_daemon(config_dir, wait_for_pid=12345)
+
+    assert len(popen_calls) == 1
+    args, kwargs = popen_calls[0]
+    assert args[0] == "/bin/bash"
+    assert "kill -0 12345" in args[2]
+    assert "python -m expando" in args[2]
+    assert kwargs["start_new_session"] is True

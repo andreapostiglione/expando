@@ -1,6 +1,6 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.26.0
+**Versione attuale:** v3.28.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
@@ -109,11 +109,23 @@
 | `expando health` + support bundle + E2E secure-input/watchdog | ✓ v3.25.0 |
 | Auto-backup + sync conflict + plugin allowlist + docs complete | ✓ v3.26.0 |
 
-### Gap residui (post v3.26)
+### Gap residui (post v3.28)
 
 - **E2E runner:** clipboard/secure-input richiedono runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`)
-- **Homebrew cask:** bump artifact in release CI; PR su tap ancora manuale
-- **Editor:** gestione file/duplica tra file — API pronta, UI minimale
+- **Secondo runner E2E:** workflow nightly presente; failover fisico ancora opzionale
+- **LaunchAgent:** reinstallare plist per applicare `ThrottleInterval` su installazioni esistenti
+
+### Sprint 37 → v3.28.0 ✓
+
+1. **T9-01** Listener watchdog retry + permission notify all'avvio
+2. **T9-02** Engine/daemon threading: no deadlock, no doppia istanza al restart
+3. **T9-03** Crash loop integrato, JSON atomici, config reload stabile, doctor repair safe mode
+
+### Sprint 36 → v3.27.0 ✓
+
+1. **T8-01** Homebrew tap PR automatica da release CI
+2. **T8-02** Editor: duplica/sposta snippet tra file con picker dedicato
+3. **T8-03** Menu bar polish: backup/restore/restart/aggiornamenti con dialog nativi
 
 ---
 
@@ -541,7 +553,7 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 | Metrica | Target v1.6 | Target v3.26 | Attuale |
 |---------|-------------|--------------|---------|
 | Tempo install → prima espansione | < 5 min | < 3 min (wizard DMG) | ~ok (wizard CLI) |
-| Test suite | ≥ 120 test, E2E verde | ≥ 300 test + E2E secure-input | **310** test, E2E ✓ runner |
+| Test suite | ≥ 120 test, E2E verde | ≥ 300 test + E2E secure-input | **340+** test, E2E ✓ runner |
 | Listener silent failure | — | 0 (watchdog < 30 s) | **watchdog ✓** |
 | Hub packages | ≥ 8 | ≥ 8 ufficiali + 10 community | **8** + **10** |
 | Update path parity | Homebrew cask | DMG + cask + Sparkle dev/prod | **Sparkle parity ✓**, cask bump artifact |
@@ -559,4 +571,4 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 
 ---
 
-*Ultimo aggiornamento: 19 giugno 2026 — v3.26.0 baseline completa (Sprint 28–35)*
+*Ultimo aggiornamento: 21 giugno 2026 — v3.28.0 (Sprint 37: stability hardening — listener, daemon, crash loop, config reload)*

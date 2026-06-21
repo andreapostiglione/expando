@@ -268,6 +268,50 @@ def preview_snippet_text(
         return f"[preview error: {exc}]"
 
 
+def move_snippet_entry(
+    config_dir: Path,
+    entry_id: str,
+    *,
+    target_file: str,
+) -> SnippetEntry:
+    source_file, index = _parse_entry_id(entry_id)
+    if source_file == target_file:
+        raise ValueError(f"Snippet is already in {target_file}")
+
+    source_path = _match_path(config_dir, source_file)
+    source_data = _load_match_file(source_path)
+    matches = list(source_data.get("matches", []) or [])
+    if index < 0 or index >= len(matches):
+        raise ValueError(f"Snippet not found: {entry_id}")
+
+    raw = dict(matches[index])
+    triggers = extract_triggers(raw)
+    if triggers:
+        for item in _load_match_file(_match_path(config_dir, target_file)).get("matches", []) or []:
+            if triggers[0] in extract_triggers(item):
+                raise ValueError(f"Trigger already exists in {target_file}: {triggers[0]}")
+
+    target_path = _match_path(config_dir, target_file)
+    target_data = _load_match_file(target_path)
+    target_matches = list(target_data.get("matches", []) or [])
+    target_matches.append(raw)
+    target_data["matches"] = target_matches
+    _write_match_file(target_path, target_data)
+
+    matches.pop(index)
+    source_data["matches"] = matches
+    _write_match_file(source_path, source_data)
+
+    new_index = len(target_matches) - 1
+    return SnippetEntry(
+        entry_id=f"{target_file}:{new_index}",
+        source_file=target_file,
+        index=new_index,
+        match=normalize_match(raw),
+        editable=True,
+    )
+
+
 def duplicate_snippet_entry(
     config_dir: Path,
     entry_id: str,

@@ -50,11 +50,15 @@ def load_runtime_health(config_dir: Path) -> dict[str, Any]:
 
 
 def _save_runtime_health(config_dir: Path, data: dict[str, Any]) -> None:
+    from .atomic_io import atomic_write_text
+
     data["version"] = HEALTH_VERSION
     data["updated_at"] = _utc_now()
     path = runtime_health_file(config_dir)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    atomic_write_text(
+        path,
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+    )
 
 
 def _update_runtime_health(config_dir: Path, **updates: Any) -> dict[str, Any]:

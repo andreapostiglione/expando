@@ -52,6 +52,15 @@ class _LastExpansion:
     suffix: str = ""
 
 
+@dataclass(frozen=True)
+class _ExpansionPlan:
+    trigger: str
+    match: Match
+    context: AppContext
+    config: ConfigBundle
+    suffix: str = ""
+
+
 class ExpansionEngine:
     def __init__(
         self,
@@ -118,13 +127,17 @@ class ExpansionEngine:
             if last is None:
                 return False
             self._last_expansion = None
-            self.injector.delete_chars(len(last.replacement))
+            replacement_len = len(last.replacement)
             restore = last.trigger + last.suffix
+        try:
+            self.injector.delete_chars(replacement_len)
             if restore:
                 self.injector.inject(restore)
-            self._buffer = restore
-            self._postponed = None
-            return True
+        finally:
+            with self._lock:
+                self._buffer = restore
+                self._postponed = None
+        return True
 
     def _compute_max_trigger_len(self) -> int:
         literal_max = max((len(trigger) for trigger in self._literal), default=0)
@@ -150,39 +163,60 @@ class ExpansionEngine:
         return context
 
     def handle_char(self, char: str) -> bool:
+        context = self._runtime_context()
         with self._lock:
             if not self.enabled:
                 return False
-            context = self._runtime_context()
             config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
                 return False
             self._buffer += char
             if len(self._buffer) > self._max_trigger_len:
                 self._buffer = self._buffer[-self._max_trigger_len :]
-            return self._try_expand(
+            plan = self._plan_expand(
                 require_word_break=False,
                 context=context,
                 config=config,
             )
+        if plan is None:
+            return False
+        return self._execute_expand(
+            plan.trigger,
+            plan.match,
+            context=plan.context,
+            config=plan.config,
+            suffix=plan.suffix,
+        )
 
     def handle_key(self, key: Key) -> bool:
+        context = self._runtime_context()
         with self._lock:
             if not self.enabled:
                 return False
-            context = self._runtime_context()
             config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
                 return False
 
             if key in WORD_BREAK_KEYS:
-                expanded = self._try_expand(
+                plan = self._plan_expand(
                     require_word_break=True,
                     context=context,
                     config=config,
                 )
                 self._append_key_to_buffer(key)
-                return expanded
+            else:
+                plan = None
+
+        if key in WORD_BREAK_KEYS:
+            if plan is None:
+                return False
+            return self._execute_expand(
+                plan.trigger,
+                plan.match,
+                context=plan.context,
+                config=plan.config,
+                suffix=plan.suffix,
+            )
 
         char = self._key_to_char(key)
         if char is None:
@@ -268,13 +302,13 @@ class ExpansionEngine:
                 return True
         return False
 
-    def _try_expand(
+    def _plan_expand(
         self,
         *,
         require_word_break: bool,
         context: AppContext,
         config: ConfigBundle,
-    ) -> bool:
+    ) -> _ExpansionPlan | None:
         match_info = self._find_match(
             require_word_break=require_word_break,
             context=context,
@@ -286,13 +320,13 @@ class ExpansionEngine:
             if match_info and len(match_info[0]) > len(postponed_trigger):
                 self._postponed = None
             elif self._could_extend_to_longer_trigger():
-                return False
+                return None
             else:
                 self._postponed = None
                 suffix = self._buffer[len(postponed_trigger) :]
-                return self._execute_expand(
-                    postponed_trigger,
-                    postponed_match,
+                return _ExpansionPlan(
+                    trigger=postponed_trigger,
+                    match=postponed_match,
                     context=context,
                     config=config,
                     suffix=suffix,
@@ -318,16 +352,16 @@ class ExpansionEngine:
                         app_name=context.name or "",
                         detail=detail,
                     )
-            return False
+            return None
 
         trigger, match = match_info
         if match.postpone and self._buffer.endswith(trigger):
             self._postponed = (trigger, match)
-            return False
+            return None
 
-        return self._execute_expand(
-            trigger,
-            match,
+        return _ExpansionPlan(
+            trigger=trigger,
+            match=match,
             context=context,
             config=config,
         )
@@ -390,7 +424,8 @@ class ExpansionEngine:
                 render_ctx,
             )
 
-        typed_trigger = self._buffer[-len(trigger) :]
+        with self._lock:
+            typed_trigger = self._buffer[-len(trigger) :]
         if match.propagate_case:
             replacement = apply_propagate_case(
                 trigger,
@@ -443,12 +478,13 @@ class ExpansionEngine:
             from .injection_degradation import record_injection_success
 
             record_injection_success(self._config_dir)
-        self._buffer = suffix
-        self._last_expansion = _LastExpansion(
-            trigger=trigger,
-            replacement=replacement,
-            suffix=suffix,
-        )
+        with self._lock:
+            self._buffer = suffix
+            self._last_expansion = _LastExpansion(
+                trigger=trigger,
+                replacement=replacement,
+                suffix=suffix,
+            )
 
         if self._plugin_manager is not None:
             self._plugin_manager.run_after_expand(render_ctx, replacement)

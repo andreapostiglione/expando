@@ -134,6 +134,15 @@ def repair_daemon_state(config_dir: Path) -> dict[str, Any]:
         path.unlink(missing_ok=True)
         actions.append(f"released_stale_lock:{path.name}")
 
+    try:
+        from .crash_loop import clear_safe_mode, safe_mode_file
+
+        if safe_mode_file(config_dir).exists():
+            clear_safe_mode(config_dir)
+            actions.append("cleared_safe_mode")
+    except Exception:
+        pass
+
     running_after, pid_after = is_running(config_dir)
     diagnosis = diagnose_daemon_state(config_dir)
     return {

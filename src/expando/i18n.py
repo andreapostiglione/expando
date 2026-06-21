@@ -157,7 +157,19 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.disable": {"it": "Disattiva", "en": "Disable"},
     "menubar.enable": {"it": "Attiva", "en": "Enable"},
     "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
-    "menubar.hub": {"it": "Package hub", "en": "Package hub"},
+    "ui.cancel": {"it": "Annulla", "en": "Cancel"},
+    "ui.confirm": {"it": "Conferma", "en": "Confirm"},
+    "ui.ok": {"it": "OK", "en": "OK"},
+    "ui.form.title": {
+        "it": "Compila i campi dello snippet",
+        "en": "Fill in the snippet fields",
+    },
+    "ui.insert": {"it": "Inserisci", "en": "Insert"},
+    "menubar.restore_picker": {
+        "it": "Scegli backup da ripristinare",
+        "en": "Choose a backup to restore",
+    },
+    "menubar.hub": {"it": "Hub pacchetti", "en": "Snippet packages"},
     "menubar.editor": {"it": "Editor snippet", "en": "Snippet editor"},
     "menubar.restart": {"it": "Riavvia", "en": "Restart"},
     "menubar.backup": {"it": "Backup configurazione", "en": "Backup configuration"},
@@ -165,6 +177,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.backup_created": {
         "it": "Backup creato: {path}",
         "en": "Backup created: {path}",
+    },
+    "menubar.backup_saved": {
+        "it": "Backup salvato ({label}).",
+        "en": "Backup saved ({label}).",
     },
     "menubar.backup_failed": {
         "it": "Backup fallito: {error}",
@@ -177,6 +193,54 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.restored": {
         "it": "Configurazione ripristinata da {path}",
         "en": "Configuration restored from {path}",
+    },
+    "menubar.restore_confirm_title": {
+        "it": "Ripristinare il backup?",
+        "en": "Restore this backup?",
+    },
+    "menubar.restore_confirm_body": {
+        "it": "Verrà ripristinato il backup del {label}. La configurazione attuale verrà sostituita.",
+        "en": "The backup from {label} will be restored. Your current configuration will be replaced.",
+    },
+    "menubar.restored_ok": {
+        "it": "Configurazione ripristinata dal backup del {label}.",
+        "en": "Configuration restored from the {label} backup.",
+    },
+    "menubar.restore_invalid_rolled_back": {
+        "it": "Il backup contiene errori. La configurazione precedente è stata ripristinata.",
+        "en": "The backup contains errors. Your previous working configuration was restored.",
+    },
+    "editor.duplicate.button": {"it": "Duplica", "en": "Duplicate"},
+    "editor.duplicate.title": {"it": "Duplica snippet", "en": "Duplicate snippet"},
+    "editor.duplicate.body": {
+        "it": "Scegli il file YAML di destinazione.",
+        "en": "Choose the destination YAML file.",
+    },
+    "editor.duplicate.select": {
+        "it": "Seleziona uno snippet da duplicare.",
+        "en": "Select a snippet to duplicate.",
+    },
+    "editor.duplicate.readonly": {
+        "it": "I package hub non possono essere duplicati da qui.",
+        "en": "Hub packages cannot be duplicated from here.",
+    },
+    "editor.move.button": {"it": "Sposta", "en": "Move"},
+    "editor.move.title": {"it": "Sposta snippet", "en": "Move snippet"},
+    "editor.move.body": {
+        "it": "Scegli il file YAML di destinazione.",
+        "en": "Choose the destination YAML file.",
+    },
+    "editor.move.select": {
+        "it": "Seleziona uno snippet da spostare.",
+        "en": "Select a snippet to move.",
+    },
+    "editor.move.readonly": {
+        "it": "I package hub non possono essere spostati da qui.",
+        "en": "Hub packages cannot be moved from here.",
+    },
+    "editor.move.no_targets": {
+        "it": "Non ci sono altri file YAML disponibili.",
+        "en": "There are no other YAML files available.",
     },
     "menubar.restore_failed": {
         "it": "Ripristino fallito: {error}",
@@ -191,8 +255,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Expando ↑{count}",
     },
     "menubar.update_manual_required": {
-        "it": "Aggiornamento manuale richiesto (Sparkle non disponibile in questa build).",
-        "en": "Manual update required (Sparkle unavailable in this build).",
+        "it": "Scarica l'ultima versione da GitHub Releases.",
+        "en": "Download the latest version from GitHub Releases.",
     },
     "menubar.updates": {"it": "Controlla aggiornamenti", "en": "Check for updates"},
     "menubar.quit": {"it": "Esci", "en": "Quit"},
@@ -214,12 +278,20 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Update check failed: {error}",
     },
     "menubar.ui_failed": {
-        "it": "Impossibile aprire la finestra (controlla expando.log).",
-        "en": "Could not open the window (check expando.log).",
+        "it": "Impossibile aprire la finestra. Riprova o riavvia Expando.",
+        "en": "Could not open the window. Try again or restart Expando.",
     },
     "menubar.action_failed": {
-        "it": "Azione menu bar fallita ({action}): {error}",
-        "en": "Menu bar action failed ({action}): {error}",
+        "it": "Operazione non riuscita: {error}",
+        "en": "Operation failed: {error}",
+    },
+    "menubar.toggle_enabled": {
+        "it": "Espansione testo attivata",
+        "en": "Text expansion enabled",
+    },
+    "menubar.toggle_disabled": {
+        "it": "Espansione testo disattivata",
+        "en": "Text expansion disabled",
     },
     "doctor.notarize_history.title": {
         "it": "Audit notarizzazione (storico locale)",
@@ -397,6 +469,14 @@ _STRINGS: dict[str, dict[str, str]] = {
     "doctor.permissions.input_monitoring_missing": {
         "it": "Monitoraggio input mancante: i trigger potrebbero non essere rilevati.",
         "en": "Input Monitoring is missing: triggers may not be detected.",
+    },
+    "listener.permissions.input_monitoring": {
+        "it": "Monitoraggio input non concesso per {grant_label}. Abilitalo in Impostazioni → Privacy e sicurezza → Monitoraggio input.",
+        "en": "Input Monitoring is not granted for {grant_label}. Enable it in System Settings → Privacy & Security → Input Monitoring.",
+    },
+    "listener.permissions.accessibility": {
+        "it": "Accessibilità non concessa per {grant_label}. Abilitala in Impostazioni → Privacy e sicurezza → Accessibilità.",
+        "en": "Accessibility is not granted for {grant_label}. Enable it in System Settings → Privacy & Security → Accessibility.",
     },
     "cli.import.header": {"it": "Importati:", "en": "Imported:"},
     "cli.import.item": {"it": "  - {name}", "en": "  - {name}"},

@@ -5,13 +5,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from expando.config import ConfigCompileError, load_config
+from expando.config import load_config
 from expando.config_reload_gate import (
+    ConfigReloadError,
     last_good_dir,
     rollback_to_last_good,
     safe_reload_config,
     save_last_good_config,
     validate_config_for_reload,
+    wait_for_stable_config,
 )
 
 
@@ -62,11 +64,35 @@ def test_safe_reload_config_rolls_back_on_invalid_yaml(tmp_path: Path):
         encoding="utf-8",
     )
 
-    with pytest.raises(ConfigCompileError):
+    with pytest.raises(ConfigReloadError) as exc_info:
         safe_reload_config(config_dir, engine)
 
+    assert exc_info.value.rolled_back is True
     engine.reload.assert_called()
     assert load_config(config_dir).matches[0].triggers == [":ok"]
+
+
+def test_wait_for_stable_config_waits_for_changing_file(tmp_path: Path, monkeypatch):
+    config_dir = _setup_config_dir(tmp_path)
+    target = config_dir / "match" / "base.yml"
+    calls = {"sleeps": 0}
+
+    def fake_sleep(seconds: float) -> None:
+        calls["sleeps"] += 1
+        if calls["sleeps"] == 1:
+            target.write_text(
+                "matches:\n  - trigger: ':mid'\n    replace: 'partial'\n",
+                encoding="utf-8",
+            )
+
+    monkeypatch.setattr("expando.config_reload_gate.time.sleep", fake_sleep)
+    wait_for_stable_config(
+        config_dir,
+        settle_seconds=0.01,
+        poll_interval=0.01,
+        timeout_seconds=0.2,
+    )
+    assert calls["sleeps"] >= 2
 
 
 def test_safe_reload_config_applies_valid_changes(tmp_path: Path):

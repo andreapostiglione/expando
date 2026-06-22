@@ -1,11 +1,15 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.28.0 | **Release:** v3.28.0 (Sprint 37 — Stability)  
+**Versione:** 3.29.0 | **Release:** v3.29.0 (Sprint 38 — UX polish)
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Fatto
 
+- **v3.29.0** ✓ Sprint 38 — **UX polish**
+  - Menu bar: health, snooze 1h/4h, badge permessi 🔒, hub upgrade con diff
+  - Wizard permessi migliorato (badge + recheck input monitoring)
+  - `doctor --repair` reinstalla LaunchAgent obsoleto
 - **v3.28.0** ✓ Sprint 37 — **Stability hardening**
   - Watchdog listener: retry 30s, niente listener morto permanente
   - Engine: lock fuori da render/inject/undo (fix deadlock form + menu bar)
@@ -26,7 +30,6 @@ Stabilità **production-ready** in dev (venv + `python3.14` con permessi OK).
 
 ## Prossimi passi (opzionali)
 
-- Reinstall LaunchAgent per `ThrottleInterval` (`./scripts/install-launch-agent.sh`)
-- Secondo runner E2E fisico
-- Wizard DMG: deep-link Monitoraggio input migliorato
-- Editor: diff upgrade package hub in UI
+- Secondo runner E2E fisico + soak su host dedicato
+- Ampliare catalogo hub community (15+ package)
+- HOMEBREW_TAP_TOKEN in CI per PR tap automatiche

@@ -4,11 +4,46 @@ from pathlib import Path
 
 from .i18n import t
 from .permissions import (
+    PermissionStatus,
     check_permissions,
     open_accessibility_settings,
     open_input_monitoring_settings,
     permissions_ready,
 )
+
+
+def _permission_badge_text(status: PermissionStatus) -> str:
+    accessibility = status.accessibility
+    if accessibility is True:
+        accessibility_label = t("doctor.perm.granted")
+    elif accessibility is False:
+        accessibility_label = t("doctor.perm.missing")
+    else:
+        accessibility_label = t("doctor.perm.unknown")
+
+    input_monitoring = status.input_monitoring
+    if input_monitoring is True:
+        input_label = t("doctor.perm.granted")
+    elif input_monitoring is False:
+        input_label = t("doctor.perm.missing")
+    else:
+        input_label = t("doctor.perm.unknown")
+
+    return (
+        f"{t('doctor.accessibility')}: {accessibility_label}\n"
+        f"{t('doctor.input_monitoring')}: {input_label}"
+    )
+
+
+def _make_badge(text: str):
+    from AppKit import NSMakeRect, NSTextField
+
+    badge = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 420, 44))
+    badge.setStringValue_(text)
+    badge.setEditable_(False)
+    badge.setBezeled_(False)
+    badge.setDrawsBackground_(False)
+    return badge
 
 
 def run_permission_wizard(config_dir: Path) -> bool:
@@ -19,8 +54,6 @@ def run_permission_wizard(config_dir: Path) -> bool:
         NSAlertThirdButtonReturn,
         NSApplication,
         NSApplicationActivationPolicyAccessory,
-        NSMakeRect,
-        NSTextField,
     )
 
     app = NSApplication.sharedApplication()
@@ -53,6 +86,8 @@ def run_permission_wizard(config_dir: Path) -> bool:
                 f"{body}\n\n{t('doctor.grant_target')}: {runtime.grant_label}\n"
                 f"{runtime.grant_hint}"
             )
+        if step_id in {"welcome", "done"}:
+            body = f"{body}\n\n{_permission_badge_text(status)}"
 
         alert = NSAlert.alloc().init()
         alert.setMessageText_(title)
@@ -62,26 +97,21 @@ def run_permission_wizard(config_dir: Path) -> bool:
             alert.addButtonWithTitle_(t("wizard.open_settings"))
             alert.addButtonWithTitle_(t("wizard.recheck"))
             alert.addButtonWithTitle_(t("wizard.skip"))
+            alert.setAccessoryView_(_make_badge(_permission_badge_text(status)))
         elif step_id == "input":
             alert.addButtonWithTitle_(t("wizard.open_settings"))
+            alert.addButtonWithTitle_(t("wizard.recheck"))
             alert.addButtonWithTitle_(t("wizard.continue"))
-            alert.addButtonWithTitle_(t("wizard.skip"))
+            alert.setAccessoryView_(_make_badge(_permission_badge_text(status)))
         elif step_id == "done":
             alert.addButtonWithTitle_(t("wizard.finish"))
             if runtime and runtime.mode == "app":
                 alert.addButtonWithTitle_(t("wizard.install_launch_agent"))
+            if not permissions_ready(status):
+                alert.addButtonWithTitle_(t("wizard.open_permissions"))
         else:
             alert.addButtonWithTitle_(t("wizard.continue"))
             alert.addButtonWithTitle_(t("wizard.skip"))
-
-        if step_id == "accessibility":
-            perm = t("doctor.perm.granted") if permissions_ready(status) else t("doctor.perm.missing")
-            badge = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 360, 22))
-            badge.setStringValue_(f"{t('doctor.accessibility')}: {perm}")
-            badge.setEditable_(False)
-            badge.setBezeled_(False)
-            badge.setDrawsBackground_(False)
-            alert.setAccessoryView_(badge)
 
         response = alert.runModal()
 
@@ -102,17 +132,34 @@ def run_permission_wizard(config_dir: Path) -> bool:
             continue
 
         if step_id == "input":
-            if response == NSAlertThirdButtonReturn:
-                return False
             if response == NSAlertFirstButtonReturn:
                 open_input_monitoring_settings()
+                continue
+            if response == NSAlertSecondButtonReturn:
+                if permissions_ready(check_permissions()):
+                    step_index += 1
                 continue
             step_index += 1
             continue
 
         if step_id == "done":
-            if response == NSAlertSecondButtonReturn and runtime and runtime.mode == "app":
-                _offer_launch_agent_install(config_dir)
+            has_launch_agent = bool(runtime and runtime.mode == "app")
+            has_open_permissions = not permissions_ready(status)
+            if response == NSAlertFirstButtonReturn:
+                return True
+            if response == NSAlertSecondButtonReturn:
+                if has_launch_agent:
+                    _offer_launch_agent_install(config_dir)
+                    return True
+                if has_open_permissions:
+                    open_accessibility_settings()
+                    open_input_monitoring_settings()
+                    continue
+                return True
+            if response == NSAlertThirdButtonReturn and has_launch_agent and has_open_permissions:
+                open_accessibility_settings()
+                open_input_monitoring_settings()
+                continue
             return True
         return True
 

@@ -2,6 +2,22 @@
 
 All notable changes to Expando are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.29.0] — 2026-06-21
+
+### Added
+- Menu bar: **Stato runtime** (`expando health` in un click)
+- Menu bar: **Pausa temporanea** (1h / 4h / riprendi) con badge ⏸
+- Menu bar: badge **🔒** quando Accessibilità o Monitoraggio input mancano
+- Menu bar: **Aggiorna pacchetti hub** con anteprima diff YAML prima dell'upgrade
+- Wizard permessi: badge live su Accessibilità + Monitoraggio input; recheck sul passo input
+- `doctor --repair` reinstalla LaunchAgent se il plist installato è obsoleto
+- `snooze.json` — pausa espansione temporanea senza disattivare il daemon
+- Script `scripts/soak-health-check.sh` per smoke ripetuto su runner self-hosted
+
+### Changed
+- Editor snippet: placeholder ricerca localizzato (`editor.search_placeholder`)
+- Priorità badge menu bar: listener ⚠ → permessi 🔒 → snooze ⏸ → hub ↑N → disabilitato ○
+
 ## [3.28.0] — 2026-06-21
 
 ### Added
@@ -47,6 +63,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.0]: https://github.com/andreapostiglione/expando/compare/v3.28.0...v3.29.0
 [3.28.0]: https://github.com/andreapostiglione/expando/compare/v3.27.0...v3.28.0
 [3.27.0]: https://github.com/andreapostiglione/expando/compare/v3.26.0...v3.27.0
 [3.26.0]: https://github.com/andreapostiglione/expando/releases/tag/v3.26.0

@@ -1,6 +1,6 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.28.0
+**Versione attuale:** v3.29.0
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
@@ -109,11 +109,20 @@
 | `expando health` + support bundle + E2E secure-input/watchdog | ✓ v3.25.0 |
 | Auto-backup + sync conflict + plugin allowlist + docs complete | ✓ v3.26.0 |
 
-### Gap residui (post v3.28)
+### Gap residui (post v3.29)
 
 - **E2E runner:** clipboard/secure-input richiedono runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`)
 - **Secondo runner E2E:** workflow nightly presente; failover fisico ancora opzionale
-- **LaunchAgent:** reinstallare plist per applicare `ThrottleInterval` su installazioni esistenti
+- **Hub packages:** ampliare catalogo community oltre i 10 attuali
+
+### Sprint 38 → v3.29.0 ✓
+
+1. **T10-01** Wizard DMG: badge Accessibilità + Monitoraggio input, recheck su entrambi i passi
+2. **T10-02** Menu bar: badge 🔒 permessi, voce Permessi → wizard, stato runtime (`expando health`)
+3. **T10-03** Snooze 1h/4h in menu bar + badge ⏸; engine rispetta pausa temporanea
+4. **T10-04** Hub upgrade in-app: diff YAML prima dell'upgrade + conferma nativa
+5. **T10-05** `doctor --repair` reinstalla LaunchAgent se plist obsoleto
+6. **T10-06** Editor: placeholder ricerca i18n; soak health script documentato
 
 ### Sprint 37 → v3.28.0 ✓
 
@@ -571,4 +580,4 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 
 ---
 
-*Ultimo aggiornamento: 21 giugno 2026 — v3.28.0 (Sprint 37: stability hardening — listener, daemon, crash loop, config reload)*
+*Ultimo aggiornamento: 21 giugno 2026 — v3.29.0 (Sprint 38: onboarding UX, menu bar health/snooze, hub upgrade diff)*

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import fcntl
 import os
+import platform
+import plistlib
 import signal
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
 
 from .daemon import is_running
-from .paths import lock_file, pid_file
+from .paths import lock_file, package_root, pid_file
 
 
 def _find_expando_processes() -> list[int]:
@@ -85,6 +88,55 @@ def diagnose_daemon_state(config_dir: Path) -> dict[str, Any]:
     }
 
 
+def _installed_launch_agent_path() -> Path:
+    return Path.home() / "Library/LaunchAgents/com.andreapostiglione.expando.plist"
+
+
+def _source_launch_agent_path() -> Path:
+    return package_root() / "scripts" / "com.andreapostiglione.expando.plist"
+
+
+def launch_agent_needs_refresh() -> bool:
+    if platform.system() != "Darwin":
+        return False
+    source = _source_launch_agent_path()
+    installed = _installed_launch_agent_path()
+    if not source.is_file():
+        return False
+    if not installed.is_file():
+        return True
+    try:
+        source_data = plistlib.loads(source.read_bytes())
+        installed_data = plistlib.loads(installed.read_bytes())
+    except Exception:
+        return True
+    for key in ("ThrottleInterval", "KeepAlive", "RunAtLoad", "Label"):
+        if source_data.get(key) != installed_data.get(key):
+            return True
+    source_args = source_data.get("ProgramArguments") or []
+    installed_args = installed_data.get("ProgramArguments") or []
+    if not installed_args:
+        return True
+    if not str(installed_args[0]).endswith("launch-expando.sh"):
+        return True
+    return False
+
+
+def repair_launch_agent() -> list[str]:
+    if platform.system() != "Darwin":
+        return []
+    script = package_root() / "scripts" / "install-launch-agent.sh"
+    if not script.is_file():
+        return []
+    if not launch_agent_needs_refresh() and _installed_launch_agent_path().is_file():
+        return []
+    try:
+        subprocess.run(["bash", str(script)], check=True, timeout=120)
+    except Exception:
+        return []
+    return ["reinstalled_launch_agent"]
+
+
 def repair_daemon_state(config_dir: Path) -> dict[str, Any]:
     config_dir.mkdir(parents=True, exist_ok=True)
     actions: list[str] = []
@@ -142,6 +194,8 @@ def repair_daemon_state(config_dir: Path) -> dict[str, Any]:
             actions.append("cleared_safe_mode")
     except Exception:
         pass
+
+    actions.extend(repair_launch_agent())
 
     running_after, pid_after = is_running(config_dir)
     diagnosis = diagnose_daemon_state(config_dir)

@@ -49,6 +49,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "wizard.continue": {"it": "Continua", "en": "Continue"},
     "wizard.skip": {"it": "Salta", "en": "Skip"},
     "wizard.finish": {"it": "Fine", "en": "Finish"},
+    "wizard.open_permissions": {
+        "it": "Apri permessi",
+        "en": "Open permissions",
+    },
     "runtime.app": {"it": "app bundle", "en": "app bundle"},
     "runtime.dev": {"it": "sviluppo (Python)", "en": "development (Python)"},
     "runtime.venv": {"it": "venv locale", "en": "local venv"},
@@ -292,6 +296,60 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.toggle_disabled": {
         "it": "Espansione testo disattivata",
         "en": "Text expansion disabled",
+    },
+    "menubar.health": {"it": "Stato runtime", "en": "Runtime health"},
+    "menubar.snooze": {"it": "Pausa temporanea", "en": "Snooze"},
+    "menubar.snooze.1h": {"it": "Pausa 1 ora", "en": "Snooze 1 hour"},
+    "menubar.snooze.4h": {"it": "Pausa 4 ore", "en": "Snooze 4 hours"},
+    "menubar.snooze.clear": {"it": "Riprendi espansione", "en": "Resume expansion"},
+    "menubar.snooze.active": {
+        "it": "In pausa ({remaining})",
+        "en": "Snoozed ({remaining})",
+    },
+    "menubar.snooze.enabled": {
+        "it": "Espansione in pausa per {remaining}.",
+        "en": "Expansion snoozed for {remaining}.",
+    },
+    "menubar.snooze.cleared": {
+        "it": "Pausa terminata. Espansione riattivata.",
+        "en": "Snooze cleared. Expansion resumed.",
+    },
+    "menubar.permissions": {"it": "Permessi macOS", "en": "macOS permissions"},
+    "menubar.permissions_ok": {
+        "it": "Permessi macOS ✓",
+        "en": "macOS permissions ✓",
+    },
+    "menubar.permissions_missing": {
+        "it": "Permessi macOS mancanti",
+        "en": "macOS permissions missing",
+    },
+    "menubar.hub_updates": {
+        "it": "Aggiorna pacchetti hub",
+        "en": "Upgrade hub packages",
+    },
+    "menubar.hub_updates_count": {
+        "it": "Aggiorna hub ({count})",
+        "en": "Upgrade hub ({count})",
+    },
+    "menubar.hub_up_to_date": {
+        "it": "Tutti i pacchetti hub sono aggiornati.",
+        "en": "All hub packages are up to date.",
+    },
+    "menubar.hub_upgrade_title": {
+        "it": "Aggiornare il pacchetto hub?",
+        "en": "Upgrade this hub package?",
+    },
+    "menubar.hub_upgraded": {
+        "it": "Pacchetto {package} aggiornato.",
+        "en": "Package {package} upgraded.",
+    },
+    "editor.search_placeholder": {
+        "it": "Cerca snippet",
+        "en": "Search snippets",
+    },
+    "doctor.repair.launch_agent": {
+        "it": "LaunchAgent reinstallato",
+        "en": "LaunchAgent reinstalled",
     },
     "doctor.notarize_history.title": {
         "it": "Audit notarizzazione (storico locale)",

@@ -162,10 +162,20 @@ class ExpansionEngine:
             return enrich_context_window_title(context)
         return context
 
+    def _expansion_active(self) -> bool:
+        if not self.enabled:
+            return False
+        if self._config_dir is not None:
+            from .snooze import snooze_active
+
+            if snooze_active(self._config_dir):
+                return False
+        return True
+
     def handle_char(self, char: str) -> bool:
         context = self._runtime_context()
         with self._lock:
-            if not self.enabled:
+            if not self._expansion_active():
                 return False
             config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
@@ -191,7 +201,7 @@ class ExpansionEngine:
     def handle_key(self, key: Key) -> bool:
         context = self._runtime_context()
         with self._lock:
-            if not self.enabled:
+            if not self._expansion_active():
                 return False
             config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):

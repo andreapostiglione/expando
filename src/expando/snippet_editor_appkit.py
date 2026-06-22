@@ -345,7 +345,7 @@ def run_snippet_editor(
 
         content = window.contentView()
         search = NSTextField.alloc().initWithFrame_(NSMakeRect(16, 672, 888, 28))
-        search.setPlaceholderString_("Cerca snippet")
+        search.setPlaceholderString_(t("editor.search_placeholder"))
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
             "searchChanged:",

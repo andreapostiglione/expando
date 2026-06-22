@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.28.0"><img src="https://img.shields.io/badge/version-3.28.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.0"><img src="https://img.shields.io/badge/version-3.29.0-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -23,7 +23,16 @@
 
 Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://github.com/andreapostiglione/expando/releases)
 
-### v3.28 — Stability hardening (latest)
+### v3.29 — UX polish (latest)
+
+| Area | What's new |
+|------|------------|
+| **Menu bar** | Runtime health in one click · snooze 1h/4h · 🔒 badge when permissions missing |
+| **Hub** | Upgrade packages from menu bar with YAML diff preview before applying |
+| **Wizard** | Live permission badges for Accessibility + Input Monitoring |
+| **Repair** | `expando doctor --repair` reinstalls outdated LaunchAgent plist |
+
+### v3.28 — Stability hardening
 
 Production-focused reliability for the daemon, listener, and menu bar:
 

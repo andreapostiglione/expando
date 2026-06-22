@@ -46,3 +46,15 @@ re-enable `ENABLE_SELF_HOSTED_E2E`.
 
 Tests marked `@pytest.mark.integration` skip on headless GitHub-hosted runners unless
 `EXPANDO_E2E_FULL=1` is set on a self-hosted host.
+
+## Soak smoke (optional)
+
+For long-running daemon stability on a self-hosted runner, use:
+
+```bash
+chmod +x scripts/soak-health-check.sh
+./scripts/soak-health-check.sh 24 300
+```
+
+This runs `expando health` and a short `expando doctor` summary every 5 minutes for 2 hours.
+Pair it with `e2e-nightly.yml` on a second physical Mac for hardware redundancy.

@@ -266,6 +266,103 @@ def hub_update_count(config_dir: Path) -> int:
     return len(hub_outdated_packages(config_dir))
 
 
+def _package_destination(config_dir: Path, package_id: str) -> Path:
+    return match_dir(config_dir) / "packages" / package_id
+
+
+def _remote_package_content(package_id: str, filename: str) -> str | None:
+    for source in _local_package_sources(package_id):
+        path = source / filename
+        if path.is_file():
+            return path.read_text(encoding="utf-8")
+    try:
+        return _download_package_file(package_id, filename)
+    except FileNotFoundError:
+        return None
+
+
+def hub_package_upgrade_diff(config_dir: Path, package_id: str) -> list[dict[str, str]]:
+    import difflib
+
+    package_id = _validate_package_id(package_id)
+    destination = _package_destination(config_dir, package_id)
+    if not destination.exists():
+        raise ValueError(f"Package not installed: {package_id}")
+
+    local_files = sorted(destination.glob("*.yml")) + sorted(destination.glob("*.yaml"))
+    if not local_files:
+        raise ValueError(f"No YAML files in installed package: {package_id}")
+
+    results: list[dict[str, str]] = []
+    for local_path in local_files:
+        filename = local_path.name
+        local_text = local_path.read_text(encoding="utf-8")
+        remote_text = _remote_package_content(package_id, filename)
+        if remote_text is None:
+            results.append(
+                {
+                    "file": filename,
+                    "status": "local_only",
+                    "summary": "remote missing",
+                }
+            )
+            continue
+        if local_text == remote_text:
+            results.append({"file": filename, "status": "unchanged", "summary": ""})
+            continue
+        diff_lines = list(
+            difflib.unified_diff(
+                local_text.splitlines(),
+                remote_text.splitlines(),
+                fromfile=f"local/{filename}",
+                tofile=f"remote/{filename}",
+                lineterm="",
+            )
+        )
+        adds = sum(
+            1 for line in diff_lines if line.startswith("+") and not line.startswith("+++")
+        )
+        dels = sum(
+            1 for line in diff_lines if line.startswith("-") and not line.startswith("---")
+        )
+        preview = "\n".join(diff_lines[:24])
+        if len(diff_lines) > 24:
+            preview += "\n..."
+        results.append(
+            {
+                "file": filename,
+                "status": "changed",
+                "summary": f"+{adds}/-{dels}",
+                "diff": preview,
+            }
+        )
+    return results
+
+
+def format_hub_upgrade_diff_summary(
+    package_id: str,
+    *,
+    local_version: str,
+    remote_version: str,
+    diff_entries: list[dict[str, str]],
+) -> str:
+    lines = [
+        f"{package_id}: {local_version} → {remote_version}",
+        "",
+    ]
+    changed = [entry for entry in diff_entries if entry.get("status") == "changed"]
+    if not changed:
+        lines.append("Nessuna modifica nei file YAML.")
+        return "\n".join(lines)
+    for entry in changed:
+        lines.append(f"- {entry['file']}: {entry.get('summary', '')}")
+        preview = entry.get("diff", "").strip()
+        if preview:
+            lines.append(preview)
+            lines.append("")
+    return "\n".join(lines).strip()
+
+
 def upgrade_hub_package(config_dir: Path, package_id: str) -> Path:
     package_id = _validate_package_id(package_id)
     installed = list_installed_hub_versions(config_dir)

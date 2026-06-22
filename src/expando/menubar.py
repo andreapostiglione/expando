@@ -41,10 +41,28 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self.config_dir = config_dir
             self.service = service
             self.enabled_item = rumps.MenuItem(t("menubar.disable"), callback=self.toggle_enabled)
+            self.health_item = rumps.MenuItem(t("menubar.health"), callback=self.show_health)
+            self.hub_updates_item = rumps.MenuItem(
+                t("menubar.hub_updates"),
+                callback=self.upgrade_hub_packages,
+            )
+            self.snooze_item = rumps.MenuItem(t("menubar.snooze"), callback=None)
+            self.snooze_item.add(rumps.MenuItem(t("menubar.snooze.1h"), callback=self.snooze_one_hour))
+            self.snooze_item.add(rumps.MenuItem(t("menubar.snooze.4h"), callback=self.snooze_four_hours))
+            self.snooze_item.add(rumps.MenuItem(t("menubar.snooze.clear"), callback=self.clear_snooze))
+            self.permissions_item = rumps.MenuItem(
+                t("menubar.permissions"),
+                callback=self.open_permissions,
+            )
             self.menu = [
                 self.enabled_item,
+                self.health_item,
+                self.snooze_item,
+                self.permissions_item,
+                None,
                 rumps.MenuItem(t("menubar.search"), callback=self.search_snippets),
                 rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
+                self.hub_updates_item,
                 rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
                 rumps.MenuItem(t("menubar.backup"), callback=self.backup_config),
                 rumps.MenuItem(t("menubar.restore"), callback=self.restore_config),
@@ -60,6 +78,8 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             service.start()
             set_ui_active(False)
             threading.Thread(target=self._startup_tasks, daemon=True).start()
+            self._status_timer = rumps.Timer(self._refresh_status, 60)
+            self._status_timer.start()
 
         def run(self, **options):
             image = load_menubar_nsimage()
@@ -77,17 +97,35 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
         def _sync_enabled_label(self, *_args) -> None:
             def _apply() -> None:
+                from .menubar_status import permissions_blocking, resolve_menubar_title
+                from .permissions import check_permissions
+                from .snooze import format_snooze_remaining, snooze_active
+
                 enabled = self.service.engine.enabled
                 self.enabled_item.title = t("menubar.disable") if enabled else t("menubar.enable")
                 hub_updates = self._hub_updates()
-                if self.service.listener_dead():
-                    self.title = "⚠"
-                elif hub_updates > 0:
-                    self.title = f"↑{hub_updates}"
-                elif not enabled:
-                    self.title = "○"
+                snoozed = snooze_active(self.config_dir)
+                permissions_ok = not permissions_blocking(check_permissions())
+                self.title = resolve_menubar_title(
+                    listener_dead=self.service.listener_dead(),
+                    enabled=enabled,
+                    hub_updates=hub_updates,
+                    permissions_ok=permissions_ok,
+                    snoozed=snoozed,
+                )
+                if hub_updates > 0:
+                    self.hub_updates_item.title = tf("menubar.hub_updates_count", count=hub_updates)
                 else:
-                    self.title = None
+                    self.hub_updates_item.title = t("menubar.hub_updates")
+                remaining = format_snooze_remaining(self.config_dir)
+                if remaining:
+                    self.snooze_item.title = tf("menubar.snooze_active", remaining=remaining)
+                else:
+                    self.snooze_item.title = t("menubar.snooze")
+                if permissions_ok:
+                    self.permissions_item.title = t("menubar.permissions_ok")
+                else:
+                    self.permissions_item.title = t("menubar.permissions_missing")
 
             try:
                 from .ui_main_thread import call_on_main_thread
@@ -95,6 +133,9 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 call_on_main_thread(_apply, wait=False)
             except Exception:
                 logger.debug("Menubar label sync skipped", exc_info=True)
+
+        def _refresh_status(self, _sender) -> None:
+            self._sync_enabled_label()
 
         def _on_listener_dead(self) -> None:
             self._sync_enabled_label()
@@ -104,6 +145,46 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             self.service.engine.toggle_enabled()
             self.service.notify_toggle()
             self._sync_enabled_label()
+
+        def show_health(self, _sender) -> None:
+            from .health import build_health_document, format_health_report
+
+            document = build_health_document(self.config_dir)
+            user_info(format_health_report(document))
+
+        def open_permissions(self, _sender) -> None:
+            from .onboarding import run_onboarding
+
+            run_onboarding(self.config_dir, force=True)
+
+        def snooze_one_hour(self, _sender) -> None:
+            self._set_snooze(60)
+
+        def snooze_four_hours(self, _sender) -> None:
+            self._set_snooze(240)
+
+        def clear_snooze(self, _sender) -> None:
+            from .snooze import clear_snooze
+
+            clear_snooze(self.config_dir)
+            self._sync_enabled_label()
+            user_info(t("menubar.snooze.cleared"))
+
+        def _set_snooze(self, minutes: int) -> None:
+            from .snooze import format_snooze_remaining, set_snooze
+
+            set_snooze(self.config_dir, minutes=minutes)
+            self._sync_enabled_label()
+            remaining = format_snooze_remaining(self.config_dir) or f"{minutes}m"
+            user_info(tf("menubar.snooze.enabled", remaining=remaining))
+
+        def upgrade_hub_packages(self, _sender) -> None:
+            try:
+                self._upgrade_hub_packages()
+            except Exception as exc:
+                self._notify_action_failed(exc)
+            finally:
+                set_ui_active(False)
 
         def search_snippets(self, _sender) -> None:
             try:
@@ -120,6 +201,65 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 self._notify_action_failed(exc)
             finally:
                 set_ui_active(False)
+
+        def _upgrade_hub_packages(self) -> None:
+            from .auto_backup import backup_before_mutation
+            from .config_reload_gate import ConfigReloadError
+            from .hub import (
+                format_hub_upgrade_diff_summary,
+                hub_outdated_packages,
+                hub_package_upgrade_diff,
+                upgrade_hub_package,
+            )
+            from .ui_bridge import show_search_picker
+
+            outdated = hub_outdated_packages(self.config_dir)
+            if not outdated:
+                user_info(t("menubar.hub_up_to_date"))
+                return
+
+            items = [
+                {
+                    "trigger": item["package_id"],
+                    "label": (
+                        f"{item['name']} "
+                        f"({item['local_version']} → {item['remote_version']})"
+                    ),
+                    "package_id": item["package_id"],
+                    "local_version": item["local_version"],
+                    "remote_version": item["remote_version"],
+                }
+                for item in outdated
+            ]
+            picked = show_search_picker(items)
+            if not picked:
+                return
+
+            package_id = picked.get("package_id") or picked.get("trigger")
+            if not package_id:
+                return
+
+            diff_entries = hub_package_upgrade_diff(self.config_dir, str(package_id))
+            summary = format_hub_upgrade_diff_summary(
+                str(package_id),
+                local_version=str(picked.get("local_version", "")),
+                remote_version=str(picked.get("remote_version", "")),
+                diff_entries=diff_entries,
+            )
+            if not user_confirm(t("menubar.hub_upgrade_title"), summary):
+                return
+
+            backup_before_mutation(self.config_dir, f"hub-upgrade-{package_id}")
+            upgrade_hub_package(self.config_dir, str(package_id))
+            try:
+                self.service.apply_config_reload()
+            except ConfigReloadError as exc:
+                if exc.rolled_back:
+                    user_error(t("menubar.restore_invalid_rolled_back"))
+                    return
+                raise
+            user_success(tf("menubar.hub_upgraded", package=package_id))
+            self._sync_enabled_label()
 
         def _browse_packages(self) -> None:
             from .hub import hub_packages_for_picker, install_hub_package

@@ -5,6 +5,7 @@ APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 RESOURCES="$APP_DIR/Contents/Resources"
 SITE_PACKAGES="$RESOURCES/site-packages"
 export PYTHONPATH="$SITE_PACKAGES${PYTHONPATH:+:$PYTHONPATH}"
+export EXPANDO_RESOURCES="$RESOURCES"
 
 if [[ $# -eq 0 ]]; then
   set -- run

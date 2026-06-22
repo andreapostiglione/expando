@@ -1,26 +1,54 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 MENUBAR_ICON_POINTS = 24.0
 
 
+def _resources_has_brand_assets(resources: Path) -> bool:
+    return (
+        (resources / "logoTemplate.png").is_file()
+        or (resources / "menubar-icon.png").is_file()
+        or (resources / "AppIcon.icns").is_file()
+    )
+
+
+def _app_bundle_resources() -> Path | None:
+    """Resolve Contents/Resources when expando runs via ``python -m expando``."""
+    env = os.environ.get("EXPANDO_RESOURCES", "").strip()
+    if env:
+        resources = Path(env)
+        if _resources_has_brand_assets(resources):
+            return resources
+
+    module_file = Path(__file__).resolve()
+    parts = module_file.parts
+    if "site-packages" in parts:
+        resources = Path(*parts[: parts.index("site-packages")])
+        if resources.name == "Resources" and _resources_has_brand_assets(resources):
+            return resources
+    return None
+
+
 def _candidate_dirs() -> list[Path]:
     module_root = Path(__file__).resolve().parent
-    dirs = [
-        module_root.parents[1] / "assets",
-        module_root / "assets",
-    ]
+    dirs: list[Path] = []
+    bundle_resources = _app_bundle_resources()
+    if bundle_resources is not None:
+        dirs.append(bundle_resources)
+    dirs.extend(
+        [
+            module_root.parents[1] / "assets",
+            module_root / "assets",
+        ]
+    )
     if sys.platform == "darwin":
         argv0 = Path(sys.argv[0]).resolve()
         for parent in argv0.parents:
             resources = parent / "Resources"
-            if (
-                (resources / "logoTemplate.png").is_file()
-                or (resources / "menubar-icon.png").is_file()
-                or (resources / "AppIcon.icns").is_file()
-            ):
+            if _resources_has_brand_assets(resources):
                 dirs.append(resources)
                 break
     return dirs

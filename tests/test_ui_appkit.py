@@ -16,6 +16,31 @@ def test_brand_asset_logo_exists() -> None:
     assert menubar_template_icon() is not None
 
 
+def test_menubar_icon_when_launched_with_python_m(monkeypatch) -> None:
+    import shutil
+    import sys
+    from pathlib import Path
+
+    from expando.brand_assets import _app_bundle_resources, menubar_template_icon
+
+    source = Path(__file__).resolve().parents[1] / "assets" / "logoTemplate.png"
+    resources = Path("/tmp/expando-test-resources")
+    if resources.exists():
+        shutil.rmtree(resources)
+    resources.mkdir()
+    shutil.copy(source, resources / "logoTemplate.png")
+
+    monkeypatch.setenv("EXPANDO_RESOURCES", str(resources))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["/opt/homebrew/bin/python3", "-m", "expando", "run"],
+    )
+
+    assert _app_bundle_resources() == resources
+    assert menubar_template_icon() == resources / "logoTemplate.png"
+
+
 def test_menubar_template_sizes() -> None:
     from PIL import Image
 

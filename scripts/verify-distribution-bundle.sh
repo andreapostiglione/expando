@@ -18,21 +18,8 @@ if grep -q '/Users/runner/' "$APP/Contents/MacOS/expando" 2>/dev/null; then
   exit 1
 fi
 
-EMBEDDED_PY=""
-for candidate in "$APP/Contents/Frameworks/Python.framework/Versions/"*/bin/python3; do
-  if [[ -x "$candidate" ]]; then
-    EMBEDDED_PY="$candidate"
-    break
-  fi
-done
-
-if [[ -z "$EMBEDDED_PY" ]]; then
-  echo "Missing embedded Python.framework runtime" >&2
-  exit 1
-fi
-
 export PYTHONPATH="$APP/Contents/Resources/site-packages${PYTHONPATH:+:$PYTHONPATH}"
-"$EMBEDDED_PY" -c "import expando"
+python3 -c "import expando"
 
 "$APP/Contents/MacOS/expando" --version >/dev/null
 echo "Distribution bundle verification passed for $APP"

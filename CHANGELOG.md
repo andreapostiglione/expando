@@ -6,7 +6,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ### Fixed
 - **DMG non si avviava** — il venv nel bundle puntava a path CI (`/Users/runner/...`) e a Python.framework assente sul Mac utente
-- Build distribuzione: embed `Python.framework` + `site-packages` invece di venv non relocabile
+- Build distribuzione: `site-packages` nel bundle + Python 3.10+ di sistema (niente venv CI)
 - Doppio click su `Expando.app` ora esegue `expando run` (icona menu bar) invece di uscire subito
 - Script `scripts/repair-installed-app.sh` per riparare installazioni DMG già rotte
 

@@ -20,6 +20,10 @@ FW_PREFIX="/Library/Frameworks/Python.framework/Versions/$PY_VERSION"
 
 rm -rf "$FRAMEWORK_DST" "$SITE_PACKAGES" "$RESOURCES/venv"
 mkdir -p "$SITE_PACKAGES"
+
+# Install dependencies with the build host Python (reliable on CI).
+python3 -m pip install -q "$ROOT" --target "$SITE_PACKAGES"
+
 ditto "$FRAMEWORK_SRC" "$FRAMEWORK_DST"
 
 patch_python_ref() {
@@ -28,7 +32,7 @@ patch_python_ref() {
   file "$binary" 2>/dev/null | grep -q "Mach-O" || return 0
   install_name_tool -change \
     "$FW_PREFIX/Python" \
-    "@loader_path/../Python" \
+    "@executable_path/../Python" \
     "$binary" 2>/dev/null || true
 }
 
@@ -37,15 +41,13 @@ install_name_tool -id "@loader_path/Python" "$FW_VERSION_DIR/Python" 2>/dev/null
 
 for binary in \
   "$FW_VERSION_DIR/bin/python3" \
-  "$FW_VERSION_DIR/bin/python3.$PY_VERSION" \
-  "$FW_VERSION_DIR/Python" \
-  "$FW_VERSION_DIR/Resources/Python.app/Contents/MacOS/Python"; do
+  "$FW_VERSION_DIR/bin/python3.$PY_VERSION"; do
   patch_python_ref "$binary"
 done
 
 EMBEDDED_PY="$FW_VERSION_DIR/bin/python3"
-"$EMBEDDED_PY" -m pip install -q --upgrade pip
-"$EMBEDDED_PY" -m pip install -q "$ROOT" --target "$SITE_PACKAGES"
+export PYTHONPATH="$SITE_PACKAGES${PYTHONPATH:+:$PYTHONPATH}"
+"$EMBEDDED_PY" -c "import expando; print(expando.__version__)"
 
 while IFS= read -r -d '' shared_object; do
   patch_python_ref "$shared_object"

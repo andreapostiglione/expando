@@ -22,35 +22,39 @@ if [[ -f "$ROOT/assets/logo.png" ]]; then
 fi
 
 if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
+  chmod +x "$ROOT/scripts/embed-distribution-python.sh"
+  "$ROOT/scripts/embed-distribution-python.sh" "$APP" "$ROOT"
+  cp "$ROOT/scripts/distribution-launcher.sh" "$MACOS/expando"
+else
   VENV="$RESOURCES/venv"
   rm -rf "$VENV"
-  python3 -m venv --copies "$VENV"
+  python3 -m venv "$VENV"
   "$VENV/bin/pip" install -q --upgrade pip
   "$VENV/bin/pip" install -q -e "$ROOT"
-  LAUNCHER_VENV='$APP_DIR/Contents/Resources/venv/bin/expando'
-else
-  LAUNCHER_VENV='$ROOT/.venv/bin/expando'
-fi
-
-cat > "$MACOS/expando" <<EOF
+  cat > "$MACOS/expando" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-APP_DIR="\$(cd "\$(dirname "\$0")/../.." && pwd)"
-ROOT="\$(dirname "\$APP_DIR")"
-VENV="$LAUNCHER_VENV"
+APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(dirname "$APP_DIR")"
+VENV="$APP_DIR/Contents/Resources/venv/bin/expando"
 
-if [[ ! -x "\$VENV" ]]; then
-  if [[ -x "\$ROOT/.venv/bin/expando" ]]; then
-    VENV="\$ROOT/.venv/bin/expando"
+if [[ ! -x "$VENV" ]]; then
+  if [[ -x "$ROOT/.venv/bin/expando" ]]; then
+    VENV="$ROOT/.venv/bin/expando"
   else
-    python3 -m venv "\$ROOT/.venv"
-    "\$ROOT/.venv/bin/pip" install -q -e "\$ROOT"
-    VENV="\$ROOT/.venv/bin/expando"
+    python3 -m venv "$ROOT/.venv"
+    "$ROOT/.venv/bin/pip" install -q -e "$ROOT"
+    VENV="$ROOT/.venv/bin/expando"
   fi
 fi
 
-exec "\$VENV" "\$@"
+if [[ $# -eq 0 ]]; then
+  set -- run
+fi
+
+exec "$VENV" "$@"
 EOF
+fi
 
 chmod +x "$MACOS/expando"
 
@@ -94,6 +98,9 @@ EOF
 if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
   chmod +x "$ROOT/scripts/embed-sparkle.sh"
   "$ROOT/scripts/embed-sparkle.sh" "$APP" || echo "Sparkle embed skipped (no clang/framework)" >&2
+  if [[ -x "$ROOT/scripts/verify-distribution-bundle.sh" ]]; then
+    "$ROOT/scripts/verify-distribution-bundle.sh" "$APP"
+  fi
 fi
 
 echo "Built $APP (v${VERSION}, distribution=${EXPANDO_DISTRIBUTION:-0})"

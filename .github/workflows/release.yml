@@ -40,6 +40,7 @@ jobs:
       - name: Build signed DMG
         env:
           EXPANDO_DISTRIBUTION: "1"
+          # python.org framework Python is required for a relocatable embedded runtime
           EXPANDO_SIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
           NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}

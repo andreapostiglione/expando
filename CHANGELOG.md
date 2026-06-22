@@ -2,6 +2,14 @@
 
 All notable changes to Expando are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.29.1] — 2026-06-22
+
+### Fixed
+- **DMG non si avviava** — il venv nel bundle puntava a path CI (`/Users/runner/...`) e a Python.framework assente sul Mac utente
+- Build distribuzione: embed `Python.framework` + `site-packages` invece di venv non relocabile
+- Doppio click su `Expando.app` ora esegue `expando run` (icona menu bar) invece di uscire subito
+- Script `scripts/repair-installed-app.sh` per riparare installazioni DMG già rotte
+
 ## [3.29.0] — 2026-06-21
 
 ### Added
@@ -63,6 +71,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.1]: https://github.com/andreapostiglione/expando/compare/v3.29.0...v3.29.1
 [3.29.0]: https://github.com/andreapostiglione/expando/compare/v3.28.0...v3.29.0
 [3.28.0]: https://github.com/andreapostiglione/expando/compare/v3.27.0...v3.28.0
 [3.27.0]: https://github.com/andreapostiglione/expando/compare/v3.26.0...v3.27.0

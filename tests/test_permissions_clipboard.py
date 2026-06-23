@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+from unittest.mock import call, patch
+
+
+def test_check_clipboard_restores_previous_contents() -> None:
+    from expando.permissions import _check_clipboard_macos
+
+    with patch("expando.permissions.subprocess.run") as run:
+        run.side_effect = [
+            type("R", (), {"stdout": "user clipboard text", "returncode": 0})(),
+            None,
+            type("R", (), {"stdout": "expando-clipboard-probe", "returncode": 0})(),
+            None,
+        ]
+
+        assert _check_clipboard_macos() is True
+
+        assert run.call_args_list[0] == call(
+            ["pbpaste"], capture_output=True, text=True, timeout=2, check=True
+        )
+        assert run.call_args_list[1] == call(
+            ["pbcopy"], input="expando-clipboard-probe", text=True, check=True, timeout=2
+        )
+        assert run.call_args_list[-1] == call(
+            ["pbcopy"], input="user clipboard text", text=True, check=True, timeout=2
+        )
+
+
+def test_check_permissions_can_skip_clipboard_probe() -> None:
+    from expando.permissions import check_permissions
+
+    with patch("expando.permissions._check_clipboard_macos") as clipboard_check:
+        with patch("expando.permissions.platform.system", return_value="Darwin"):
+            check_permissions(include_clipboard=False)
+
+    clipboard_check.assert_not_called()

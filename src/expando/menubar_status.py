@@ -4,7 +4,7 @@ from .permissions import PermissionStatus, check_permissions, permissions_ready
 
 
 def permissions_blocking(status: PermissionStatus | None = None) -> bool:
-    status = status or check_permissions()
+    status = status or check_permissions(include_clipboard=False)
     return not permissions_ready(status)
 
 

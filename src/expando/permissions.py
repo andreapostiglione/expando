@@ -112,16 +112,41 @@ def _client_matches_runtime(client: str, runtime: RuntimeInfo) -> bool:
     return any(label and label in client_lower for label in labels)
 
 
+def _read_clipboard_text() -> str | None:
+    try:
+        result = subprocess.run(
+            ["pbpaste"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=True,
+        )
+    except Exception:
+        return None
+    return result.stdout
+
+
+def _write_clipboard_text(text: str) -> None:
+    subprocess.run(["pbcopy"], input=text, text=True, check=True, timeout=2)
+
+
 def _check_clipboard_macos() -> bool | None:
     if platform.system() != "Darwin":
         return None
     probe = "expando-clipboard-probe"
+    original = _read_clipboard_text()
     try:
-        subprocess.run(["pbcopy"], input=probe, text=True, check=True, timeout=2)
+        _write_clipboard_text(probe)
         result = subprocess.run(["pbpaste"], capture_output=True, text=True, timeout=2, check=True)
+        return result.stdout == probe
     except Exception:
         return None
-    return result.stdout == probe
+    finally:
+        if original is not None:
+            try:
+                _write_clipboard_text(original)
+            except Exception:
+                pass
 
 
 def _check_input_monitoring_macos(runtime: RuntimeInfo) -> bool | None:
@@ -151,14 +176,22 @@ def open_input_monitoring_settings() -> None:
     subprocess.run(["open", SETTINGS_INPUT_MONITORING], check=False)
 
 
-def check_permissions(*, prompt_accessibility: bool = False) -> PermissionStatus:
+def check_permissions(
+    *,
+    prompt_accessibility: bool = False,
+    include_clipboard: bool = True,
+) -> PermissionStatus:
     notes: list[str] = []
     runtime = detect_runtime() if platform.system() == "Darwin" else None
     accessibility = _check_accessibility_macos(prompt=prompt_accessibility)
     input_monitoring = (
         _check_input_monitoring_macos(runtime) if runtime is not None else None
     )
-    clipboard = _check_clipboard_macos() if platform.system() == "Darwin" else None
+    clipboard = (
+        _check_clipboard_macos()
+        if platform.system() == "Darwin" and include_clipboard
+        else None
+    )
     injection_ready = _injection_ready(accessibility, input_monitoring)
 
     if platform.system() == "Darwin" and runtime is not None:

@@ -134,7 +134,7 @@ def run_doctor(config_dir: Path) -> DoctorReport:
     process_count = len(find_expando_processes())
     config_errors = validate_config_files(config_dir)
     duplicate_triggers = find_duplicate_triggers(config_dir)
-    permissions = check_permissions()
+    permissions = check_permissions(include_clipboard=True)
     runtime = permissions.runtime or detect_runtime()
     injection_probe = run_injection_probe(config_dir)
     injection_degradation = degradation_status(config_dir)

@@ -105,9 +105,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 self.enabled_item.title = t("menubar.disable") if enabled else t("menubar.enable")
                 hub_updates = self._hub_updates()
                 snoozed = snooze_active(self.config_dir)
-                permissions_ok = not permissions_blocking(
-                    check_permissions(include_clipboard=False)
-                )
+                permissions_ok = not permissions_blocking(check_permissions())
                 self.title = resolve_menubar_title(
                     listener_dead=self.service.listener_dead(),
                     enabled=enabled,

@@ -179,7 +179,7 @@ def open_input_monitoring_settings() -> None:
 def check_permissions(
     *,
     prompt_accessibility: bool = False,
-    include_clipboard: bool = True,
+    include_clipboard: bool = False,
 ) -> PermissionStatus:
     notes: list[str] = []
     runtime = detect_runtime() if platform.system() == "Darwin" else None

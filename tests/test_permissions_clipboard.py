@@ -27,11 +27,22 @@ def test_check_clipboard_restores_previous_contents() -> None:
         )
 
 
-def test_check_permissions_can_skip_clipboard_probe() -> None:
+def test_check_permissions_skips_clipboard_probe_by_default() -> None:
     from expando.permissions import check_permissions
 
     with patch("expando.permissions._check_clipboard_macos") as clipboard_check:
         with patch("expando.permissions.platform.system", return_value="Darwin"):
-            check_permissions(include_clipboard=False)
+            check_permissions()
 
     clipboard_check.assert_not_called()
+
+
+def test_check_permissions_runs_clipboard_probe_for_doctor() -> None:
+    from expando.permissions import check_permissions
+
+    with patch("expando.permissions._check_clipboard_macos", return_value=True) as clipboard_check:
+        with patch("expando.permissions.platform.system", return_value="Darwin"):
+            status = check_permissions(include_clipboard=True)
+
+    clipboard_check.assert_called_once()
+    assert status.clipboard is True

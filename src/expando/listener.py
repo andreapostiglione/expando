@@ -253,7 +253,7 @@ class KeyboardService:
                 try:
                     from .permissions import check_permissions
 
-                    status = check_permissions(include_clipboard=False)
+                    status = check_permissions()
                     if status.runtime is not None:
                         label = status.runtime.grant_label
                     input_monitoring_ok = status.input_monitoring is not False

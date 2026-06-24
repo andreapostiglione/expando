@@ -1,0 +1,5 @@
+VERIFY_FAILED_AS_EXPECTED_FOR_DEV (good)
+APP_mode + client_python3: False
+APP_mode + client_expando: True
+DEV_mode + client_python3: True
+PERM_GRANTS_CORRECT

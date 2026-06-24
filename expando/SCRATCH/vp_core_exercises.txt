@@ -1,0 +1,5 @@
+detect_runtime: dev Expando (dev)
+_client_matches for python label test (non app): True
+permissions smoke ok
+DAEMON_CMD smoke: ['/Applications/Expando.app/Contents/MacOS/expando']
+VP_CORE_EXERCISES_PASS

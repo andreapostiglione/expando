@@ -1,0 +1,118 @@
+ expando/src/expando/daemon.py        | 27 ++++++++++++++++++---------
+ expando/src/expando/doctor_repair.py |  4 ++--
+ expando/src/expando/ui_bridge.py     | 16 ++++++++++++++++
+ 3 files changed, 36 insertions(+), 11 deletions(-)
+ M expando/src/expando/daemon.py
+ M expando/src/expando/doctor_repair.py
+ M expando/src/expando/ui_bridge.py
+?? "Desktop/PROGETTI/LinkedIn Leads/scripts/"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/accounts 2.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/accounts.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/ai-personalizer.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/api-helpers.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/api-routes.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/auth-middleware.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/cli.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/config.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/connection-monitor.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/connection-sync.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/connection-tracker.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/content-publisher.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/conversation-tracker.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/enrichment.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/human-delay.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/inmail-filter.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/inmail-sender.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/inviter.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/lead-scorer.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/logger.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/profile-visitor.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/re-engager.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/reply-suggester.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/scheduler.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/search.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/send-window.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/setup.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/store.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/unipile-client.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/users.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/utils.js"
+?? "Desktop/PROGETTI/LinkedIn Leads/src/warmup.js"
+?? expando/scripts/
+?? expando/src/docs/
+?? expando/src/expando/__init__.py
+?? expando/src/expando/__main__.py
+?? expando/src/expando/atomic_io.py
+?? expando/src/expando/auto_backup.py
+?? expando/src/expando/backup.py
+?? expando/src/expando/benchmark.py
+?? expando/src/expando/block_notifications.py
+?? expando/src/expando/brand_assets.py
+?? expando/src/expando/changelog.py
+?? expando/src/expando/cli_output.py
+?? expando/src/expando/config.py
+?? expando/src/expando/config_reload_gate.py
+?? expando/src/expando/crash_loop.py
+?? expando/src/expando/crash_reporting.py
+?? expando/src/expando/doctor_checks.py
+?? expando/src/expando/espanso_compat.py
+?? expando/src/expando/espanso_migrate.py
+?? expando/src/expando/expansion_stats.py
+?? expando/src/expando/external_import.py
+?? expando/src/expando/forms.py
+?? expando/src/expando/health.py
+?? expando/src/expando/hotkeys.py
+?? expando/src/expando/hub.py
+?? expando/src/expando/i18n.py
+?? expando/src/expando/image_paths.py
+?? expando/src/expando/injection_degradation.py
+?? expando/src/expando/injection_probe.py
+?? expando/src/expando/injector.py
+?? expando/src/expando/listener.py
+?? expando/src/expando/listener_watchdog.py
+?? expando/src/expando/lock.py
+?? expando/src/expando/log_viewer.py
+?? expando/src/expando/logging_setup.py
+?? expando/src/expando/match_store.py
+?? expando/src/expando/match_utils.py
+?? expando/src/expando/menubar.py
+?? expando/src/expando/menubar_feedback.py
+?? expando/src/expando/menubar_status.py
+?? expando/src/expando/notarization_audit.py
+?? expando/src/expando/notarization_history.py
+?? expando/src/expando/notifications.py
+?? expando/src/expando/onboarding.py
+?? expando/src/expando/onboarding_ui.py
+?? expando/src/expando/packages.py
+?? expando/src/expando/paths.py
+?? expando/src/expando/permissions.py
+?? expando/src/expando/plugins.py
+?? expando/src/expando/profiles.py
+?? expando/src/expando/raycast_compat.py
+?? expando/src/expando/registry_catalog.py
+?? expando/src/expando/render_context.py
+?? expando/src/expando/runtime_cache.py
+?? expando/src/expando/runtime_info.py
+?? expando/src/expando/search.py
+?? expando/src/expando/secure_input.py
+?? expando/src/expando/snippet_editor.py
+?? expando/src/expando/snippet_editor_appkit.py
+?? expando/src/expando/snippet_editor_data.py
+?? expando/src/expando/snippet_templates.py
+?? expando/src/expando/snooze.py
+?? expando/src/expando/sparkle_benchmark_history.py
+?? expando/src/expando/sparkle_native.py
+?? expando/src/expando/support_bundle.py
+?? expando/src/expando/sync_assist.py
+?? expando/src/expando/text_convert.py
+?? expando/src/expando/text_transform.py
+?? expando/src/expando/textexpander_compat.py
+?? expando/src/expando/ui_appkit.py
+?? expando/src/expando/ui_appkit_runtime.py
+?? expando/src/expando/ui_cli.py
+?? expando/src/expando/ui_file_picker.py
+?? expando/src/expando/ui_main_thread.py
+?? expando/src/expando/ui_state.py
+?? expando/src/expando/updater.py
+?? expando/src/expando/version_utils.py
+?? expando/src/expando/when_conditions.py

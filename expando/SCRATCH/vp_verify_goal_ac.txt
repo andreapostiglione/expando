@@ -1,0 +1,30 @@
+/Users/andreapostiglione/expando/tests/test_hub.py:55: AssertionError: assert False
+E   AssertionError: assert 'typing-it' in {'core', 'dev', 'email-it', 'legal-it', 'medical-it', 'sales-it', ...}
+/Users/andreapostiglione/expando/tests/test_hub_community.py:10: AssertionError: assert 'typing-it' in {'core', 'dev', 'email-it', 'legal-it', 'medical-it', 'sales-it', ...}
+E   ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+/Users/andreapostiglione/expando/src/expando/hub_marketplace.py:1322: ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+E   ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+/Users/andreapostiglione/expando/src/expando/hub_marketplace.py:175: ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+E   ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+/Users/andreapostiglione/expando/src/expando/hub_marketplace.py:175: ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+E   ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+/Users/andreapostiglione/expando/src/expando/hub_marketplace.py:175: ValueError: Cartella package non trovata: /Users/andreapostiglione/expando/src/default_config/match/packages/social
+E   AssertionError: assert 'typing-it' in set()
+/Users/andreapostiglione/expando/tests/test_hub_validate_community.py:17: AssertionError: assert 'typing-it' in set()
+E   AssertionError: assert 'typing-it' in 'Nessun package community da validare.\n'
+     +  where 'Nessun package community da validare.\n' = <Result okay>.output
+/Users/andreapostiglione/expando/tests/test_hub_validate_community.py:40: AssertionError: assert 'typing-it' in 'Nessun package community da validare.\n'
+E   AssertionError: assert 'com.apple.security.automation.apple-events' in {}
+/Users/andreapostiglione/expando/tests/test_notarization_audit.py:36: AssertionError: assert 'com.apple.security.automation.apple-events' in {}
+=========================== short test summary info ============================
+FAILED tests/test_hub.py::test_validate_and_publish_local_package - Assertion...
+FAILED tests/test_hub_community.py::test_fetch_registry_includes_approved_community_packages
+FAILED tests/test_hub_marketplace.py::test_create_submission_bundle - ValueEr...
+FAILED tests/test_hub_marketplace_review.py::test_queue_and_approve_submission
+FAILED tests/test_hub_marketplace_review.py::test_reject_submission_hides_package
+FAILED tests/test_hub_marketplace_review.py::test_marketplace_index_persists_status_fields
+FAILED tests/test_hub_validate_community.py::test_validate_community_hub_packages_passes_repo_packages
+FAILED tests/test_hub_validate_community.py::test_hub_validate_community_cli
+FAILED tests/test_notarization_audit.py::test_load_expected_entitlements_reads_repo_baseline
+9 failed, 348 passed in 69.12s (0:01:09)
+unexpected failures

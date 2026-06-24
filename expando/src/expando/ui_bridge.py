@@ -63,6 +63,7 @@ def _ui_subprocess_argv(command: str) -> list[str]:
         return [override, "-m", "expando.ui_cli", command]
 
     from .runtime_info import detect_runtime
+    from .paths import find_expando_app_bundle
 
     runtime = detect_runtime()
     if runtime.mode == "app":
@@ -70,6 +71,21 @@ def _ui_subprocess_argv(command: str) -> list[str]:
         launcher = app_root / "Contents" / "MacOS" / "expando"
         if launcher.is_file():
             return [str(launcher), "-m", "expando.ui_cli", command]
+
+        # try embedded python in bundle
+        emb = app_root / "Contents" / "Resources" / "python" / "bin" / "python3"
+        if emb.is_file():
+            return [str(emb), "-m", "expando.ui_cli", command]
+
+    # robust fallback using find
+    app = find_expando_app_bundle()
+    if app:
+        launcher = app / "Contents" / "MacOS" / "expando"
+        if launcher.is_file():
+            return [str(launcher), "-m", "expando.ui_cli", command]
+        emb = app / "Contents" / "Resources" / "python" / "bin" / "python3"
+        if emb.is_file():
+            return [str(emb), "-m", "expando.ui_cli", command]
 
     return [sys.executable, "-m", "expando.ui_cli", command]
 

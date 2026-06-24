@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .lock import SingleInstanceLock
 from .logging_setup import setup_logging
-from .paths import lock_file, log_file, pid_file
+from .paths import find_expando_app_bundle, lock_file, log_file, pid_file
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +49,25 @@ def _app_bundle_executable() -> Path | None:
     if os.environ.get("EXPANDO_USE_APP_BUNDLE", "").lower() in {"0", "false", "no"}:
         return None
 
-    root = Path(__file__).resolve().parent.parent.parent
-    candidate = root / "Expando.app" / "Contents" / "MacOS" / "expando"
-    if not candidate.exists() or not os.access(candidate, os.X_OK):
+    app = find_expando_app_bundle()  # from .paths , robust ancestor + env
+    if not app:
         return None
 
-    # In a git checkout, prefer the local venv unless the app bundle is explicit.
-    if (root / ".git").exists() and os.environ.get("EXPANDO_USE_APP_BUNDLE", "") != "1":
-        return None
+    launcher = app / "Contents" / "MacOS" / "expando"
+    if launcher.exists() and os.access(launcher, os.X_OK):
+        return launcher
 
-    return candidate
+    # fallback to embedded python inside bundle if present (standalone DMG)
+    for emb in (
+        app / "Contents" / "Resources" / "python" / "bin" / "python3",
+        app / "Contents" / "Resources" / "python" / "bin" / "python",
+    ):
+        if emb.exists() and os.access(emb, os.X_OK):
+            return emb
+
+    # If we have app bundle but no executable found inside, return None to force python -m fallback
+    # (prevents launching non-executable path)
+    return None
 
 
 def start_daemon(config_dir: Path) -> int:

@@ -108,7 +108,7 @@ def launch_agent_needs_refresh() -> bool:
     try:
         source_data = plistlib.loads(source.read_bytes())
         installed_data = plistlib.loads(installed.read_bytes())
-    except Exception:
+    except (OSError, ValueError, TypeError, plistlib.InvalidFileException):
         return True
     for key in ("ThrottleInterval", "KeepAlive", "RunAtLoad", "Label"):
         if source_data.get(key) != installed_data.get(key):
@@ -132,7 +132,7 @@ def repair_launch_agent() -> list[str]:
         return []
     try:
         subprocess.run(["bash", str(script)], check=True, timeout=120)
-    except Exception:
+    except (subprocess.SubprocessError, OSError, FileNotFoundError):
         return []
     return ["reinstalled_launch_agent"]
 

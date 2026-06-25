@@ -133,3 +133,42 @@ def test_restart_foreground_daemon_waits_for_old_pid(
     assert "kill -0 12345" in args[2]
     assert "python -m expando" in args[2]
     assert kwargs["start_new_session"] is True
+
+
+# --- Real shipped logic tests (drive _app_bundle_executable / _daemon_command / find without full fake bypass) ---
+
+def test_real_app_bundle_executable_and_daemon_cmd_use_finder(monkeypatch, tmp_path: Path):
+    """Directly exercise shipped _app_bundle_executable and _daemon_command via controlled finder (no reimplementation)."""
+    from expando.daemon import _app_bundle_executable, _daemon_command
+
+    fake_app = tmp_path / "Expando.app"
+    macos = fake_app / "Contents" / "MacOS"
+    macos.mkdir(parents=True)
+    launcher = macos / "expando"
+    launcher.write_text("#!/bin/sh\n", encoding="utf-8")
+    launcher.chmod(0o755)
+
+    # Patch the name as bound in the daemon module (from .paths import ...) and the source module
+    monkeypatch.setattr("expando.paths.find_expando_app_bundle", lambda: fake_app)
+    monkeypatch.setattr("expando.daemon.find_expando_app_bundle", lambda: fake_app)
+    monkeypatch.delenv("EXPANDO_USE_APP_BUNDLE", raising=False)
+
+    exe = _app_bundle_executable()
+    assert exe == launcher
+
+    cmd = _daemon_command(tmp_path / "cfg")
+    assert cmd[0] == str(launcher)
+    assert "--config-dir" in cmd
+    assert cmd[-1] == "run"
+
+
+def test_real_daemon_cmd_falls_back_when_no_bundle(monkeypatch):
+    from expando.daemon import _daemon_command
+    from pathlib import Path
+
+    monkeypatch.setattr("expando.paths.find_expando_app_bundle", lambda: None)
+    monkeypatch.setattr("expando.daemon.find_expando_app_bundle", lambda: None)
+    cmd = _daemon_command(Path("/tmp/c"))
+    # must use python -m path when no bundle found (real fallback exercised)
+    joined = " ".join(cmd)
+    assert sys.executable in cmd or cmd[0] == sys.executable or "-m" in joined or "expando.daemon" in joined

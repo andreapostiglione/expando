@@ -77,15 +77,22 @@ def _ui_subprocess_argv(command: str) -> list[str]:
         if emb.is_file():
             return [str(emb), "-m", "expando.ui_cli", command]
 
-    # robust fallback using find
+        # also try plain python in Resources/python for some embedded layouts
+        emb2 = app_root / "Contents" / "Resources" / "python" / "bin" / "python"
+        if emb2.is_file():
+            return [str(emb2), "-m", "expando.ui_cli", command]
+
+    # Only fall back to a bundle launcher for non-app if we have strong signal of embedded runtime present
+    # (prevents dev PYTHONPATH=src runs from picking /Applications or sibling launcher unintentionally)
     app = find_expando_app_bundle()
-    if app:
+    if app and runtime.mode == "app":
         launcher = app / "Contents" / "MacOS" / "expando"
         if launcher.is_file():
             return [str(launcher), "-m", "expando.ui_cli", command]
-        emb = app / "Contents" / "Resources" / "python" / "bin" / "python3"
-        if emb.is_file():
-            return [str(emb), "-m", "expando.ui_cli", command]
+        for emb_name in ("python3", "python"):
+            emb = app / "Contents" / "Resources" / "python" / "bin" / emb_name
+            if emb.is_file():
+                return [str(emb), "-m", "expando.ui_cli", command]
 
     return [sys.executable, "-m", "expando.ui_cli", command]
 

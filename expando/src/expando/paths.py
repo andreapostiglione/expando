@@ -42,6 +42,28 @@ def find_expando_app_bundle() -> Path | None:
     except (OSError, RuntimeError):
         pass
 
+    # sibling lookup for dev checkout: package root sibling Expando.app (e.g. when running PYTHONPATH=src from checkout)
+    try:
+        pkg_root = Path(__file__).resolve().parent.parent.parent
+        cand = pkg_root / "Expando.app"
+        if cand.exists() and (cand / "Contents").exists():
+            return cand
+    except (OSError, RuntimeError):
+        pass
+
+    # cwd sibling and nearby parents (common when cd to expando/ dir and run)
+    try:
+        p = Path.cwd().resolve()
+        for _ in range(4):
+            cand = p / "Expando.app"
+            if cand.exists() and (cand / "Contents").exists():
+                return cand
+            if p == p.parent:
+                break
+            p = p.parent
+    except (OSError, RuntimeError):
+        pass
+
     # last resort standard install location
     p = Path("/Applications/Expando.app")
     if p.exists():

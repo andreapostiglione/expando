@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import fcntl
+import logging
 import os
 import platform
 import plistlib
@@ -12,6 +13,8 @@ from typing import Any
 
 from .daemon import is_running
 from .paths import lock_file, package_root, pid_file
+
+logger = logging.getLogger(__name__)
 
 
 def _find_expando_processes() -> list[int]:
@@ -193,7 +196,7 @@ def repair_daemon_state(config_dir: Path) -> dict[str, Any]:
             clear_safe_mode(config_dir)
             actions.append("cleared_safe_mode")
     except Exception:
-        pass
+        logger.exception("Failed to clear safe mode during daemon repair (best-effort)")
 
     actions.extend(repair_launch_agent())
 

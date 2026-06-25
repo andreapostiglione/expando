@@ -188,7 +188,7 @@ def restart_foreground_daemon(
             close_fds=True,
             env=os.environ.copy(),
         )
-    except Exception:
+    except (OSError, FileNotFoundError, PermissionError, subprocess.SubprocessError):
         log_handle.close()
         raise
     log_handle.close()

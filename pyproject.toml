@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "expando"
-version = "3.29.4"
+version = "3.29.5"
 description = "A privacy-first, open-source text expander for macOS"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,13 +19,59 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "Pillow>=10.0"]
 
 [project.scripts]
 expando = "expando.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.data-files]
+"default_config/config" = [
+    "default_config/config/default.yml",
+    "default_config/config/terminal.yml",
+]
+"default_config/match" = [
+    "default_config/match/base.yml",
+    "default_config/match/dev.yml",
+]
+"default_config/match/packages/core" = ["default_config/match/packages/core/snippets.yml"]
+"default_config/match/packages/dev" = ["default_config/match/packages/dev/snippets.yml"]
+"default_config/match/packages/email-it" = ["default_config/match/packages/email-it/snippets.yml"]
+"default_config/match/packages/legal-it" = ["default_config/match/packages/legal-it/snippets.yml"]
+"default_config/match/packages/medical-it" = [
+    "default_config/match/packages/medical-it/hub.json",
+    "default_config/match/packages/medical-it/snippets.yml",
+]
+"default_config/match/packages/sales-it" = [
+    "default_config/match/packages/sales-it/hub.json",
+    "default_config/match/packages/sales-it/snippets.yml",
+]
+"default_config/match/packages/social" = [
+    "default_config/match/packages/social/hub.json",
+    "default_config/match/packages/social/snippets.yml",
+]
+"default_config/match/packages/support-it" = [
+    "default_config/match/packages/support-it/hub.json",
+    "default_config/match/packages/support-it/snippets.yml",
+]
+"default_config/plugins" = [
+    "default_config/plugins/README.md",
+    "default_config/plugins/example.py",
+]
+"packages/hub" = [
+    "packages/hub/index.json",
+    "packages/hub/marketplace.json",
+]
+"scripts" = [
+    "scripts/com.andreapostiglione.expando.plist",
+    "scripts/distribution-launcher.sh",
+    "scripts/entitlements.plist",
+    "scripts/install-launch-agent.sh",
+    "scripts/launch-expando.sh",
+    "scripts/uninstall-launch-agent.sh",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

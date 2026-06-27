@@ -23,7 +23,7 @@ class TextInjector:
         self.settings = settings
         self.keyboard = Controller()
         self._system = platform.system()
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def delete_chars(self, count: int) -> None:
         with self._lock:

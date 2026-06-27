@@ -17,7 +17,9 @@ def resolve_image_path(config_dir: Path, raw_path: str) -> Path:
         candidate = candidate.resolve()
 
     base = config_dir.resolve()
-    if not str(candidate).startswith(str(base)):
+    try:
+        candidate.relative_to(base)
+    except ValueError:
         raise RuntimeError(f"Image path must stay inside config directory: {raw_path}")
 
     if not candidate.exists():

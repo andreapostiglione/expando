@@ -137,9 +137,12 @@ def run_security_audit(config_dir: Path) -> SecurityAuditReport:
 
     plugins_root = plugins_dir(config_dir)
     if plugins_root.exists():
+        resolved_plugins_root = plugins_root.resolve()
         for path in plugins_root.rglob("*.py"):
             resolved = path.resolve()
-            if not str(resolved).startswith(str(plugins_root.resolve())):
+            try:
+                resolved.relative_to(resolved_plugins_root)
+            except ValueError:
                 report.add(
                     "plugins.symlink",
                     "warn",

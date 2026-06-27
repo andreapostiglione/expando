@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import platform
 import plistlib
 import re
@@ -9,7 +10,7 @@ from pathlib import Path
 
 from .paths import package_root
 
-TEAM_ID = "68Q8CQBQQV"
+DEFAULT_TEAM_ID = "68Q8CQBQQV"
 HARDENED_RUNTIME_FLAG = re.compile(r"runtime\b", re.IGNORECASE)
 
 
@@ -33,6 +34,14 @@ class NotarizationAuditReport:
 
 def expected_entitlements_path() -> Path:
     return package_root() / "scripts" / "entitlements.plist"
+
+
+def expected_team_id() -> str:
+    return (
+        os.environ.get("EXPANDO_EXPECTED_TEAM_ID")
+        or os.environ.get("NOTARY_TEAM_ID")
+        or DEFAULT_TEAM_ID
+    )
 
 
 def load_expected_entitlements() -> dict[str, object]:
@@ -220,12 +229,13 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
             )
         )
 
-    if TEAM_ID in details:
+    team_id = expected_team_id()
+    if team_id in details:
         findings.append(
             NotarizationFinding(
                 check_id="codesign.team_id",
                 status="pass",
-                message=f"Developer Team ID {TEAM_ID} found in signature",
+                message=f"Developer Team ID {team_id} found in signature",
             )
         )
     else:
@@ -233,7 +243,7 @@ def audit_app_bundle(app_bundle: Path, *, expected: dict[str, object]) -> list[N
             NotarizationFinding(
                 check_id="codesign.team_id",
                 status="warn",
-                message=f"Team ID {TEAM_ID} not found in signature metadata",
+                message=f"Team ID {team_id} not found in signature metadata",
             )
         )
 
@@ -378,12 +388,13 @@ def audit_sparkle_helper_signing(
             )
         )
 
-    if TEAM_ID in details:
+    team_id = expected_team_id()
+    if team_id in details:
         findings.append(
             NotarizationFinding(
                 check_id="sparkle.helper.team_id",
                 status="pass",
-                message=f"{label} signed with Team ID {TEAM_ID}",
+                message=f"{label} signed with Team ID {team_id}",
             )
         )
     else:
@@ -391,7 +402,7 @@ def audit_sparkle_helper_signing(
             NotarizationFinding(
                 check_id="sparkle.helper.team_id",
                 status="warn",
-                message=f"Team ID {TEAM_ID} not found on {label}",
+                message=f"Team ID {team_id} not found on {label}",
             )
         )
 

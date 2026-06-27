@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DMG="${1:-$ROOT/Expando.dmg}"
 PROFILE="${NOTARY_KEYCHAIN_PROFILE:-expando-notary}"
-TEAM_ID="${NOTARY_TEAM_ID:-68Q8CQBQQV}"
+TEAM_ID="${NOTARY_TEAM_ID:-}"
 
 if [[ ! -f "$DMG" ]]; then
   echo "DMG not found: $DMG" >&2
@@ -19,6 +19,10 @@ elif [[ -n "${NOTARY_APPLE_ID:-}" ]]; then
   if [[ -z "${NOTARY_PASSWORD:-}" ]]; then
     echo "NOTARY_APPLE_ID is set but NOTARY_PASSWORD is empty." >&2
     echo "Run: gh secret set NOTARY_PASSWORD" >&2
+    exit 1
+  fi
+  if [[ -z "$TEAM_ID" ]]; then
+    echo "NOTARY_TEAM_ID is required when using NOTARY_APPLE_ID/NOTARY_PASSWORD." >&2
     exit 1
   fi
   notary_args+=(--apple-id "$NOTARY_APPLE_ID" --password "$NOTARY_PASSWORD" --team-id "$TEAM_ID")

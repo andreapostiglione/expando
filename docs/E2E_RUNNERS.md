@@ -41,11 +41,12 @@ re-enable `ENABLE_SELF_HOSTED_E2E`.
 | Variable | Meaning |
 |----------|---------|
 | `EXPANDO_E2E_FULL=1` | Enable full listener / secure-input E2E |
+| `EXPANDO_E2E_TEXTEDIT=1` | Allow tests that open and type into TextEdit |
 | `EXPANDO_E2E_CLIPBOARD=1` | Enable clipboard injection E2E |
 | `EXPANDO_E2E_IMAGE=1` | Enable image clipboard E2E |
 
 Tests marked `@pytest.mark.integration` skip on headless GitHub-hosted runners unless
-`EXPANDO_E2E_FULL=1` is set on a self-hosted host.
+`EXPANDO_E2E_FULL=1` and `EXPANDO_E2E_TEXTEDIT=1` are set on a self-hosted host.
 
 ## Soak smoke (optional)
 

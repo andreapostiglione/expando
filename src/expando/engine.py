@@ -213,6 +213,15 @@ class ExpansionEngine:
                     context=context,
                     config=config,
                 )
+                suffix = self._key_to_char(key) or ""
+                if plan is not None and suffix:
+                    plan = _ExpansionPlan(
+                        trigger=plan.trigger,
+                        match=plan.match,
+                        context=plan.context,
+                        config=plan.config,
+                        suffix=plan.suffix + suffix,
+                    )
                 self._append_key_to_buffer(key)
             else:
                 plan = None
@@ -454,8 +463,14 @@ class ExpansionEngine:
             )
             return False
 
+        typed_text = trigger + suffix
+        inserted_text = replacement + suffix
+        adjusted_cursor_left = cursor_left
+        if cursor_left and suffix:
+            adjusted_cursor_left = cursor_left + len(suffix)
+
         try:
-            self.injector.delete_chars(len(trigger))
+            self.injector.delete_chars(len(typed_text))
             pasted_image = False
             if match.image and self._config_dir is not None:
                 try:
@@ -469,13 +484,18 @@ class ExpansionEngine:
                     logger.warning("Image expansion failed for %r: %s", trigger, exc)
 
             if pasted_image:
-                if cursor_left:
+                if suffix:
+                    self.injector.inject(
+                        suffix,
+                        cursor_left=adjusted_cursor_left,
+                    )
+                elif cursor_left:
                     self.injector.move_cursor_left(cursor_left)
             else:
                 self.injector.inject(
-                    replacement,
+                    inserted_text,
                     force_clipboard=match.force_clipboard or bool(match.image),
-                    cursor_left=cursor_left,
+                    cursor_left=adjusted_cursor_left,
                 )
         except Exception:
             if self._config_dir is not None:
@@ -492,7 +512,7 @@ class ExpansionEngine:
             self._buffer = suffix
             self._last_expansion = _LastExpansion(
                 trigger=trigger,
-                replacement=replacement,
+                replacement=inserted_text,
                 suffix=suffix,
             )
 

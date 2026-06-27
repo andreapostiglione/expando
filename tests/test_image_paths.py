@@ -24,3 +24,13 @@ def test_resolve_image_path_blocks_traversal(tmp_path: Path):
 
     with pytest.raises(RuntimeError, match="inside config"):
         resolve_image_path(config_dir, str(outside))
+
+
+def test_resolve_image_path_blocks_prefix_sibling_traversal(tmp_path: Path):
+    config_dir = tmp_path / "expando"
+    config_dir.mkdir(parents=True)
+    outside = tmp_path / "expando_evil.png"
+    outside.write_bytes(b"\x89PNG\r\n")
+
+    with pytest.raises(RuntimeError, match="inside config"):
+        resolve_image_path(config_dir, "../expando_evil.png")

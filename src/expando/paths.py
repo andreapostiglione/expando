@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import platform
 import shutil
+import sys
 from pathlib import Path
 
 
@@ -73,4 +74,13 @@ def ensure_default_config(config_dir: Path, package_root: Path) -> None:
 
 
 def package_root() -> Path:
-    return Path(__file__).resolve().parent.parent.parent
+    module_root = Path(__file__).resolve().parent
+    candidates = [
+        module_root.parent.parent,
+        module_root.parent,
+        Path(sys.prefix),
+    ]
+    for candidate in candidates:
+        if (candidate / "default_config").exists():
+            return candidate
+    return module_root.parent.parent

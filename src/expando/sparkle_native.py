@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import platform
+import plistlib
 import subprocess
 import time
 from dataclasses import dataclass
@@ -41,6 +42,19 @@ def sparkle_helper_path(app_bundle: Path) -> Path | None:
     return helper if helper.is_file() and os.access(helper, os.X_OK) else None
 
 
+def sparkle_public_ed_key_present(app_bundle: Path) -> bool:
+    info_plist = app_bundle / "Contents" / "Info.plist"
+    if not info_plist.is_file():
+        return False
+    try:
+        with info_plist.open("rb") as handle:
+            info = plistlib.load(handle)
+    except Exception:
+        return False
+    value = info.get("SUPublicEDKey")
+    return isinstance(value, str) and bool(value.strip())
+
+
 def sparkle_available() -> bool:
     if platform.system() != "Darwin":
         return False
@@ -70,6 +84,7 @@ class SparkleSmokeReport:
     app_bundle: str | None
     helper_path: str | None
     framework_present: bool
+    public_ed_key_present: bool
     errors: list[str]
 
 
@@ -77,6 +92,7 @@ def smoke_test_sparkle_embed(app_bundle: Path) -> SparkleSmokeReport:
     errors: list[str] = []
     helper = sparkle_helper_path(app_bundle)
     framework_present = sparkle_framework_path(app_bundle) is not None
+    public_ed_key_present = sparkle_public_ed_key_present(app_bundle)
 
     if helper is None:
         errors.append("expando-sparkle helper missing or not executable")
@@ -98,12 +114,15 @@ def smoke_test_sparkle_embed(app_bundle: Path) -> SparkleSmokeReport:
 
     if not framework_present:
         errors.append("Sparkle.framework missing")
+    if not public_ed_key_present:
+        errors.append("SUPublicEDKey missing from Info.plist")
 
     return SparkleSmokeReport(
         ok=not errors,
         app_bundle=str(app_bundle),
         helper_path=str(helper) if helper is not None else None,
         framework_present=framework_present,
+        public_ed_key_present=public_ed_key_present,
         errors=errors,
     )
 
@@ -117,6 +136,8 @@ def format_sparkle_smoke_report(report: SparkleSmokeReport) -> str:
         f"  {t('sparkle.smoke.helper')}: {report.helper_path or t('benchmark.sparkle.none')}",
         f"  {t('sparkle.smoke.framework')}: "
         f"{t('doctor.yes') if report.framework_present else t('doctor.no')}",
+        f"  SUPublicEDKey: "
+        f"{t('doctor.yes') if report.public_ed_key_present else t('doctor.no')}",
     ]
     if report.ok:
         lines.append(f"  {t('sparkle.smoke.ok')}")

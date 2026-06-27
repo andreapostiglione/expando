@@ -113,7 +113,9 @@ def _load_module(path: Path) -> Any:
 def resolve_plugin_script(config_dir: Path, script_path: str) -> Path:
     base = plugins_dir(config_dir).resolve()
     candidate = (base / script_path).resolve()
-    if not str(candidate).startswith(str(base)):
+    try:
+        candidate.relative_to(base)
+    except ValueError:
         raise RuntimeError(f"Script path must stay inside plugins/: {script_path}")
     if candidate.suffix != ".py":
         raise RuntimeError(f"Script must be a .py file: {script_path}")

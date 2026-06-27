@@ -37,6 +37,18 @@ def _github_actions_headless() -> bool:
     )
 
 
+def _textedit_e2e_enabled() -> bool:
+    return any(
+        os.environ.get(name) == "1"
+        for name in (
+            "EXPANDO_E2E_FULL",
+            "EXPANDO_E2E_TEXTEDIT",
+            "EXPANDO_E2E_CLIPBOARD",
+            "EXPANDO_E2E_IMAGE",
+        )
+    )
+
+
 @pytest.fixture
 def require_accessibility() -> None:
     if platform.system() != "Darwin":
@@ -89,6 +101,11 @@ def require_full_e2e(require_accessibility) -> None:
 
 @pytest.fixture
 def require_textedit_e2e(require_accessibility) -> None:
+    if not _textedit_e2e_enabled():
+        pytest.skip(
+            "TextEdit E2E disabled — set EXPANDO_E2E_TEXTEDIT=1, "
+            "EXPANDO_E2E_CLIPBOARD=1, EXPANDO_E2E_IMAGE=1, or EXPANDO_E2E_FULL=1"
+        )
     try:
         subprocess.run(
             ["osascript", "-e", 'tell application "TextEdit" to id'],

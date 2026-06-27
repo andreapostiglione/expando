@@ -6,10 +6,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-IDENTITY="${APPLE_SIGNING_IDENTITY:-Developer ID Application: Inochi Srl (68Q8CQBQQV)}"
-TEAM_ID="${NOTARY_TEAM_ID:-68Q8CQBQQV}"
-APPLE_ID="${NOTARY_APPLE_ID:-andreapostiglione@live.it}"
+IDENTITY="${APPLE_SIGNING_IDENTITY:-}"
+TEAM_ID="${NOTARY_TEAM_ID:-}"
+APPLE_ID="${NOTARY_APPLE_ID:-}"
 P12_PATH="${APPLE_P12_PATH:-$ROOT/.release-certificate.p12}"
+
+if [[ -z "$IDENTITY" || -z "$TEAM_ID" || -z "$APPLE_ID" ]]; then
+  echo "Set APPLE_SIGNING_IDENTITY, NOTARY_TEAM_ID, and NOTARY_APPLE_ID before running." >&2
+  exit 1
+fi
 
 echo "==> Expando — GitHub release secrets"
 echo "Identity: $IDENTITY"
@@ -58,6 +63,17 @@ gh secret set APPLE_SIGNING_IDENTITY --body "$IDENTITY"
 gh secret set NOTARY_APPLE_ID --body "$APPLE_ID"
 gh secret set NOTARY_PASSWORD --body "$NOTARY_PASSWORD"
 gh secret set NOTARY_TEAM_ID --body "$TEAM_ID"
+
+if [[ -n "${EXPANDO_SPARKLE_PUBLIC_ED_KEY:-}" ]]; then
+  gh secret set EXPANDO_SPARKLE_PUBLIC_ED_KEY --body "$EXPANDO_SPARKLE_PUBLIC_ED_KEY"
+else
+  echo "EXPANDO_SPARKLE_PUBLIC_ED_KEY not set; add it before production releases." >&2
+fi
+if [[ -n "${SPARKLE_PRIVATE_KEY:-}" ]]; then
+  gh secret set SPARKLE_PRIVATE_KEY --body "$SPARKLE_PRIVATE_KEY"
+else
+  echo "SPARKLE_PRIVATE_KEY not set; add it before production releases." >&2
+fi
 
 echo
 echo "Done. Secrets configured:"

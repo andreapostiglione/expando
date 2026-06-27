@@ -10,7 +10,7 @@ matches:
       in allegato trova il preventivo per un importo di {{importo}}.
       Restiamo a disposizione per eventuali chiarimenti.
 
-  - trigger: ":followup"
+  - trigger: ":salesfollowup"
     form:
       - name: argomento
         label: "Argomento"

@@ -23,6 +23,15 @@
 
 Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://github.com/andreapostiglione/expando/releases)
 
+### Release status
+
+The current public build is ready for normal macOS users:
+
+- `Expando.dmg` is Developer ID signed, notarized, stapled, and accepted by Gatekeeper.
+- `Expando.app` inside the DMG passes deep codesign verification.
+- `appcast.xml` is signed for Sparkle updates.
+- Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
+
 ### v3.29.6 — Production hardening (latest)
 
 | Area | What's new |
@@ -31,7 +40,7 @@ Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://gith
 | **Hub** | Upgrade packages from menu bar with YAML diff preview before applying |
 | **Wizard** | Live permission badges for Accessibility + Input Monitoring |
 | **Repair** | `expando doctor --repair` reinstalls outdated LaunchAgent plist |
-| **Release** | Distribution bundles verify runtime assets; DMG containers are signed and notarized; live TextEdit E2E is opt-in |
+| **Release** | Distribution bundles verify runtime assets; DMG container and app bundle are signed/notarized; Sparkle appcast and Homebrew cask are verified; live TextEdit E2E is opt-in |
 
 ### v3.28 — Stability hardening
 
@@ -49,7 +58,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**355** automated tests. Dev mode: grant **python3.14** (or **Expando.app**) in Accessibility **and** Input Monitoring.
+**384** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for **Expando.app** when installed from the DMG/Homebrew cask, or for the Python runtime reported by `expando doctor` when running from source.
 
 ### Recent feature releases
 
@@ -103,16 +112,21 @@ Expando:      claude --dangerously-skip-permissions
 
 ### 1. Install
 
-**DMG (recommended):** download [Expando.dmg](https://github.com/andreapostiglione/expando/releases/latest) from GitHub Releases.
+**DMG (recommended for users):**
+
+1. Download `Expando.dmg` from the [latest GitHub Release](https://github.com/andreapostiglione/expando/releases/latest).
+2. Open the DMG and drag `Expando.app` to `/Applications`.
+3. Launch `Expando.app`. The menu bar icon appears after macOS permissions are granted.
+
+macOS will require Accessibility and Input Monitoring permissions. That is expected for a text expander because Expando listens for typed triggers and injects the replacement text locally.
 
 **Homebrew cask:**
 
 ```bash
-brew tap andreapostiglione/tap
-brew install --cask expando
+brew install --cask andreapostiglione/tap/expando
 ```
 
-**From source:**
+**From source (contributors/development):**
 
 ```bash
 git clone https://github.com/andreapostiglione/expando.git
@@ -127,18 +141,21 @@ Website: [andreapostiglione.github.io/expando](https://andreapostiglione.github.
 
 Open **System Settings → Privacy & Security** and enable:
 
-1. **Accessibility** — Expando.app (DMG) or `python3.14` (dev/from source)
-2. **Input Monitoring** — same binary as above (required for global key listening)
+1. **Accessibility** — `Expando.app` for DMG/Homebrew installs, or the runtime shown by `expando doctor` for source installs
+2. **Input Monitoring** — the same app/runtime (required for global key listening)
 
-Verify:
+Verify from the menu bar with **Runtime health**. If you are running from source or have the CLI available:
 
 ```bash
-source .venv/bin/activate
 expando doctor
 expando doctor --repair   # fix stale pid/locks, safe mode, orphan processes
 ```
 
 ### 3. Run
+
+DMG/Homebrew users can open `Expando.app` from `/Applications`.
+
+Source/CLI users:
 
 ```bash
 expando start
@@ -530,8 +547,7 @@ Pushing a `v*` tag triggers GitHub Actions to:
 Tap: [andreapostiglione/homebrew-tap](https://github.com/andreapostiglione/homebrew-tap) (`andreapostiglione/tap`).
 
 ```bash
-brew tap andreapostiglione/tap
-brew install expando
+brew install --cask andreapostiglione/tap/expando
 ```
 
 ---
@@ -580,10 +596,10 @@ expando/
 
 | Problem | Fix |
 |---------|-----|
-| Snippets don't expand | `expando doctor` — enable **Accessibility** and **Input Monitoring** for your runtime (`python3.14` in dev, `Expando.app` in DMG) |
+| Snippets don't expand | Open **Runtime health** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for `Expando.app` (DMG/Homebrew) or the runtime shown by doctor (source/dev) |
 | Worked yesterday, dead today | `expando doctor --repair && expando restart` |
 | Menu bar restart broke snippets | Fixed in v3.28 — update and use **Riavvia servizio** (no duplicate listener) |
-| `python3.14` in Privacy settings | Normal in dev mode; grant both permissions to that binary |
+| `python3.x` in Privacy settings | Normal only when running from source/dev; grant both permissions to that binary |
 | Multiple instances / stale lock | `expando stop` · `expando doctor --repair` · `expando start` |
 | Config not reloading | `auto_restart: true` in `config/default.yml`; invalid YAML rolls back to `.last-good/` |
 | Expando disabled after crashes | Safe mode — `expando doctor --repair` clears it |

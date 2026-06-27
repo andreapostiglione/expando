@@ -23,6 +23,19 @@ ln -s /Applications "$STAGE/Applications"
 hdiutil create -volname "Expando" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 rm -rf "$STAGE"
 
+if [[ "$SIGN" == "1" ]]; then
+  IDENTITY="${EXPANDO_SIGN_IDENTITY:-}"
+  if [[ -z "$IDENTITY" ]]; then
+    IDENTITY="$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | head -1)"
+  fi
+  if [[ -z "$IDENTITY" ]]; then
+    echo "No Developer ID signing identity found for DMG. Set EXPANDO_SIGN_IDENTITY." >&2
+    exit 1
+  fi
+  codesign --force --timestamp --sign "$IDENTITY" "$DMG"
+  codesign --verify --verbose=2 "$DMG"
+fi
+
 if [[ "$NOTARIZE" == "1" ]]; then
   "$ROOT/scripts/notarize-dmg.sh" "$DMG"
 fi

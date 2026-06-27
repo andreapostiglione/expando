@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from expando.notarization_audit import (
+    audit_dmg,
     _entitlements_match,
     _normalize_entitlements,
     format_notarization_audit_report,
@@ -73,3 +74,38 @@ def test_format_notarization_audit_report(monkeypatch: pytest.MonkeyPatch):
     report = run_notarization_audit()
     text = format_notarization_audit_report(report)
     assert "codesign" in text.lower() or "targets" in text.lower() or "[" in text
+
+
+def test_audit_dmg_fails_unsigned_gatekeeper_container(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    dmg = tmp_path / "Expando.dmg"
+    dmg.write_bytes(b"not a real dmg")
+
+    def fake_run(args: list[str], *, timeout: int = 60):
+        class Result:
+            stdout = ""
+            stderr = ""
+
+            def __init__(self, returncode: int, stderr: str = "") -> None:
+                self.returncode = returncode
+                self.stderr = stderr
+
+        if args[:3] == ["codesign", "--verify", "--verbose=2"]:
+            return Result(0)
+        if args[:3] == ["spctl", "-a", "-t"]:
+            return Result(3, f"{dmg}: rejected\nsource=no usable signature")
+        if args[:3] == ["xcrun", "stapler", "validate"]:
+            return Result(0, "The validate action worked!")
+        return Result(1, "unexpected command")
+
+    monkeypatch.setattr("expando.notarization_audit._run_command", fake_run)
+
+    findings = audit_dmg(dmg)
+
+    by_id = {finding.check_id: finding for finding in findings}
+    assert by_id["dmg.codesign.verify"].status == "pass"
+    assert by_id["dmg.gatekeeper.open"].status == "fail"
+    assert "no usable signature" in by_id["dmg.gatekeeper.open"].message
+    assert by_id["notary.staple"].status == "pass"

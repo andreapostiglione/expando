@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.5"><img src="https://img.shields.io/badge/version-3.29.5-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.6"><img src="https://img.shields.io/badge/version-3.29.6-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -23,7 +23,7 @@
 
 Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://github.com/andreapostiglione/expando/releases)
 
-### v3.29.5 — Production hardening (latest)
+### v3.29.6 — Production hardening (latest)
 
 | Area | What's new |
 |------|------------|
@@ -31,7 +31,7 @@ Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://gith
 | **Hub** | Upgrade packages from menu bar with YAML diff preview before applying |
 | **Wizard** | Live permission badges for Accessibility + Input Monitoring |
 | **Repair** | `expando doctor --repair` reinstalls outdated LaunchAgent plist |
-| **Release** | Distribution bundles verify runtime assets; live TextEdit E2E is opt-in |
+| **Release** | Distribution bundles verify runtime assets; DMG containers are signed and notarized; live TextEdit E2E is opt-in |
 
 ### v3.28 — Stability hardening
 
@@ -602,7 +602,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.5**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.6**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

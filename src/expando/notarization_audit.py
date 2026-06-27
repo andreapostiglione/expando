@@ -430,6 +430,57 @@ def audit_sparkle_helper_signing(
 
 def audit_dmg(dmg: Path) -> list[NotarizationFinding]:
     findings: list[NotarizationFinding] = []
+    verify = _run_command(["codesign", "--verify", "--verbose=2", str(dmg)])
+    output = "\n".join(part for part in (verify.stdout, verify.stderr) if part).strip()
+    if verify.returncode == 0:
+        findings.append(
+            NotarizationFinding(
+                check_id="dmg.codesign.verify",
+                status="pass",
+                message="DMG codesign verification succeeded",
+            )
+        )
+    else:
+        line = output.splitlines()[-1] if output else "DMG codesign verify failed"
+        findings.append(
+            NotarizationFinding(
+                check_id="dmg.codesign.verify",
+                status="fail",
+                message=line,
+            )
+        )
+
+    assess = _run_command(
+        [
+            "spctl",
+            "-a",
+            "-t",
+            "open",
+            "--context",
+            "context:primary-signature",
+            "-vv",
+            str(dmg),
+        ]
+    )
+    output = "\n".join(part for part in (assess.stdout, assess.stderr) if part).strip()
+    if assess.returncode == 0 and "accepted" in output.lower():
+        findings.append(
+            NotarizationFinding(
+                check_id="dmg.gatekeeper.open",
+                status="pass",
+                message="DMG Gatekeeper primary-signature assessment accepted",
+            )
+        )
+    else:
+        line = output.splitlines()[-1] if output else "DMG Gatekeeper assessment failed"
+        findings.append(
+            NotarizationFinding(
+                check_id="dmg.gatekeeper.open",
+                status="fail",
+                message=line,
+            )
+        )
+
     validate = _run_command(["xcrun", "stapler", "validate", str(dmg)])
     output = "\n".join(part for part in (validate.stdout, validate.stderr) if part).strip()
     if validate.returncode == 0:

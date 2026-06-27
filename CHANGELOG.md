@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.6] — 2026-06-27
+
+### Fixed
+- Release DMGs are now signed as containers before notarization, so Gatekeeper primary-signature assessment accepts the downloaded `Expando.dmg` as well as the app bundle inside it.
+- Notarization audit now fails if the DMG container is unsigned or rejected by `spctl --type open --context context:primary-signature`.
+
 ## [3.29.5] — 2026-06-27
 
 ### Security
@@ -106,6 +112,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.6]: https://github.com/andreapostiglione/expando/compare/v3.29.5...v3.29.6
 [3.29.5]: https://github.com/andreapostiglione/expando/compare/v3.29.4...v3.29.5
 [3.29.4]: https://github.com/andreapostiglione/expando/compare/v3.29.3...v3.29.4
 [3.29.3]: https://github.com/andreapostiglione/expando/compare/v3.29.2...v3.29.3

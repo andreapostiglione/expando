@@ -35,7 +35,7 @@ jobs:
           python -m pip install --disable-pip-version-check -e .
           expando hub portal publish-site
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs
       - id: deployment

@@ -41,3 +41,20 @@ def test_inject_with_cursor_hint_does_not_deadlock():
 
     assert not thread.is_alive()
     assert ("press", Key.left) in keyboard.events
+
+
+def test_inject_types_short_text_with_keyboard_events():
+    injector = TextInjector(InjectorSettings(backend="inject"))
+    keyboard = _FakeKeyboard()
+    injector.keyboard = keyboard  # type: ignore[assignment]
+
+    injector.inject("a\n\tb")
+
+    assert keyboard.events == [
+        ("type", "a"),
+        ("press", Key.enter),
+        ("release", Key.enter),
+        ("press", Key.tab),
+        ("release", Key.tab),
+        ("type", "b"),
+    ]

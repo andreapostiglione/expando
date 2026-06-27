@@ -46,6 +46,8 @@ def test_watchdog_calls_on_dead_callback():
 
 
 def test_watchdog_retries_after_failed_restart():
+    import time
+
     alive = {"value": False}
     restart_attempts: list[str] = []
 
@@ -59,8 +61,10 @@ def test_watchdog_retries_after_failed_restart():
         retry_seconds=0.12,
     )
     watchdog.start()
-    import time
-
-    time.sleep(0.35)
-    watchdog.stop()
+    deadline = time.monotonic() + 1.0
+    try:
+        while time.monotonic() < deadline and len(restart_attempts) < 2:
+            time.sleep(0.02)
+    finally:
+        watchdog.stop()
     assert len(restart_attempts) >= 2

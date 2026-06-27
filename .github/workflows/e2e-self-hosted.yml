@@ -2,14 +2,6 @@ name: E2E (self-hosted)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 6 * * 1"
-  push:
-    branches: [main]
-    paths:
-      - "src/**"
-      - "tests/e2e/**"
-      - ".github/workflows/e2e-self-hosted.yml"
 
 jobs:
   e2e-full:

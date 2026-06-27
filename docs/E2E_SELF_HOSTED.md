@@ -17,7 +17,10 @@ gh variable set ENABLE_SELF_HOSTED_E2E --body true --repo andreapostiglione/expa
 4. Grant **Accessibility** and **Input Monitoring** to the runner service (System Settings → Privacy & Security).
 5. Run the workflow once interactively on the runner host so clipboard paste works in the runner session.
 
-6. Push to `main` or run workflow **E2E (self-hosted)** manually.
+6. Run workflow **E2E (self-hosted)** manually before releases or when validating macOS GUI behavior.
+
+The workflow is not attached to `push` or a timer because it opens TextEdit and injects
+keyboard/clipboard events in the runner's active GUI session.
 
 ## Run locally
 
@@ -35,6 +38,9 @@ Image snippet tests use `@pytest.mark.image` and verify PNG clipboard paste into
 Live TextEdit injection tests use `@pytest.mark.integration`, are excluded from headless
 `macos-latest` CI (`pytest -m "not clipboard and not image and not integration"`), and
 skip unless one of the `EXPANDO_E2E_*` live flags above is set.
+If the self-hosted GUI session is frontmost but does not accept synthetic typing or paste
+events, live TextEdit tests skip with a readiness message; fix the runner session/TCC grants
+before treating those skips as release confidence.
 
 ## Notarization audit (weekly)
 

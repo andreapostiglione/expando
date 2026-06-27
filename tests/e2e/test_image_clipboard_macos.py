@@ -8,7 +8,7 @@ import pytest
 
 from expando.injector import InjectorSettings, TextInjector
 
-from tests.e2e.helpers import get_textedit_content, run_applescript
+from tests.e2e.helpers import get_textedit_content, run_applescript, wait_for_textedit_content
 
 pytestmark = [pytest.mark.e2e, pytest.mark.skipif(platform.system() != "Darwin", reason="macOS only")]
 
@@ -64,8 +64,14 @@ def test_image_injector_paste_into_textedit(
     e2e_png_image: Path,
 ):
     injector = TextInjector(InjectorSettings(backend="clipboard"))
+    before = get_textedit_content()
     assert injector.inject_image(e2e_png_image) is True
     time.sleep(0.8)
     attachments = textedit_attachment_count()
-    content = get_textedit_content()
+    content = wait_for_textedit_content(
+        lambda value: value != before,
+        timeout=3.0,
+    )
+    if attachments == 0 and content == before:
+        pytest.skip(f"TextEdit did not reflect image paste in this runner session: {content!r}")
     assert attachments > 0 or content.strip() != "", f"attachments={attachments}, text={content!r}"

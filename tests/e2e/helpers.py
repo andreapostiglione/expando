@@ -63,6 +63,17 @@ def get_textedit_content() -> str:
     return run_applescript('tell application "TextEdit" to return text of front document')
 
 
+def wait_for_textedit_content(predicate, *, timeout: float = 3.0, interval: float = 0.2) -> str:
+    deadline = time.monotonic() + timeout
+    content = ""
+    while time.monotonic() < deadline:
+        content = get_textedit_content()
+        if predicate(content):
+            return content
+        time.sleep(interval)
+    return content
+
+
 def type_text_via_subprocess(text: str, *, delay: float = 0.12) -> None:
     """Type with a separate process so pynput listeners capture real key events."""
     script = f"""

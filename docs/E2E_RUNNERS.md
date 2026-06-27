@@ -7,10 +7,12 @@ with Accessibility and Input Monitoring granted to the runner process.
 
 | Workflow | Schedule | Runner | Purpose |
 |----------|----------|--------|---------|
-| `e2e-self-hosted.yml` | Mon 06:00 UTC + push | `self-hosted, macos` | Primary full E2E on `main` |
-| `e2e-nightly.yml` | Daily 05:00 UTC | `self-hosted, macos` | Redundant nightly regression |
+| `e2e-self-hosted.yml` | Manual | `self-hosted, macos` | Primary full E2E before releases |
+| `e2e-nightly.yml` | Manual | `self-hosted, macos` | Redundant runner regression check |
 
 Both workflows are gated by repository variable `ENABLE_SELF_HOSTED_E2E=true`.
+They are manual because live E2E opens TextEdit and injects keystrokes in the runner's GUI
+session.
 
 ## Primary runner
 
@@ -23,7 +25,7 @@ See [E2E_SELF_HOSTED.md](E2E_SELF_HOSTED.md) for local reproduction and clipboar
 
 ## Redundant / failover runner
 
-`e2e-nightly.yml` provides a second daily run on the same runner label. If the primary job
+`e2e-nightly.yml` provides a second manual run on the same runner label. If the primary job
 fails or the variable is unset, a lightweight **failover** job documents the outage instead of
 silently skipping.
 
@@ -33,7 +35,7 @@ For true hardware redundancy:
 2. GitHub Actions distributes jobs across available runners with matching labels.
 3. Keep TCC permissions aligned on both hosts.
 
-If both runners are offline, nightly artifacts are not produced; check the failover job log and
+If both runners are offline, E2E artifacts are not produced; check the failover job log and
 re-enable `ENABLE_SELF_HOSTED_E2E`.
 
 ## Environment flags
@@ -46,7 +48,10 @@ re-enable `ENABLE_SELF_HOSTED_E2E`.
 | `EXPANDO_E2E_IMAGE=1` | Enable image clipboard E2E |
 
 Tests marked `@pytest.mark.integration` skip on headless GitHub-hosted runners unless
-`EXPANDO_E2E_FULL=1` and `EXPANDO_E2E_TEXTEDIT=1` are set on a self-hosted host.
+`EXPANDO_E2E_FULL=1` and `EXPANDO_E2E_TEXTEDIT=1` are set on a self-hosted host. If the
+self-hosted GUI session does not actually accept synthetic typing or paste events, the live
+TextEdit tests skip with an environment-readiness message instead of reporting a product
+regression.
 
 ## Soak smoke (optional)
 
@@ -58,4 +63,5 @@ chmod +x scripts/soak-health-check.sh
 ```
 
 This runs `expando health` and a short `expando doctor` summary every 5 minutes for 2 hours.
-Pair it with `e2e-nightly.yml` on a second physical Mac for hardware redundancy.
+Pair it with the manual redundant E2E workflow on a second physical Mac for hardware
+redundancy.

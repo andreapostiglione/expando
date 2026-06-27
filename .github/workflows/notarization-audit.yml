@@ -36,7 +36,7 @@ jobs:
           hdiutil detach "/Volumes/Expando" -quiet || true
 
       - name: Restore audit history cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .ci-audit-history/notarize-audit-history.json
           key: notarize-audit-history-v1-${{ runner.os }}

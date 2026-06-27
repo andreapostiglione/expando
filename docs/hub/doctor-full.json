@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-27T11:06:36+00:00",
+  "generated_at": "2026-06-27T11:15:49+00:00",
   "doctor": {
     "ok": true,
     "config_dir": "/Users/runner/Library/Application Support/expando",
@@ -54,7 +54,7 @@
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-27T11:06:36+00:00",
+    "generated_at": "2026-06-27T11:15:49+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
     "approved_count": 10,
@@ -161,15 +161,15 @@
       "ok": 1,
       "failed": 0,
       "last_ok": true,
-      "last_recorded_at": "2026-06-27T11:06:33+00:00",
+      "last_recorded_at": "2026-06-27T11:15:47+00:00",
       "recent_ok_rate": 1.0
     },
     "entries": [
       {
-        "recorded_at": "2026-06-27T11:06:33+00:00",
+        "recorded_at": "2026-06-27T11:15:47+00:00",
         "ok": true,
         "summary": {
-          "pass": 9,
+          "pass": 11,
           "warn": 2,
           "fail": 0
         },
@@ -231,6 +231,16 @@
               "message": "Could not read entitlements from expando-sparkle"
             },
             {
+              "check_id": "dmg.codesign.verify",
+              "status": "pass",
+              "message": "DMG codesign verification succeeded"
+            },
+            {
+              "check_id": "dmg.gatekeeper.open",
+              "status": "pass",
+              "message": "DMG Gatekeeper primary-signature assessment accepted"
+            },
+            {
               "check_id": "notary.staple",
               "status": "pass",
               "message": "DMG stapler validation succeeded"
@@ -244,43 +254,18 @@
     "path": "/Users/runner/work/expando/expando/sparkle-benchmark-history.json",
     "version": 1,
     "stats": {
-      "total": 19,
+      "total": 20,
       "slow": 0,
       "failed": 0,
       "last_helper_ms": null,
-      "last_version": "3.29.5",
-      "last_recorded_at": "2026-06-27T11:06:34+00:00",
+      "last_version": "3.29.6",
+      "last_recorded_at": "2026-06-27T11:15:48+00:00",
       "trend_min_ms": null,
       "trend_max_ms": null,
       "trend_avg_ms": null,
       "trend_sparkline": ""
     },
     "entries": [
-      {
-        "recorded_at": "2026-06-19T10:13:23+00:00",
-        "version": "3.26.2",
-        "tag": "v3.26.2",
-        "warn_ms": 15000,
-        "fail_ms": 30000,
-        "slow": false,
-        "failed": false,
-        "benchmark": {
-          "sparkle_available": true,
-          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
-          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
-          "framework_present": true,
-          "appcast_fetch_ms": 189.46,
-          "helper_check_ms": null,
-          "appcast_entries": 1,
-          "latest_version": "3.26.1",
-          "current_version": "3.26.2",
-          "update_available": false,
-          "helper_slow": false,
-          "helper_fail": false,
-          "warn_ms": 15000,
-          "fail_ms": 30000
-        }
-      },
       {
         "recorded_at": "2026-06-19T10:58:57+00:00",
         "version": "3.26.4",
@@ -505,12 +490,37 @@
           "warn_ms": 15000,
           "fail_ms": 30000
         }
+      },
+      {
+        "recorded_at": "2026-06-27T11:15:48+00:00",
+        "version": "3.29.6",
+        "tag": "v3.29.6",
+        "warn_ms": 15000,
+        "fail_ms": 30000,
+        "slow": false,
+        "failed": false,
+        "benchmark": {
+          "sparkle_available": true,
+          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
+          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
+          "framework_present": true,
+          "appcast_fetch_ms": 203.37,
+          "helper_check_ms": null,
+          "appcast_entries": 1,
+          "latest_version": "3.29.5",
+          "current_version": "3.29.6",
+          "update_available": false,
+          "helper_slow": false,
+          "helper_fail": false,
+          "warn_ms": 15000,
+          "fail_ms": 30000
+        }
       }
     ]
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-27T11:06:36+00:00",
+    "generated_at": "2026-06-27T11:15:49+00:00",
     "ok": true,
     "packages": [
       {
@@ -606,5 +616,5 @@
     ]
   },
   "publish_context": "release-ci",
-  "release_context": "v3.29.5"
+  "release_context": "v3.29.6"
 }

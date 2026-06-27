@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0", "Pillow>=10.0"]
+dev = ["pytest>=9.1.1", "Pillow>=10.0"]
 
 [project.scripts]
 expando = "expando.cli:main"

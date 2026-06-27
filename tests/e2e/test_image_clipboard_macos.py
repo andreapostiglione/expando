@@ -44,11 +44,16 @@ def test_image_injector_sets_clipboard(require_clipboard_e2e, e2e_png_image: Pat
 
 
 def textedit_attachment_count() -> int:
-    return int(
-        run_applescript(
-            "tell application \"TextEdit\" to return count of attachments of front document"
+    try:
+        return int(
+            run_applescript(
+                "tell application \"TextEdit\" to return count of attachments of front document"
+            )
         )
-    )
+    except RuntimeError:
+        # Some TextEdit builds expose pasted images in the document body but not
+        # through the attachments AppleScript collection.
+        return 0
 
 
 @pytest.mark.clipboard

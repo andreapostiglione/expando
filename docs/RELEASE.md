@@ -14,7 +14,7 @@ Store credentials in Keychain:
 ```bash
 xcrun notarytool store-credentials "expando-notary" \
   --apple-id "your@email.com" \
-  --team-id "68Q8CQBQQV" \
+  --team-id "YOURTEAMID" \
   --password "xxxx-xxxx-xxxx-xxxx"
 ```
 
@@ -36,10 +36,12 @@ Push a tag `v*` to trigger `.github/workflows/release.yml`.
 |--------|-------------|
 | `APPLE_CERTIFICATE_BASE64` | Developer ID .p12 exported from Keychain, base64-encoded |
 | `APPLE_CERTIFICATE_PASSWORD` | Password for the .p12 export |
-| `APPLE_SIGNING_IDENTITY` | e.g. `Developer ID Application: Inochi Srl (68Q8CQBQQV)` |
+| `APPLE_SIGNING_IDENTITY` | e.g. `Developer ID Application: Example Org (YOURTEAMID)` |
 | `NOTARY_APPLE_ID` | Apple ID email |
 | `NOTARY_PASSWORD` | App-specific password |
-| `NOTARY_TEAM_ID` | `68Q8CQBQQV` |
+| `NOTARY_TEAM_ID` | Apple Developer Team ID |
+| `EXPANDO_SPARKLE_PUBLIC_ED_KEY` | Sparkle EdDSA public key for `SUPublicEDKey` |
+| `SPARKLE_PRIVATE_KEY` | Sparkle EdDSA private key PEM for appcast signing |
 
 Optional API key alternative: `NOTARY_API_KEY`, `NOTARY_API_KEY_ID`, `NOTARY_API_ISSUER`.
 
@@ -47,17 +49,15 @@ Optional API key alternative: `NOTARY_API_KEY`, `NOTARY_API_KEY_ID`, `NOTARY_API
 
 Each release generates `appcast.xml` (Sparkle-compatible feed) and attaches it to the GitHub release.
 
-Optional secret for EdDSA signatures:
-
-| Secret | Description |
-|--------|-------------|
-| `SPARKLE_PRIVATE_KEY` | EdDSA private key PEM for `sign_update` |
+Sparkle signing is required for production release appcasts. `scripts/generate-appcast.sh`
+fails without `SPARKLE_PRIVATE_KEY` unless `EXPANDO_ALLOW_UNSIGNED_APPCAST=1` is set for
+local unsigned test feeds.
 
 Local generation:
 
 ```bash
 chmod +x scripts/generate-appcast.sh
-./scripts/generate-appcast.sh 1.6.0 Expando.dmg appcast.xml
+SPARKLE_PRIVATE_KEY="$(cat ed_private_key.pem)" ./scripts/generate-appcast.sh 1.6.0 Expando.dmg appcast.xml
 ```
 
 Feed URL (default): `https://raw.githubusercontent.com/andreapostiglione/expando/main/appcast.xml`

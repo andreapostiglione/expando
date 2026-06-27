@@ -1,6 +1,6 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.29.0
+**Versione attuale:** v3.29.5
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
@@ -109,9 +109,9 @@
 | `expando health` + support bundle + E2E secure-input/watchdog | ✓ v3.25.0 |
 | Auto-backup + sync conflict + plugin allowlist + docs complete | ✓ v3.26.0 |
 
-### Gap residui (post v3.29)
+### Gap residui (post v3.29.5)
 
-- **E2E runner:** clipboard/secure-input richiedono runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`)
+- **E2E runner:** clipboard/secure-input richiedono runner self-hosted con TCC (`EXPANDO_E2E_FULL=1`, `EXPANDO_E2E_TEXTEDIT=1`)
 - **Secondo runner E2E:** workflow nightly presente; failover fisico ancora opzionale
 - **Hub packages:** ampliare catalogo community oltre i 10 attuali
 
@@ -575,9 +575,9 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 
 - Ogni feature ha un ID (`T3-01`, …) da citare in issue e PR
 - Aggiornare la sezione **Stato attuale** a ogni release minor
-- Spostare item completati in `PROMPT_SESSIONE.md` o CHANGELOG
+- Spostare item completati in CHANGELOG o nei documenti di release pubblici
 - Rivedere la roadmap ogni trimestre
 
 ---
 
-*Ultimo aggiornamento: 21 giugno 2026 — v3.29.0 (Sprint 38: onboarding UX, menu bar health/snooze, hub upgrade diff)*
+*Ultimo aggiornamento: 27 giugno 2026 — v3.29.5 production hardening*

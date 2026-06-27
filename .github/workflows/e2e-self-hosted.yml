@@ -43,6 +43,7 @@ jobs:
         id: e2e
         env:
           EXPANDO_E2E_FULL: "1"
+          EXPANDO_E2E_TEXTEDIT: "1"
           EXPANDO_E2E_CLIPBOARD: "1"
           EXPANDO_E2E_IMAGE: "1"
         run: pytest -q tests/e2e -ra --junitxml=e2e-results.xml

@@ -9,15 +9,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pathlib import Path
-
 from .config import AppConfig, Match, Variable
 from .forms import collect_form_values
 from .render_context import RenderContext
 from .text_transform import decode_unicode_escapes
 
 TEMPLATE_RE = re.compile(r"\{\{([a-zA-Z0-9_]+)\}\}")
-SHELL_CHAIN_RE = re.compile(r"[;|&`$()<>]")
+SHELL_CHAIN_RE = re.compile(r"[;|&`$()<>\r\n\x00]")
 
 
 def _resolve_env(name: str) -> str:
@@ -33,25 +31,25 @@ BUILTIN_ENV = {
 }
 
 
-def _shell_executable(cmd: str) -> str:
+def _shell_argv(cmd: str) -> list[str]:
     stripped = cmd.strip()
     if not stripped:
-        return ""
+        return []
+    if SHELL_CHAIN_RE.search(stripped):
+        return []
     try:
-        parts = shlex.split(stripped)
+        return shlex.split(stripped)
     except ValueError:
-        return ""
-    return parts[0] if parts else ""
+        return []
 
 
 def _shell_allowed(cmd: str, allowlist: list[str]) -> bool:
     if not allowlist:
         return False
-    if SHELL_CHAIN_RE.search(cmd):
+    argv = _shell_argv(cmd)
+    if not argv:
         return False
-    executable = _shell_executable(cmd)
-    if not executable:
-        return False
+    executable = argv[0]
     executable_name = Path(executable).name.casefold()
     return any(
         executable_name == prefix.casefold() or executable.casefold() == prefix.casefold()
@@ -70,15 +68,15 @@ def _resolve_variable(
         return datetime.now().strftime(fmt)
 
     if variable.type == "shell":
-        cmd = variable.params.get("cmd", "")
+        cmd = str(variable.params.get("cmd", ""))
         if not cmd:
             return ""
+        argv = _shell_argv(cmd)
         allowlist = app_config.shell_allowlist if app_config else []
-        if not _shell_allowed(cmd, allowlist):
+        if not argv or not _shell_allowed(cmd, allowlist):
             raise RuntimeError(f"Shell command not allowed: {cmd}")
         result = subprocess.run(
-            cmd,
-            shell=True,
+            argv,
             capture_output=True,
             text=True,
             timeout=10,

@@ -29,7 +29,7 @@ Default targets:
 |-------|-------------|
 | `codesign.verify` | Deep strict verification |
 | `codesign.hardened_runtime` | Hardened runtime flag |
-| `codesign.team_id` | Developer Team ID `68Q8CQBQQV` |
+| `codesign.team_id` | Developer Team ID (override with `EXPANDO_EXPECTED_TEAM_ID` or `NOTARY_TEAM_ID`) |
 | `entitlements.baseline` | Match `scripts/entitlements.plist` |
 | `gatekeeper.assess` | `spctl` acceptance |
 | `notary.staple` | `stapler validate` on DMG |

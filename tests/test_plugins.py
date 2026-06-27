@@ -40,3 +40,15 @@ def test_script_path_traversal_blocked(tmp_path: Path):
     plugins.mkdir()
     with pytest.raises(RuntimeError, match="inside plugins"):
         resolve_plugin_script(tmp_path, "../outside.py")
+
+
+def test_script_path_prefix_sibling_traversal_blocked(tmp_path: Path):
+    config_dir = tmp_path / "expando"
+    plugins = config_dir / "plugins"
+    plugins.mkdir(parents=True)
+    sibling = config_dir / "plugins_evil"
+    sibling.mkdir()
+    (sibling / "leak.py").write_text("def run(context):\n    return 'leak'\n", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="inside plugins"):
+        resolve_plugin_script(config_dir, "../plugins_evil/leak.py")

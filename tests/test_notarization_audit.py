@@ -6,6 +6,7 @@ from expando.notarization_audit import (
     _entitlements_match,
     _normalize_entitlements,
     format_notarization_audit_report,
+    expected_team_id,
     load_expected_entitlements,
     run_notarization_audit,
 )
@@ -34,6 +35,12 @@ def test_normalize_entitlements_sorts_lists():
 def test_load_expected_entitlements_reads_repo_baseline():
     data = load_expected_entitlements()
     assert "com.apple.security.automation.apple-events" in data
+
+
+def test_expected_team_id_can_be_overridden(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("EXPANDO_EXPECTED_TEAM_ID", "TEAM123456")
+
+    assert expected_team_id() == "TEAM123456"
 
 
 def test_notarization_audit_warns_without_artifacts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

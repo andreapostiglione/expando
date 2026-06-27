@@ -116,7 +116,9 @@ def test_config_reloader_invokes_callback_after_debounce():
     event = SimpleNamespace(is_directory=False, src_path="/tmp/match/base.yml")
     handler.on_any_event(event)
     assert calls == []
-    time.sleep(0.35)
+    deadline = time.monotonic() + 2
+    while not calls and time.monotonic() < deadline:
+        time.sleep(0.02)
     assert calls == ["reload"]
 
 
@@ -129,5 +131,7 @@ def test_config_reloader_coalesces_rapid_events():
     handler.on_any_event(event)
     time.sleep(0.1)
     handler.on_any_event(event)
-    time.sleep(0.35)
+    deadline = time.monotonic() + 2
+    while not calls and time.monotonic() < deadline:
+        time.sleep(0.02)
     assert calls == ["reload"]

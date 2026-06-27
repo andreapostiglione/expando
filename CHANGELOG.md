@@ -2,6 +2,41 @@
 
 All notable changes to Expando are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+## [3.29.5] — 2026-06-27
+
+### Security
+- Shell variables now execute allowlisted commands with `shell=False` and reject shell chaining/control characters, including newline command injection.
+- Plugin script and image path resolution now use canonical `Path.relative_to()` containment checks to block prefix-sibling traversal such as `../expando_evil.png`.
+
+### Fixed
+- Expansion with `word_break` or postponed suffix now deletes the full typed trigger plus suffix before reinserting replacement text.
+- Cursor hint injection no longer deadlocks when `inject(..., cursor_left=...)` calls cursor movement internally.
+- Official `sales-it` package trigger renamed from `:followup` to `:salesfollowup` to avoid cross-package conflicts.
+
+### Changed
+- Distribution bundles now copy and verify `default_config`, hub metadata, and runtime launch scripts.
+- Live TextEdit/macOS E2E tests are opt-in via `EXPANDO_E2E_TEXTEDIT=1`, `EXPANDO_E2E_CLIPBOARD=1`, `EXPANDO_E2E_IMAGE=1`, or `EXPANDO_E2E_FULL=1`.
+- Sparkle release builds now require a public EdDSA key in the app bundle, and appcast generation requires `SPARKLE_PRIVATE_KEY` unless explicitly generating a local unsigned appcast.
+- Added open-source contribution, security, code of conduct, and Dependabot metadata.
+
+## [3.29.4] — 2026-06-27
+
+### Fixed
+- Clipboard permission probe no longer pollutes the user's pasteboard outside `expando doctor`.
+- Release health docs and Sparkle benchmark history were refreshed for v3.29.4.
+
+## [3.29.3] — 2026-06-27
+
+### Fixed
+- Clipboard readiness checks avoid destructive pasteboard probes during normal runtime.
+
+## [3.29.2] — 2026-06-27
+
+### Fixed
+- Release appcast and health artifacts refreshed after clipboard and distribution fixes.
+
 ## [3.29.1] — 2026-06-22
 
 ### Fixed
@@ -71,6 +106,10 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.5]: https://github.com/andreapostiglione/expando/compare/v3.29.4...v3.29.5
+[3.29.4]: https://github.com/andreapostiglione/expando/compare/v3.29.3...v3.29.4
+[3.29.3]: https://github.com/andreapostiglione/expando/compare/v3.29.2...v3.29.3
+[3.29.2]: https://github.com/andreapostiglione/expando/compare/v3.29.1...v3.29.2
 [3.29.1]: https://github.com/andreapostiglione/expando/compare/v3.29.0...v3.29.1
 [3.29.0]: https://github.com/andreapostiglione/expando/compare/v3.28.0...v3.29.0
 [3.28.0]: https://github.com/andreapostiglione/expando/compare/v3.27.0...v3.28.0

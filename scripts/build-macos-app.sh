@@ -6,6 +6,7 @@ APP="$ROOT/Expando.app"
 MACOS="$APP/Contents/MacOS"
 RESOURCES="$APP/Contents/Resources"
 VERSION="$(grep '^version' "$ROOT/pyproject.toml" | head -1 | sed 's/.*"\(.*\)".*/\1/')"
+SPARKLE_PUBLIC_ED_KEY="${EXPANDO_SPARKLE_PUBLIC_ED_KEY:-${SPARKLE_PUBLIC_ED_KEY:-}}"
 
 mkdir -p "$MACOS" "$RESOURCES"
 
@@ -19,6 +20,11 @@ for template_icon in logoTemplate.png "logoTemplate@2x.png" "logoTemplate@3x.png
 done
 if [[ -f "$ROOT/assets/logo.png" ]]; then
   cp "$ROOT/assets/logo.png" "$RESOURCES/logo.png"
+fi
+
+if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" && -z "$SPARKLE_PUBLIC_ED_KEY" ]]; then
+  echo "EXPANDO_SPARKLE_PUBLIC_ED_KEY or SPARKLE_PUBLIC_ED_KEY is required for distribution builds" >&2
+  exit 1
 fi
 
 if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
@@ -58,6 +64,12 @@ fi
 
 chmod +x "$MACOS/expando"
 
+SPARKLE_PUBLIC_ED_KEY_BLOCK=""
+if [[ -n "$SPARKLE_PUBLIC_ED_KEY" ]]; then
+  SPARKLE_PUBLIC_ED_KEY_BLOCK="    <key>SUPublicEDKey</key>
+    <string>${SPARKLE_PUBLIC_ED_KEY}</string>"
+fi
+
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -91,6 +103,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <string>https://raw.githubusercontent.com/andreapostiglione/expando/main/appcast.xml</string>
     <key>SUEnableAutomaticChecks</key>
     <true/>
+${SPARKLE_PUBLIC_ED_KEY_BLOCK}
 </dict>
 </plist>
 EOF

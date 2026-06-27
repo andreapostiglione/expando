@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-23T03:12:19+00:00",
+  "generated_at": "2026-06-27T09:02:05+00:00",
   "ok": true,
   "packages": [
     {
@@ -87,11 +87,11 @@
     },
     {
       "community_trigger": ":follow",
-      "official_trigger": ":followup",
+      "official_trigger": ":salesfollowup",
       "community_package": "meeting-it",
       "official_package": "sales-it",
-      "score": 0.94,
-      "reason": "prefix"
+      "score": 0.772,
+      "reason": "contains"
     }
   ]
 }

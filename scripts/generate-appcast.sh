@@ -26,6 +26,12 @@ DOWNLOAD_URL="https://github.com/andreapostiglione/expando/releases/download/v${
 PUB_DATE="$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
 SIGNATURE_ATTR=""
 
+if [[ -z "${SPARKLE_PRIVATE_KEY:-}" && "${EXPANDO_ALLOW_UNSIGNED_APPCAST:-0}" != "1" ]]; then
+  echo "SPARKLE_PRIVATE_KEY is required to generate a production appcast" >&2
+  echo "Set EXPANDO_ALLOW_UNSIGNED_APPCAST=1 only for local unsigned test appcasts" >&2
+  exit 1
+fi
+
 if [[ -n "${SPARKLE_PRIVATE_KEY:-}" ]]; then
   SPARKLE_VERSION="${SPARKLE_VERSION:-2.6.4}"
   SPARKLE_DIR="$ROOT/.sparkle-tools"
@@ -42,6 +48,11 @@ if [[ -n "${SPARKLE_PRIVATE_KEY:-}" ]]; then
   if [[ -n "$ED_SIGNATURE" ]]; then
     SIGNATURE_ATTR=" sparkle:edSignature=\"${ED_SIGNATURE}\""
   fi
+fi
+
+if [[ -z "$SIGNATURE_ATTR" && "${EXPANDO_ALLOW_UNSIGNED_APPCAST:-0}" != "1" ]]; then
+  echo "Sparkle signing did not produce sparkle:edSignature" >&2
+  exit 1
 fi
 
 if [[ -z "$NOTES" ]]; then

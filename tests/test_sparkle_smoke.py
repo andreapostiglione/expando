@@ -24,6 +24,18 @@ def test_smoke_test_passes_with_helper_and_framework(tmp_path: Path):
     framework = bundle / "Contents" / "Frameworks" / "Sparkle.framework"
     helper.parent.mkdir(parents=True)
     framework.mkdir(parents=True)
+    (bundle / "Contents" / "Info.plist").write_text(
+        """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>SUPublicEDKey</key>
+  <string>abc123</string>
+</dict>
+</plist>
+""",
+        encoding="utf-8",
+    )
     helper.write_text("", encoding="utf-8")
     helper.chmod(0o755)
 
@@ -32,6 +44,7 @@ def test_smoke_test_passes_with_helper_and_framework(tmp_path: Path):
 
     assert report.ok is True
     assert report.framework_present is True
+    assert report.public_ed_key_present is True
     assert report.helper_path is not None
 
 
@@ -41,6 +54,7 @@ def test_format_sparkle_smoke_report_ok():
         app_bundle="/Applications/Expando.app",
         helper_path="/Applications/Expando.app/Contents/MacOS/expando-sparkle",
         framework_present=True,
+        public_ed_key_present=True,
         errors=[],
     )
     text = format_sparkle_smoke_report(report)
@@ -54,6 +68,7 @@ def test_format_sparkle_smoke_report_fail():
         app_bundle="/tmp/Expando.app",
         helper_path=None,
         framework_present=False,
+        public_ed_key_present=False,
         errors=["Sparkle.framework missing"],
     )
     text = format_sparkle_smoke_report(report)

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.0"><img src="https://img.shields.io/badge/version-3.29.0-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.5"><img src="https://img.shields.io/badge/version-3.29.5-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -23,7 +23,7 @@
 
 Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://github.com/andreapostiglione/expando/releases)
 
-### v3.29 — UX polish (latest)
+### v3.29.5 — Production hardening (latest)
 
 | Area | What's new |
 |------|------------|
@@ -31,6 +31,7 @@ Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://gith
 | **Hub** | Upgrade packages from menu bar with YAML diff preview before applying |
 | **Wizard** | Live permission badges for Accessibility + Input Monitoring |
 | **Repair** | `expando doctor --repair` reinstalls outdated LaunchAgent plist |
+| **Release** | Distribution bundles verify runtime assets; live TextEdit E2E is opt-in |
 
 ### v3.28 — Stability hardening
 
@@ -562,7 +563,7 @@ expando/
 │   ├── ui_native.py      # Tkinter search + form windows
 │   ├── profiles.py       # Per-app config profiles
 │   └── packages.py       # Package loader
-├── tests/                # 355+ pytest tests (incl. tests/e2e)
+├── tests/                # pytest tests (unit + opt-in macOS E2E)
 ├── CHANGELOG.md          # Release notes
 ├── packages/
 │   ├── hub/              # Official hub index + marketplace queue
@@ -601,14 +602,14 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.28.0** (Sprint 37 — stability). See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.5**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 
-Contributions welcome. Fork the repo, create a branch, add tests, open a PR.
+Contributions welcome. Fork the repo, create a branch, add tests, open a PR. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 1. `pip install -e ".[dev]"`
-2. `pytest -q`
+2. `pytest -q tests --ignore=tests/e2e`
 3. Keep changes focused and documented
 
 ---

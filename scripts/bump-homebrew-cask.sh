@@ -23,6 +23,7 @@ cat <<EOF
 cask "expando" do
   version "${VERSION}"
   sha256 "${SHA256}"
-  url "https://github.com/andreapostiglione/expando/releases/download/v${VERSION}/Expando.dmg"
+  url "https://github.com/andreapostiglione/expando/releases/download/v${VERSION}/Expando.dmg",
+      verified: "github.com/andreapostiglione/expando/"
 end
 EOF

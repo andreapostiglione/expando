@@ -47,3 +47,12 @@ def test_dmg_build_signs_container_before_notarization() -> None:
     assert 'codesign --force --timestamp --sign "$IDENTITY" "$DMG"' in text
     assert 'codesign --verify --verbose=2 "$DMG"' in text
     assert text.index('codesign --verify --verbose=2 "$DMG"') < text.index("notarize-dmg.sh")
+
+
+def test_homebrew_cask_generators_include_verified_url() -> None:
+    root = Path(__file__).resolve().parents[1]
+    bump = (root / "scripts" / "bump-homebrew-cask.sh").read_text(encoding="utf-8")
+    tap_pr = (root / "scripts" / "push-homebrew-tap-pr.sh").read_text(encoding="utf-8")
+
+    assert 'verified: "github.com/andreapostiglione/expando/"' in bump
+    assert 'verified: "github.com/andreapostiglione/expando/"' in tap_pr

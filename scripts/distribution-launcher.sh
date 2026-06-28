@@ -6,6 +6,7 @@ RESOURCES="$APP_DIR/Contents/Resources"
 SITE_PACKAGES="$RESOURCES/site-packages"
 export PYTHONPATH="$SITE_PACKAGES${PYTHONPATH:+:$PYTHONPATH}"
 export EXPANDO_RESOURCES="$RESOURCES"
+export PYTHONDONTWRITEBYTECODE=1
 
 if [[ $# -eq 0 ]]; then
   set -- run

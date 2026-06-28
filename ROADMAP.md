@@ -1,6 +1,6 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.29.11
+**Versione attuale:** v3.29.12
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
@@ -580,4 +580,4 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 
 ---
 
-*Ultimo aggiornamento: 28 giugno 2026 — v3.29.11 Sparkle helper runtime fix*
+*Ultimo aggiornamento: 28 giugno 2026 — v3.29.12 signed bundle seal fix*

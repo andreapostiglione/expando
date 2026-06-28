@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP="${1:?app bundle path required}"
+export PYTHONDONTWRITEBYTECODE=1
 
 if [[ -d "$APP/Contents/Resources/venv" ]]; then
   echo "Legacy non-relocatable venv must not ship in distribution builds" >&2

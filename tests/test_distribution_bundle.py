@@ -20,9 +20,14 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     root = Path(__file__).resolve().parents[1]
     embed = (root / "scripts" / "embed-distribution-python.sh").read_text(encoding="utf-8")
     verify = (root / "scripts" / "verify-distribution-bundle.sh").read_text(encoding="utf-8")
+    launcher = (root / "scripts" / "distribution-launcher.sh").read_text(encoding="utf-8")
 
     assert "$RESOURCES/default_config" in embed
     assert "$RESOURCES/packages" in embed
+    assert "--no-compile" in embed
+    assert "find \"$SITE_PACKAGES\" -type d -name __pycache__" in embed
+    assert "PYTHONDONTWRITEBYTECODE=1" in launcher
+    assert "PYTHONDONTWRITEBYTECODE=1" in verify
     assert "default_config/config/default.yml" in verify
     assert "packages/hub/index.json" in verify
     assert "python3.12 is required to verify bundled native dependencies" in verify

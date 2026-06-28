@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.12] — 2026-06-28
+
+### Fixed
+- Distribution launcher disables Python bytecode writes so first launch no longer creates or modifies `__pycache__` inside the signed app bundle.
+- Distribution builds install dependencies with `--no-compile`, remove bundled `__pycache__`, and run verification with `PYTHONDONTWRITEBYTECODE=1` to keep the signed bundle sealed.
+
 ## [3.29.11] — 2026-06-28
 
 ### Fixed
@@ -147,6 +153,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.12]: https://github.com/andreapostiglione/expando/compare/v3.29.11...v3.29.12
 [3.29.11]: https://github.com/andreapostiglione/expando/compare/v3.29.10...v3.29.11
 [3.29.10]: https://github.com/andreapostiglione/expando/compare/v3.29.9...v3.29.10
 [3.29.9]: https://github.com/andreapostiglione/expando/compare/v3.29.8...v3.29.9

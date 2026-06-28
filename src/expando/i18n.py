@@ -54,6 +54,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Open permissions",
     },
     "runtime.app": {"it": "app bundle", "en": "app bundle"},
+    "runtime.packaged": {"it": "app installata", "en": "installed app"},
     "runtime.dev": {"it": "sviluppo (Python)", "en": "development (Python)"},
     "runtime.venv": {"it": "venv locale", "en": "local venv"},
     "runtime.unknown": {"it": "sconosciuta", "en": "unknown"},

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.13"><img src="https://img.shields.io/badge/version-3.29.13-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.14"><img src="https://img.shields.io/badge/version-3.29.14-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,14 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.13 — Simpler menu and glass editor (latest)
+### v3.29.14 — Installed-app runtime wording (latest)
+
+| Area | What's new |
+|------|------------|
+| **Doctor** | DMG/Homebrew launches that use the packaged Python runtime are shown as an installed app, not as development mode |
+| **Permissions** | Doctor keeps the exact macOS grant target visible without telling normal users they are in a dev setup |
+
+### v3.29.13 — Simpler menu and glass editor
 
 | Area | What's new |
 |------|------------|
@@ -112,7 +119,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**391** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for **Expando.app** when installed from the DMG/Homebrew cask, or for the Python runtime reported by `expando doctor` when running from source.
+**392** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; installed builds may appear as `Expando.app` or as the packaged Python runtime depending on macOS.
 
 ### Recent feature releases
 
@@ -195,7 +202,7 @@ Website: [andreapostiglione.github.io/expando](https://andreapostiglione.github.
 
 Open **System Settings → Privacy & Security** and enable:
 
-1. **Accessibility** — `Expando.app` for DMG/Homebrew installs, or the runtime shown by `expando doctor` for source installs
+1. **Accessibility** — the app/runtime shown by Expando setup or `expando doctor`
 2. **Input Monitoring** — the same app/runtime (required for global key listening)
 
 Verify from the menu bar with **Avanzate → Diagnostica**. If you are running from source or have the CLI available:
@@ -650,7 +657,7 @@ expando/
 
 | Problem | Fix |
 |---------|-----|
-| Snippets don't expand | Open **Avanzate → Diagnostica** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for `Expando.app` (DMG/Homebrew) or the runtime shown by doctor (source/dev) |
+| Snippets don't expand | Open **Avanzate → Diagnostica** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for the app/runtime shown there |
 | Worked yesterday, dead today | `expando doctor --repair && expando restart` |
 | Menu bar restart broke snippets | Fixed in v3.28 — update and use **Avanzate → Riavvia Expando** (no duplicate listener) |
 | `python3.x` in Privacy settings | Normal only when running from source/dev; grant both permissions to that binary |
@@ -672,7 +679,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.13**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.14**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

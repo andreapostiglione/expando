@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,19 @@ class RuntimeInfo:
 def detect_runtime() -> RuntimeInfo:
     executable = Path(sys.executable).resolve()
     exe_str = str(executable)
+    resources = os.environ.get("EXPANDO_RESOURCES")
+
+    if resources:
+        resources_path = Path(resources).expanduser().resolve()
+        if resources_path.name == "Resources" and resources_path.parent.name == "Contents":
+            app_root = resources_path.parent.parent
+            if app_root.suffix == ".app":
+                return RuntimeInfo(
+                    mode="packaged",
+                    executable=exe_str,
+                    grant_label=executable.name,
+                    grant_hint=str(app_root),
+                )
 
     if "Expando.app" in exe_str:
         app_root = executable

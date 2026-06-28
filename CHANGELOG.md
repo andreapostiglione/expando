@@ -4,6 +4,15 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.14] — 2026-06-28
+
+### Changed
+- DMG/Homebrew launches that run through the packaged Python runtime are reported as an installed app in doctor output instead of development mode.
+- Permission notes now explain the exact macOS grant target without telling normal installed-app users they are in a dev setup.
+
+### Fixed
+- Added runtime detection coverage for packaged app launches using `EXPANDO_RESOURCES`.
+
 ## [3.29.13] — 2026-06-28
 
 ### Changed
@@ -164,6 +173,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.14]: https://github.com/andreapostiglione/expando/compare/v3.29.13...v3.29.14
 [3.29.13]: https://github.com/andreapostiglione/expando/compare/v3.29.12...v3.29.13
 [3.29.12]: https://github.com/andreapostiglione/expando/compare/v3.29.11...v3.29.12
 [3.29.11]: https://github.com/andreapostiglione/expando/compare/v3.29.10...v3.29.11

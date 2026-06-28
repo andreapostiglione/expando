@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.16] — 2026-06-28
+
+### Fixed
+- Menu bar **Aggiorna Expando** no longer freezes while Sparkle runs the interactive update check.
+- Interactive Sparkle checks now launch detached from the menu callback; background checks still wait and time out for release verification.
+
 ## [3.29.15] — 2026-06-28
 
 ### Changed
@@ -179,6 +185,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.16]: https://github.com/andreapostiglione/expando/compare/v3.29.15...v3.29.16
 [3.29.15]: https://github.com/andreapostiglione/expando/compare/v3.29.14...v3.29.15
 [3.29.14]: https://github.com/andreapostiglione/expando/compare/v3.29.13...v3.29.14
 [3.29.13]: https://github.com/andreapostiglione/expando/compare/v3.29.12...v3.29.13

@@ -181,7 +181,16 @@ def check_for_updates_via_sparkle(*, background: bool = True) -> bool:
 
     args = [str(helper), "background" if background else "interactive"]
     try:
-        subprocess.run(args, check=False, timeout=120)
+        if background:
+            subprocess.run(args, check=False, timeout=120)
+        else:
+            subprocess.Popen(
+                args,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
         return True
     except Exception:
         logger.exception("Sparkle helper failed")

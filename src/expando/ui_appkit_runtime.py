@@ -43,9 +43,10 @@ def select_first_table_row(table) -> None:
 
 
 def set_text_view_string(text_view, value: str) -> None:
+    editable = bool(text_view.isEditable())
     text_view.setEditable_(True)
     text_view.setString_(value)
-    style_readonly_text_view(text_view)
+    text_view.setEditable_(editable)
 
 
 def run_appkit_session(builder) -> object | None:

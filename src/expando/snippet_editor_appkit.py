@@ -10,6 +10,7 @@ from AppKit import (
     NSButton,
     NSControlTextDidChangeNotification,
     NSMakeRect,
+    NSSearchField,
     NSScrollView,
     NSTableView,
     NSTextField,
@@ -28,6 +29,7 @@ from .ui_appkit_runtime import (
     run_appkit_session,
     select_first_table_row,
     set_text_view_string,
+    style_readonly_text_view,
 )
 from .ui_file_picker import pick_list_item
 
@@ -76,6 +78,9 @@ class _SnippetEditorController(NSObject):
             select_first_table_row(self.table_view)
             self._load_selection()
 
+    def tableViewSelectionDidChange_(self, _notification):
+        self._load_selection()
+
     def tableSelectionChanged_(self, _notification):
         self._load_selection()
 
@@ -91,9 +96,26 @@ class _SnippetEditorController(NSObject):
             self.current_id = None
             _set_field(self.trigger_field, "")
             _set_field(self.if_app_field, "")
+            if hasattr(self, "unless_app_field"):
+                _set_field(self.unless_app_field, "")
+                _set_field(self.if_bundle_field, "")
+                _set_field(self.unless_bundle_field, "")
+                _set_field(self.if_title_field, "")
+                _set_field(self.unless_title_field, "")
+                _set_field(self.regex_field, "")
+                _set_view(self.when_view, "")
+                _set_field(self.image_field, "")
+                _set_field(self.priority_field, "")
+                _set_field(self.force_clipboard_field, "")
+                _set_field(self.target_file_field, "")
             _set_view(self.form_view, "")
             _set_view(self.vars_view, "")
             _set_view(self.replace_view, "")
+            self.replace_view.setEditable_(True)
+            self.form_view.setEditable_(True)
+            self.vars_view.setEditable_(True)
+            if hasattr(self, "when_view"):
+                self.when_view.setEditable_(True)
             self._update_preview()
             return
         self.current_id = item.get("id")
@@ -121,6 +143,8 @@ class _SnippetEditorController(NSObject):
         self.replace_view.setEditable_(editable)
         self.form_view.setEditable_(editable)
         self.vars_view.setEditable_(editable)
+        if hasattr(self, "when_view"):
+            self.when_view.setEditable_(editable)
         self._update_preview()
 
     def replaceChanged_(self, _notification):
@@ -156,6 +180,7 @@ class _SnippetEditorController(NSObject):
             _set_field(self.force_clipboard_field, "")
             target = (getattr(self, "match_files", None) or ["dev.yml"])[0]
             _set_field(self.target_file_field, target)
+            self.when_view.setEditable_(True)
         self.form_view.setEditable_(True)
         self.vars_view.setEditable_(True)
         _set_view(self.form_view, "")
@@ -348,7 +373,7 @@ def run_snippet_editor(
         controller.config_dir = config_dir
         controller.match_files = list(match_files or ["dev.yml"])
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, 920, 820),
+            NSMakeRect(0, 0, 960, 760),
             NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
             NSBackingStoreBuffered,
             False,
@@ -358,7 +383,41 @@ def run_snippet_editor(
         controller.window = window
 
         content = window.contentView()
-        search = NSTextField.alloc().initWithFrame_(NSMakeRect(16, 672, 888, 28))
+        left_x = 20
+        left_w = 280
+        right_x = 320
+        right_edge = 940
+        label_w = 100
+        field_x = right_x + label_w + 10
+        field_w = right_edge - field_x
+
+        def _label(text: str, x: int, y: int, width: int = label_w) -> NSTextField:
+            label = NSTextField.alloc().initWithFrame_(NSMakeRect(x, y, width, 22))
+            label.setStringValue_(text)
+            label.setEditable_(False)
+            label.setBezeled_(False)
+            label.setDrawsBackground_(False)
+            content.addSubview_(label)
+            return label
+
+        def _field(x: int, y: int, width: int) -> NSTextField:
+            field = NSTextField.alloc().initWithFrame_(NSMakeRect(x, y - 2, width, 24))
+            content.addSubview_(field)
+            return field
+
+        def _text_area(x: int, y: int, width: int, height: int, *, editable: bool) -> NSTextView:
+            scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(x, y, width, height))
+            scroll.setBorderType_(NSBezelBorder)
+            scroll.setHasVerticalScroller_(True)
+            view = NSTextView.alloc().initWithFrame_(scroll.bounds())
+            view.setEditable_(editable)
+            if not editable:
+                style_readonly_text_view(view)
+            scroll.setDocumentView_(view)
+            content.addSubview_(scroll)
+            return view
+
+        search = NSSearchField.alloc().initWithFrame_(NSMakeRect(left_x, 704, left_w, 28))
         search.setPlaceholderString_(t("editor.search_placeholder"))
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
@@ -369,7 +428,7 @@ def run_snippet_editor(
         controller.search_field = search
         content.addSubview_(search)
 
-        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(16, 180, 280, 480))
+        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(left_x, 72, left_w, 616))
         table_scroll.setBorderType_(NSBezelBorder)
         table_scroll.setHasVerticalScroller_(True)
         table = NSTableView.alloc().initWithFrame_(table_scroll.bounds())
@@ -380,114 +439,57 @@ def run_snippet_editor(
         table_scroll.setDocumentView_(table)
         content.addSubview_(table_scroll)
 
-        trigger_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 672, 80, 22))
-        trigger_label.setStringValue_("Trigger")
-        trigger_label.setEditable_(False)
-        trigger_label.setBezeled_(False)
-        trigger_label.setDrawsBackground_(False)
-        content.addSubview_(trigger_label)
+        _label("Trigger", right_x, 708)
+        controller.trigger_field = _field(field_x, 708, field_w)
 
-        trigger_field = NSTextField.alloc().initWithFrame_(NSMakeRect(392, 670, 512, 24))
-        controller.trigger_field = trigger_field
-        content.addSubview_(trigger_field)
+        _label("Solo in app", right_x, 674)
+        controller.if_app_field = _field(field_x, 674, field_w)
 
-        if_app_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 638, 80, 22))
-        if_app_label.setStringValue_("Solo in app")
-        if_app_label.setEditable_(False)
-        if_app_label.setBezeled_(False)
-        if_app_label.setDrawsBackground_(False)
-        content.addSubview_(if_app_label)
-
-        if_app_field = NSTextField.alloc().initWithFrame_(NSMakeRect(392, 636, 512, 24))
-        controller.if_app_field = if_app_field
-        content.addSubview_(if_app_field)
-
-        def _adv_label(text: str, y: int) -> None:
-            label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, y, 120, 22))
-            label.setStringValue_(text)
-            label.setEditable_(False)
-            label.setBezeled_(False)
-            label.setDrawsBackground_(False)
-            content.addSubview_(label)
-
-        def _adv_field(y: int) -> NSTextField:
-            field = NSTextField.alloc().initWithFrame_(NSMakeRect(440, y - 2, 464, 24))
-            content.addSubview_(field)
-            return field
-
-        _adv_label("unless_app", 606)
-        controller.unless_app_field = _adv_field(606)
-        _adv_label("if_bundle", 574)
-        controller.if_bundle_field = _adv_field(574)
-        _adv_label("unless_bundle", 542)
-        controller.unless_bundle_field = _adv_field(542)
-        _adv_label("if_title", 510)
-        controller.if_title_field = _adv_field(510)
-        _adv_label("unless_title", 478)
-        controller.unless_title_field = _adv_field(478)
-        _adv_label("regex (1/0)", 446)
-        controller.regex_field = _adv_field(446)
-        _adv_label("image", 414)
-        controller.image_field = _adv_field(414)
-        _adv_label("priority", 382)
-        controller.priority_field = _adv_field(382)
-        _adv_label("force_clipboard", 350)
-        controller.force_clipboard_field = _adv_field(350)
-        _adv_label("target_file", 318)
-        controller.target_file_field = _adv_field(318)
+        _label("File", right_x, 640)
+        controller.target_file_field = _field(field_x, 640, field_w)
         controller.target_file_field.setStringValue_((match_files or ["dev.yml"])[0])
 
-        when_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 286, 80, 22))
-        when_label.setStringValue_("when")
-        when_label.setEditable_(False)
-        when_label.setBezeled_(False)
-        when_label.setDrawsBackground_(False)
-        content.addSubview_(when_label)
-        when_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(392, 254, 512, 56))
-        when_scroll.setBorderType_(NSBezelBorder)
-        when_scroll.setHasVerticalScroller_(True)
-        when_view = NSTextView.alloc().initWithFrame_(when_scroll.bounds())
-        controller.when_view = when_view
-        when_scroll.setDocumentView_(when_view)
-        content.addSubview_(when_scroll)
+        col1_label_x = right_x
+        col1_field_x = right_x + 108
+        col2_label_x = 620
+        col2_field_x = 730
+        col1_field_w = 170
+        col2_field_w = right_edge - col2_field_x
 
-        form_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 224, 80, 22))
-        form_label.setStringValue_("Form")
-        form_label.setEditable_(False)
-        form_label.setBezeled_(False)
-        form_label.setDrawsBackground_(False)
-        content.addSubview_(form_label)
+        _label("Escludi app", col1_label_x, 598, 100)
+        controller.unless_app_field = _field(col1_field_x, 598, col1_field_w)
+        _label("Bundle", col2_label_x, 598, 100)
+        controller.if_bundle_field = _field(col2_field_x, 598, col2_field_w)
 
-        form_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(392, 574, 512, 56))
-        form_scroll.setBorderType_(NSBezelBorder)
-        form_scroll.setHasVerticalScroller_(True)
-        form_view = NSTextView.alloc().initWithFrame_(form_scroll.bounds())
-        form_view.setEditable_(True)
-        controller.form_view = form_view
-        form_scroll.setDocumentView_(form_view)
-        content.addSubview_(form_scroll)
+        _label("Escludi bundle", col1_label_x, 566, 100)
+        controller.unless_bundle_field = _field(col1_field_x, 566, col1_field_w)
+        _label("Titolo", col2_label_x, 566, 100)
+        controller.if_title_field = _field(col2_field_x, 566, col2_field_w)
 
-        vars_label = NSTextField.alloc().initWithFrame_(NSMakeRect(312, 544, 80, 22))
-        vars_label.setStringValue_("Variabili")
-        vars_label.setEditable_(False)
-        vars_label.setBezeled_(False)
-        vars_label.setDrawsBackground_(False)
-        content.addSubview_(vars_label)
+        _label("Escludi titolo", col1_label_x, 534, 100)
+        controller.unless_title_field = _field(col1_field_x, 534, col1_field_w)
+        _label("Immagine", col2_label_x, 534, 100)
+        controller.image_field = _field(col2_field_x, 534, col2_field_w)
 
-        vars_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(392, 468, 512, 72))
-        vars_scroll.setBorderType_(NSBezelBorder)
-        vars_scroll.setHasVerticalScroller_(True)
-        vars_view = NSTextView.alloc().initWithFrame_(vars_scroll.bounds())
-        vars_view.setEditable_(True)
-        controller.vars_view = vars_view
-        vars_scroll.setDocumentView_(vars_view)
-        content.addSubview_(vars_scroll)
+        _label("Regex", col1_label_x, 502, 100)
+        controller.regex_field = _field(col1_field_x, 502, col1_field_w)
+        _label("Priorità", col2_label_x, 502, 100)
+        controller.priority_field = _field(col2_field_x, 502, col2_field_w)
 
-        replace_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(312, 300, 592, 160))
-        replace_scroll.setBorderType_(NSBezelBorder)
-        replace_scroll.setHasVerticalScroller_(True)
-        replace_view = NSTextView.alloc().initWithFrame_(replace_scroll.bounds())
-        replace_view.setEditable_(True)
+        _label("Forza paste", col1_label_x, 470, 100)
+        controller.force_clipboard_field = _field(col1_field_x, 470, col1_field_w)
+
+        _label("when", right_x, 434)
+        controller.when_view = _text_area(field_x, 374, field_w, 54, editable=True)
+
+        _label("Form", right_x, 340)
+        controller.form_view = _text_area(right_x, 258, 292, 76, editable=True)
+
+        _label("Variabili", 628, 340)
+        controller.vars_view = _text_area(628, 258, 312, 76, editable=True)
+
+        _label("Testo", right_x, 228)
+        replace_view = _text_area(right_x, 122, right_edge - right_x, 100, editable=True)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
             "replaceChanged:",
@@ -495,49 +497,41 @@ def run_snippet_editor(
             replace_view,
         )
         controller.replace_view = replace_view
-        replace_scroll.setDocumentView_(replace_view)
-        content.addSubview_(replace_scroll)
 
-        preview_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(312, 180, 592, 108))
-        preview_scroll.setBorderType_(NSBezelBorder)
-        preview_scroll.setHasVerticalScroller_(True)
-        preview = NSTextView.alloc().initWithFrame_(preview_scroll.bounds())
-        preview.setEditable_(False)
-        controller.preview_view = preview
-        preview_scroll.setDocumentView_(preview)
-        content.addSubview_(preview_scroll)
+        _label("Anteprima", right_x, 92)
+        controller.preview_view = _text_area(right_x, 54, right_edge - right_x, 34, editable=False)
 
-        new_button = NSButton.alloc().initWithFrame_(NSMakeRect(16, 16, 80, 28))
+        new_button = NSButton.alloc().initWithFrame_(NSMakeRect(left_x, 16, 80, 28))
         new_button.setTitle_("Nuovo")
         new_button.setTarget_(controller)
         new_button.setAction_("new:")
         content.addSubview_(new_button)
 
-        save_button = NSButton.alloc().initWithFrame_(NSMakeRect(104, 16, 80, 28))
+        save_button = NSButton.alloc().initWithFrame_(NSMakeRect(108, 16, 80, 28))
         save_button.setTitle_("Salva")
         save_button.setTarget_(controller)
         save_button.setAction_("save:")
         content.addSubview_(save_button)
 
-        delete_button = NSButton.alloc().initWithFrame_(NSMakeRect(192, 16, 80, 28))
+        delete_button = NSButton.alloc().initWithFrame_(NSMakeRect(196, 16, 80, 28))
         delete_button.setTitle_("Elimina")
         delete_button.setTarget_(controller)
         delete_button.setAction_("delete:")
         content.addSubview_(delete_button)
 
-        duplicate_button = NSButton.alloc().initWithFrame_(NSMakeRect(280, 16, 90, 28))
+        duplicate_button = NSButton.alloc().initWithFrame_(NSMakeRect(284, 16, 90, 28))
         duplicate_button.setTitle_(t("editor.duplicate.button"))
         duplicate_button.setTarget_(controller)
         duplicate_button.setAction_("duplicate:")
         content.addSubview_(duplicate_button)
 
-        move_button = NSButton.alloc().initWithFrame_(NSMakeRect(378, 16, 80, 28))
+        move_button = NSButton.alloc().initWithFrame_(NSMakeRect(382, 16, 80, 28))
         move_button.setTitle_(t("editor.move.button"))
         move_button.setTarget_(controller)
         move_button.setAction_("move:")
         content.addSubview_(move_button)
 
-        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(804, 16, 80, 28))
+        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(860, 16, 80, 28))
         close_button.setTitle_("Chiudi")
         close_button.setTarget_(controller)
         close_button.setAction_("close:")

@@ -139,3 +139,84 @@ def test_configure_single_column_table_adds_column() -> None:
     table = NSTableView.alloc().init()
     configure_single_column_table(table)
     assert table.numberOfColumns() == 1
+
+
+def test_text_view_setter_preserves_editability() -> None:
+    import sys
+
+    if sys.platform != "darwin":
+        return
+    from AppKit import NSTextView
+
+    from expando.ui_appkit_runtime import set_text_view_string
+
+    editable = NSTextView.alloc().init()
+    editable.setEditable_(True)
+    set_text_view_string(editable, "editable")
+    assert editable.isEditable()
+    assert str(editable.string()) == "editable"
+
+    readonly = NSTextView.alloc().init()
+    readonly.setEditable_(False)
+    set_text_view_string(readonly, "readonly")
+    assert not readonly.isEditable()
+    assert str(readonly.string()) == "readonly"
+
+
+def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -> None:
+    import sys
+
+    if sys.platform != "darwin":
+        return
+
+    from expando import snippet_editor_appkit
+
+    captured = {}
+
+    def fake_run_appkit_session(builder):
+        controller = builder()
+        controller.window.orderOut_(None)
+        captured["controller"] = controller
+        return {"opened": "1"}
+
+    monkeypatch.setattr(snippet_editor_appkit, "run_appkit_session", fake_run_appkit_session)
+    snippet_editor_appkit.run_snippet_editor(
+        [
+            {
+                "id": "0",
+                "trigger": ":hello",
+                "label": ":hello",
+                "replace": "Hello",
+                "editable": "1",
+            }
+        ],
+        on_save=lambda _payload: None,
+        on_create=lambda _payload: None,
+        on_delete=lambda _entry_id: None,
+        reload_items=lambda: [],
+        match_files=["dev.yml"],
+    )
+
+    controller = captured["controller"]
+    content = controller.window.contentView()
+    frames = []
+    for view in content.subviews():
+        frame = view.frame()
+        frames.append(
+            (
+                str(view.className()),
+                float(frame.origin.x),
+                float(frame.origin.y),
+                float(frame.size.width),
+                float(frame.size.height),
+            )
+        )
+
+    def overlaps(first, second) -> bool:
+        _, ax, ay, aw, ah = first
+        _, bx, by, bw, bh = second
+        return ax < bx + bw and ax + aw > bx and ay < by + bh and ay + ah > by
+
+    for index, first in enumerate(frames):
+        for second in frames[index + 1 :]:
+            assert not overlaps(first, second), (first, second)

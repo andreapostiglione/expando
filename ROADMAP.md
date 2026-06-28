@@ -1,6 +1,6 @@
 # Expando — Roadmap 2026
 
-**Versione attuale:** v3.29.7
+**Versione attuale:** v3.29.8
 **Posizionamento:** text expander open-source, privacy-first, solo macOS  
 **Principio guida:** tutto locale, niente account, niente telemetry
 
@@ -580,4 +580,4 @@ Vedi Tier 6–7 e Sprint 28–35 sotto per il piano completo fino a **v3.26**.
 
 ---
 
-*Ultimo aggiornamento: 28 giugno 2026 — v3.29.7 snippet creation UX*
+*Ultimo aggiornamento: 28 giugno 2026 — v3.29.8 editor UI cleanup*

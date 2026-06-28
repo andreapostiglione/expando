@@ -4,6 +4,13 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.8] — 2026-06-28
+
+### Fixed
+- Native snippet editor layout now uses a compact two-column advanced section and no longer overlaps labels, inputs, and text areas.
+- AppKit text updates preserve text view editability, so loading a snippet no longer turns editor fields into read-only views.
+- Snippet list selection now uses the correct AppKit table delegate callback and updates the detail panel reliably.
+
 ## [3.29.7] — 2026-06-28
 
 ### Added
@@ -121,6 +128,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.8]: https://github.com/andreapostiglione/expando/compare/v3.29.7...v3.29.8
 [3.29.7]: https://github.com/andreapostiglione/expando/compare/v3.29.6...v3.29.7
 [3.29.6]: https://github.com/andreapostiglione/expando/compare/v3.29.5...v3.29.6
 [3.29.5]: https://github.com/andreapostiglione/expando/compare/v3.29.4...v3.29.5

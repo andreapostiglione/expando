@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BUNDLE_APP="$ROOT/../MacOS/expando"
 APP="$ROOT/Expando.app/Contents/MacOS/expando"
 VENV_BIN="$ROOT/.venv/bin/expando"
 
@@ -11,6 +12,10 @@ _ensure_venv() {
     "$ROOT/.venv/bin/pip" install -q -e "$ROOT"
   fi
 }
+
+if [[ -x "$BUNDLE_APP" ]]; then
+  exec "$BUNDLE_APP"
+fi
 
 if [[ "${EXPANDO_USE_APP:-}" == "1" ]] && [[ -x "$APP" ]]; then
   exec "$APP"

@@ -28,6 +28,11 @@ if [[ ! -x "$APP/Contents/Resources/scripts/install-launch-agent.sh" ]]; then
   exit 1
 fi
 
+if ! grep -q '../MacOS/expando' "$APP/Contents/Resources/scripts/launch-expando.sh"; then
+  echo "Bundled launch agent script must resolve Contents/MacOS/expando" >&2
+  exit 1
+fi
+
 if grep -q '/Users/runner/' "$APP/Contents/MacOS/expando" 2>/dev/null; then
   echo "Launcher contains CI runner paths" >&2
   exit 1

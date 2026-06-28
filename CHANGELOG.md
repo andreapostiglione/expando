@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.9] — 2026-06-28
+
+### Fixed
+- Bundled LaunchAgent startup now resolves `Expando.app/Contents/MacOS/expando` from inside `Contents/Resources`, so onboarding/doctor repair no longer falls back to creating a source-style `.venv` inside the installed app.
+- Distribution verification now fails if the bundled launch script cannot resolve the app executable.
+
 ## [3.29.8] — 2026-06-28
 
 ### Fixed
@@ -128,6 +134,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.9]: https://github.com/andreapostiglione/expando/compare/v3.29.8...v3.29.9
 [3.29.8]: https://github.com/andreapostiglione/expando/compare/v3.29.7...v3.29.8
 [3.29.7]: https://github.com/andreapostiglione/expando/compare/v3.29.6...v3.29.7
 [3.29.6]: https://github.com/andreapostiglione/expando/compare/v3.29.5...v3.29.6

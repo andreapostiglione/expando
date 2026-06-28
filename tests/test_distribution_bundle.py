@@ -6,6 +6,8 @@ def test_distribution_launcher_defaults_to_run() -> None:
     launcher = Path(__file__).resolve().parents[1] / "scripts" / "distribution-launcher.sh"
     text = launcher.read_text(encoding="utf-8")
     assert 'set -- run' in text
+    assert "python3.12" in text
+    assert "/opt/homebrew/bin/python3 " not in text
     assert "-m expando" in text
 
 
@@ -23,6 +25,8 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     assert "$RESOURCES/packages" in embed
     assert "default_config/config/default.yml" in verify
     assert "packages/hub/index.json" in verify
+    assert "python3.12 is required to verify bundled native dependencies" in verify
+    assert "from pynput import keyboard" in verify
 
 
 def test_bundled_launch_agent_script_uses_app_executable(tmp_path: Path) -> None:
@@ -87,3 +91,5 @@ def test_homebrew_cask_generators_include_verified_url() -> None:
 
     assert 'verified: "github.com/andreapostiglione/expando/"' in bump
     assert 'verified: "github.com/andreapostiglione/expando/"' in tap_pr
+    assert 'depends_on formula: "python@3.12"' in bump
+    assert 'depends_on formula: "python@3.12"' in tap_pr

@@ -4,6 +4,13 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.10] — 2026-06-28
+
+### Fixed
+- Distribution launcher now requires Python 3.12 explicitly, matching the bundled CPython 3.12 native PyObjC wheels instead of accidentally using Homebrew's generic `python3`.
+- Release bundle verification now imports PyObjC and `pynput.keyboard` with Python 3.12, so ABI mismatches fail before a DMG is shipped.
+- Homebrew cask generators declare `depends_on formula: "python@3.12"` for a working runtime on fresh installs.
+
 ## [3.29.9] — 2026-06-28
 
 ### Fixed
@@ -134,6 +141,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.10]: https://github.com/andreapostiglione/expando/compare/v3.29.9...v3.29.10
 [3.29.9]: https://github.com/andreapostiglione/expando/compare/v3.29.8...v3.29.9
 [3.29.8]: https://github.com/andreapostiglione/expando/compare/v3.29.7...v3.29.8
 [3.29.7]: https://github.com/andreapostiglione/expando/compare/v3.29.6...v3.29.7

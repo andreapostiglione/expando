@@ -41,5 +41,20 @@ fi
 export PYTHONPATH="$APP/Contents/Resources/site-packages${PYTHONPATH:+:$PYTHONPATH}"
 python3 -c "from expando.paths import package_root; root = package_root(); assert (root / 'default_config' / 'config' / 'default.yml').is_file(), root; import expando"
 
+PY312="${EXPANDO_VERIFY_PYTHON312:-$(command -v python3.12 || true)}"
+if [[ -z "$PY312" ]]; then
+  echo "python3.12 is required to verify bundled native dependencies" >&2
+  exit 1
+fi
+PYTHONPATH="$APP/Contents/Resources/site-packages${PYTHONPATH:+:$PYTHONPATH}" "$PY312" - <<'PY'
+import AppKit
+import objc
+from pynput import keyboard
+
+assert AppKit is not None
+assert objc is not None
+assert keyboard is not None
+PY
+
 "$APP/Contents/MacOS/expando" --version >/dev/null
 echo "Distribution bundle verification passed for $APP"

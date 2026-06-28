@@ -38,6 +38,14 @@ if grep -q '/Users/runner/' "$APP/Contents/MacOS/expando" 2>/dev/null; then
   exit 1
 fi
 
+SPARKLE_HELPER="$APP/Contents/MacOS/expando-sparkle"
+if [[ -x "$SPARKLE_HELPER" ]] && otool -L "$SPARKLE_HELPER" | grep -q '@rpath/Sparkle.framework'; then
+  if ! otool -l "$SPARKLE_HELPER" | grep -q '@executable_path/../Frameworks'; then
+    echo "Sparkle helper is missing @executable_path/../Frameworks rpath" >&2
+    exit 1
+  fi
+fi
+
 export PYTHONPATH="$APP/Contents/Resources/site-packages${PYTHONPATH:+:$PYTHONPATH}"
 python3 -c "from expando.paths import package_root; root = package_root(); assert (root / 'default_config' / 'config' / 'default.yml').is_file(), root; import expando"
 

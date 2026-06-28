@@ -75,6 +75,15 @@ def test_appcast_generation_requires_sparkle_signature() -> None:
     assert "sparkle:edSignature" in text
 
 
+def test_sparkle_helper_links_with_bundle_rpath() -> None:
+    root = Path(__file__).resolve().parents[1]
+    embed = (root / "scripts" / "embed-sparkle.sh").read_text(encoding="utf-8")
+    verify = (root / "scripts" / "verify-distribution-bundle.sh").read_text(encoding="utf-8")
+
+    assert "-Wl,-rpath,@executable_path/../Frameworks" in embed
+    assert "Sparkle helper is missing @executable_path/../Frameworks rpath" in verify
+
+
 def test_dmg_build_signs_container_before_notarization() -> None:
     script = Path(__file__).resolve().parents[1] / "scripts" / "build-dmg.sh"
     text = script.read_text(encoding="utf-8")

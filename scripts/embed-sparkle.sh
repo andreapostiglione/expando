@@ -38,6 +38,7 @@ HELPER_BIN="$MACOS/expando-sparkle"
 if [[ -f "$HELPER_SRC" ]]; then
   clang -fobjc-arc -framework Cocoa -framework Sparkle \
     -F "$FRAMEWORKS" \
+    -Wl,-rpath,@executable_path/../Frameworks \
     "$HELPER_SRC" -o "$HELPER_BIN"
   chmod +x "$HELPER_BIN"
   echo "Built Sparkle helper at $HELPER_BIN"

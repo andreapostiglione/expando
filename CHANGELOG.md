@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.11] — 2026-06-28
+
+### Fixed
+- Sparkle helper now links with `@executable_path/../Frameworks` RPATH so it can load the bundled `Sparkle.framework` at runtime.
+- Distribution verification now fails if the Sparkle helper references `@rpath/Sparkle.framework` without a bundle-local framework RPATH.
+
 ## [3.29.10] — 2026-06-28
 
 ### Fixed
@@ -141,6 +147,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.11]: https://github.com/andreapostiglione/expando/compare/v3.29.10...v3.29.11
 [3.29.10]: https://github.com/andreapostiglione/expando/compare/v3.29.9...v3.29.10
 [3.29.9]: https://github.com/andreapostiglione/expando/compare/v3.29.8...v3.29.9
 [3.29.8]: https://github.com/andreapostiglione/expando/compare/v3.29.7...v3.29.8

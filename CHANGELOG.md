@@ -4,6 +4,15 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.7] — 2026-06-28
+
+### Added
+- Menu bar now exposes a direct **New snippet** action that opens the graphical editor already in create mode.
+
+### Fixed
+- New-snippet mode clears advanced editor fields before saving, avoiding stale app/bundle/title filters from the previously selected snippet.
+- Closing the snippet editor without saving no longer reports a false UI failure from the menu bar.
+
 ## [3.29.6] — 2026-06-27
 
 ### Fixed
@@ -112,6 +121,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.7]: https://github.com/andreapostiglione/expando/compare/v3.29.6...v3.29.7
 [3.29.6]: https://github.com/andreapostiglione/expando/compare/v3.29.5...v3.29.6
 [3.29.5]: https://github.com/andreapostiglione/expando/compare/v3.29.4...v3.29.5
 [3.29.4]: https://github.com/andreapostiglione/expando/compare/v3.29.3...v3.29.4

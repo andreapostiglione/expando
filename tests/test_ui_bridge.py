@@ -63,3 +63,22 @@ def test_ui_subprocess_uses_app_launcher_when_in_app_mode(tmp_path, monkeypatch)
     monkeypatch.setattr("expando.runtime_info.detect_runtime", lambda: runtime)
     argv = ui_bridge._ui_subprocess_argv("search")
     assert argv[:3] == [str(launcher), "-m", "expando.ui_cli"]
+
+
+def test_show_snippet_editor_passes_initial_new(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run_ui_command(command, payload):
+        captured["command"] = command
+        captured["payload"] = payload
+        return {"saved": "1"}
+
+    monkeypatch.setattr(ui_bridge, "run_ui_command", fake_run_ui_command)
+
+    result = ui_bridge.show_snippet_editor("/tmp/expando", initial_new=True)
+
+    assert result == {"saved": "1"}
+    assert captured == {
+        "command": "editor",
+        "payload": {"config_dir": "/tmp/expando", "initial_new": True},
+    }

@@ -1,3 +1,3 @@
 """Expando — a privacy-first text expander for macOS."""
 
-__version__ = "3.29.6"
+__version__ = "3.29.7"

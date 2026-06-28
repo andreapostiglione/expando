@@ -161,6 +161,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.disable": {"it": "Disattiva", "en": "Disable"},
     "menubar.enable": {"it": "Attiva", "en": "Enable"},
     "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
+    "menubar.new_snippet": {"it": "Nuovo snippet", "en": "New snippet"},
     "ui.cancel": {"it": "Annulla", "en": "Cancel"},
     "ui.confirm": {"it": "Conferma", "en": "Confirm"},
     "ui.ok": {"it": "OK", "en": "OK"},

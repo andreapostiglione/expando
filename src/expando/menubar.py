@@ -61,6 +61,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 self.permissions_item,
                 None,
                 rumps.MenuItem(t("menubar.search"), callback=self.search_snippets),
+                rumps.MenuItem(t("menubar.new_snippet"), callback=self.new_snippet),
                 rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
                 self.hub_updates_item,
                 rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
@@ -288,13 +289,20 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             finally:
                 set_ui_active(False)
 
-        def _open_snippet_editor(self) -> None:
+        def new_snippet(self, _sender) -> None:
+            try:
+                self._open_snippet_editor(initial_new=True)
+            except Exception as exc:
+                self._notify_action_failed(exc)
+            finally:
+                set_ui_active(False)
+
+        def _open_snippet_editor(self, *, initial_new: bool = False) -> None:
             from .config_reload_gate import ConfigReloadError
             from .ui_bridge import show_snippet_editor
 
-            result = show_snippet_editor(str(self.config_dir))
+            result = show_snippet_editor(str(self.config_dir), initial_new=initial_new)
             if result is None:
-                user_error(t("menubar.ui_failed"))
                 return
             try:
                 self.service.apply_config_reload()

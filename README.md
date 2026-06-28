@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.6"><img src="https://img.shields.io/badge/version-3.29.6-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.7"><img src="https://img.shields.io/badge/version-3.29.7-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,15 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.6 — Production hardening (latest)
+### v3.29.7 — Snippet creation UX (latest)
+
+| Area | What's new |
+|------|------------|
+| **Menu bar** | Direct **New snippet** action opens the editor already in create mode |
+| **Editor** | New-snippet mode starts blank and clears advanced fields before saving |
+| **Tests** | UI bridge and editor coverage for menu-driven snippet creation |
+
+### v3.29.6 — Production hardening
 
 | Area | What's new |
 |------|------------|
@@ -58,7 +66,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**384** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for **Expando.app** when installed from the DMG/Homebrew cask, or for the Python runtime reported by `expando doctor` when running from source.
+**386** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for **Expando.app** when installed from the DMG/Homebrew cask, or for the Python runtime reported by `expando doctor` when running from source.
 
 ### Recent feature releases
 
@@ -93,7 +101,7 @@ Expando:      claude --dangerously-skip-permissions
 | | Feature | Benefit |
 |---|---------|---------|
 | 🔒 | **100% local** | Your snippets never leave your machine |
-| 📟 | **Menu bar native** | Always-visible status, toggle, search, edit |
+| 📟 | **Menu bar native** | Always-visible status, toggle, new snippet, search, edit |
 | 🔎 | **Fuzzy search** | `⌘⇧E` → live filter + preview panel |
 | 📝 | **Multi-field forms** | Single-window input for dynamic snippets |
 | 🎯 | **Advanced app rules** | Filter by app name, bundle ID, or window title |
@@ -175,7 +183,7 @@ Or install auto-start at login:
 |----------|--------|
 | `⌥⌥` (double Alt) | Toggle Expando on/off |
 | `⌘⇧E` | Open snippet search picker |
-| Menu bar icon | Status, search, edit, restart, quit |
+| Menu bar icon | Status, new snippet, search, edit, restart, quit |
 
 ---
 
@@ -618,7 +626,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.6**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.7**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

@@ -27,7 +27,10 @@ def main() -> None:
         config_dir = payload.get("config_dir")
         if not config_dir:
             raise SystemExit(2)
-        result = open_snippet_editor(Path(config_dir))
+        result = open_snippet_editor(
+            Path(config_dir),
+            initial_new=bool(payload.get("initial_new")),
+        )
     else:
         raise SystemExit(2)
 

@@ -45,7 +45,7 @@ def _parse_editor_payload(payload: dict[str, str]) -> dict:
     }
 
 
-def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
+def open_snippet_editor(config_dir: Path, *, initial_new: bool = False) -> dict[str, str] | None:
     match_files = list_match_files(config_dir)
 
     def reload() -> list[dict[str, str]]:
@@ -119,4 +119,5 @@ def open_snippet_editor(config_dir: Path) -> dict[str, str] | None:
         reload_items=reload,
         match_files=match_files,
         config_dir=config_dir,
+        initial_new=initial_new,
     )

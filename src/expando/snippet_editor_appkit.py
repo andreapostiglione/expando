@@ -143,6 +143,19 @@ class _SnippetEditorController(NSObject):
         self.current_id = None
         _set_field(self.trigger_field, ":nuovo")
         _set_field(self.if_app_field, "")
+        if hasattr(self, "unless_app_field"):
+            _set_field(self.unless_app_field, "")
+            _set_field(self.if_bundle_field, "")
+            _set_field(self.unless_bundle_field, "")
+            _set_field(self.if_title_field, "")
+            _set_field(self.unless_title_field, "")
+            _set_field(self.regex_field, "")
+            _set_view(self.when_view, "")
+            _set_field(self.image_field, "")
+            _set_field(self.priority_field, "")
+            _set_field(self.force_clipboard_field, "")
+            target = (getattr(self, "match_files", None) or ["dev.yml"])[0]
+            _set_field(self.target_file_field, target)
         self.form_view.setEditable_(True)
         self.vars_view.setEditable_(True)
         _set_view(self.form_view, "")
@@ -316,6 +329,7 @@ def run_snippet_editor(
     reload_items: Callable[[], list[dict[str, str]]],
     match_files: list[str] | None = None,
     config_dir: Path | None = None,
+    initial_new: bool = False,
 ) -> dict[str, str] | None:
     handlers = {
         "save": on_save,
@@ -531,7 +545,9 @@ def run_snippet_editor(
 
         window.center()
         window.makeKeyAndOrderFront_(None)
-        if controller.visible:
+        if initial_new:
+            controller.new_(None)
+        elif controller.visible:
             select_first_table_row(table)
             controller._load_selection()
         return controller

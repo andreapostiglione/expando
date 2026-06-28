@@ -325,6 +325,7 @@ def run_snippet_editor(
     reload_items: Callable[[], list[dict[str, str]]],
     match_files: list[str] | None = None,
     config_dir: Path | None = None,
+    initial_new: bool = False,
 ) -> dict[str, str] | None:
     if _use_appkit():
         from .snippet_editor_appkit import run_snippet_editor as appkit_editor
@@ -339,6 +340,7 @@ def run_snippet_editor(
             reload_items=reload_items,
             match_files=match_files,
             config_dir=config_dir,
+            initial_new=initial_new,
         )
     editor = SnippetEditor(
         items,
@@ -347,4 +349,6 @@ def run_snippet_editor(
         on_delete=on_delete,
     )
     editor.set_reload(reload_items)
+    if initial_new:
+        editor._new_snippet()
     return editor.run()

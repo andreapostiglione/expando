@@ -1,28 +1,28 @@
 {
   "version": 1,
-  "generated_at": "2026-06-28T14:05:36+00:00",
+  "generated_at": "2026-06-28T14:19:44+00:00",
   "artifacts": [
     {
       "id": "marketplace",
       "path": "hub/marketplace.json",
       "title": "Hub Marketplace",
-      "updated_at": "2026-06-28T14:05:36+00:00",
+      "updated_at": "2026-06-28T14:19:44+00:00",
       "package_count": 10
     },
     {
       "id": "community-validation",
       "path": "hub/community-validation.json",
       "title": "Community Validation",
-      "updated_at": "2026-06-28T14:05:36+00:00",
+      "updated_at": "2026-06-28T14:19:44+00:00",
       "ok": true
     },
     {
       "id": "doctor-full",
       "path": "hub/doctor-full.json",
       "title": "Release Health",
-      "generated_at": "2026-06-28T14:05:31+00:00",
+      "generated_at": "2026-06-28T14:19:39+00:00",
       "publish_context": "release-ci",
-      "release_context": "v3.29.15",
+      "release_context": "v3.29.16",
       "doctor_ok": true
     }
   ],

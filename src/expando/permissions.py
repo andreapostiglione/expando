@@ -196,14 +196,16 @@ def check_permissions(
 
     if platform.system() == "Darwin" and runtime is not None:
         if runtime.mode == "app":
-            notes.append(
-                "Modalità app: abilita Expando.app in Accessibilità e Monitoraggio input."
-            )
+            if accessibility is not True or input_monitoring is not True:
+                notes.append(
+                    "Modalità app: abilita Expando.app in Accessibilità e Monitoraggio input."
+                )
         elif runtime.mode == "packaged":
-            notes.append(
-                f"Installazione app: macOS autorizza «{runtime.grant_label}» "
-                "come runtime di Expando."
-            )
+            if accessibility is not True or input_monitoring is not True:
+                notes.append(
+                    f"Installazione app: macOS autorizza «{runtime.grant_label}» "
+                    "come runtime di Expando."
+                )
         else:
             notes.append(
                 f"Modalità {runtime.mode}: macOS autorizza «{runtime.grant_label}», "

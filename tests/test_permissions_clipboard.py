@@ -46,3 +46,26 @@ def test_check_permissions_runs_clipboard_probe_for_doctor() -> None:
 
     clipboard_check.assert_called_once()
     assert status.clipboard is True
+
+
+def test_packaged_runtime_notes_only_when_permissions_need_attention() -> None:
+    from expando.permissions import check_permissions
+    from expando.runtime_info import RuntimeInfo
+
+    runtime = RuntimeInfo(
+        mode="packaged",
+        executable="/opt/homebrew/bin/python3.12",
+        grant_label="python3.12",
+        grant_hint="/Applications/Expando.app",
+    )
+
+    with patch("expando.permissions.platform.system", return_value="Darwin"):
+        with patch("expando.permissions.detect_runtime", return_value=runtime):
+            with patch("expando.permissions._check_accessibility_macos", return_value=True):
+                with patch("expando.permissions._check_input_monitoring_macos", return_value=True):
+                    ready = check_permissions()
+                with patch("expando.permissions._check_input_monitoring_macos", return_value=False):
+                    needs_attention = check_permissions()
+
+    assert not any("Installazione app" in note for note in ready.notes)
+    assert any("Installazione app" in note for note in needs_attention.notes)

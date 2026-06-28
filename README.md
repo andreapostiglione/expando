@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.14"><img src="https://img.shields.io/badge/version-3.29.14-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.15"><img src="https://img.shields.io/badge/version-3.29.15-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,14 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.14 — Installed-app runtime wording (latest)
+### v3.29.15 — Clean healthy diagnostics (latest)
+
+| Area | What's new |
+|------|------------|
+| **Doctor** | Healthy installed apps no longer show permission-target notes as warnings |
+| **Diagnostics** | App/runtime guidance appears only when permissions actually need attention |
+
+### v3.29.14 — Installed-app runtime wording
 
 | Area | What's new |
 |------|------------|
@@ -119,7 +126,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**392** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; installed builds may appear as `Expando.app` or as the packaged Python runtime depending on macOS.
+**393** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; installed builds may appear as `Expando.app` or as the packaged Python runtime depending on macOS.
 
 ### Recent feature releases
 
@@ -679,7 +686,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.14**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.15**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

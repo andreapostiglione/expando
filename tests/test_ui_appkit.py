@@ -57,6 +57,20 @@ def test_menubar_template_sizes() -> None:
         assert image.size == (size, size)
 
 
+def test_menubar_keeps_advanced_actions_out_of_main_menu() -> None:
+    from expando.menubar import menu_layout_keys
+
+    main, advanced = menu_layout_keys()
+    assert "new_snippet" in main
+    assert "editor" in main
+    assert "search" in main
+    assert "advanced" in main
+
+    advanced_only = {"health", "hub", "hub_updates", "backup", "restore", "restart"}
+    assert advanced_only.isdisjoint({key for key in main if key})
+    assert advanced_only.issubset(set(advanced))
+
+
 def test_load_menubar_nsimage_has_representations() -> None:
     import sys
 
@@ -198,7 +212,7 @@ def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -
     )
 
     controller = captured["controller"]
-    content = controller.window.contentView()
+    content = getattr(controller, "editor_content_view", controller.window.contentView())
     frames = []
     for view in content.subviews():
         frame = view.frame()

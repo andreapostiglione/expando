@@ -25,6 +25,36 @@ def menubar_available() -> bool:
     return rumps is not None
 
 
+_MAIN_MENU_KEYS: tuple[str | None, ...] = (
+    "enabled",
+    None,
+    "new_snippet",
+    "editor",
+    "search",
+    None,
+    "snooze",
+    "permissions",
+    "updates",
+    None,
+    "advanced",
+    None,
+    "quit",
+)
+
+_ADVANCED_MENU_KEYS: tuple[str, ...] = (
+    "backup",
+    "restore",
+    "hub",
+    "hub_updates",
+    "health",
+    "restart",
+)
+
+
+def menu_layout_keys() -> tuple[tuple[str | None, ...], tuple[str, ...]]:
+    return _MAIN_MENU_KEYS, _ADVANCED_MENU_KEYS
+
+
 def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
     if rumps is None:
         raise RuntimeError("rumps is not installed")
@@ -54,24 +84,27 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 t("menubar.permissions"),
                 callback=self.open_permissions,
             )
-            self.menu = [
-                self.enabled_item,
-                self.health_item,
-                self.snooze_item,
-                self.permissions_item,
-                None,
-                rumps.MenuItem(t("menubar.search"), callback=self.search_snippets),
-                rumps.MenuItem(t("menubar.new_snippet"), callback=self.new_snippet),
-                rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
-                self.hub_updates_item,
-                rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
-                rumps.MenuItem(t("menubar.backup"), callback=self.backup_config),
-                rumps.MenuItem(t("menubar.restore"), callback=self.restore_config),
-                rumps.MenuItem(t("menubar.restart"), callback=self.restart_service),
-                rumps.MenuItem(t("menubar.updates"), callback=self.check_updates),
-                None,
-                rumps.MenuItem(t("menubar.quit"), callback=self.quit_app),
-            ]
+            advanced_item = rumps.MenuItem(t("menubar.advanced"), callback=None)
+            menu_items = {
+                "enabled": self.enabled_item,
+                "new_snippet": rumps.MenuItem(t("menubar.new_snippet"), callback=self.new_snippet),
+                "editor": rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
+                "search": rumps.MenuItem(t("menubar.search"), callback=self.search_snippets),
+                "snooze": self.snooze_item,
+                "permissions": self.permissions_item,
+                "updates": rumps.MenuItem(t("menubar.updates"), callback=self.check_updates),
+                "advanced": advanced_item,
+                "quit": rumps.MenuItem(t("menubar.quit"), callback=self.quit_app),
+                "backup": rumps.MenuItem(t("menubar.backup"), callback=self.backup_config),
+                "restore": rumps.MenuItem(t("menubar.restore"), callback=self.restore_config),
+                "hub": rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
+                "hub_updates": self.hub_updates_item,
+                "health": self.health_item,
+                "restart": rumps.MenuItem(t("menubar.restart"), callback=self.restart_service),
+            }
+            for key in _ADVANCED_MENU_KEYS:
+                advanced_item.add(menu_items[key])
+            self.menu = [None if key is None else menu_items[key] for key in _MAIN_MENU_KEYS]
             self._sync_enabled_label()
             service.on_toggle = self._sync_enabled_label
             service.on_listener_dead = self._on_listener_dead

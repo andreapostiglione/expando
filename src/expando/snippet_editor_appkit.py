@@ -26,6 +26,7 @@ from .i18n import t
 from .ui_appkit_runtime import (
     close_appkit_session,
     configure_single_column_table,
+    install_liquid_glass_background,
     run_appkit_session,
     select_first_table_row,
     set_text_view_string,
@@ -373,20 +374,21 @@ def run_snippet_editor(
         controller.config_dir = config_dir
         controller.match_files = list(match_files or ["dev.yml"])
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, 960, 760),
+            NSMakeRect(0, 0, 920, 620),
             NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
             NSBackingStoreBuffered,
             False,
         )
-        window.setTitle_("Expando — Snippet editor")
+        window.setTitle_(t("editor.window_title"))
         window.setDelegate_(controller)
         controller.window = window
 
-        content = window.contentView()
+        content = install_liquid_glass_background(window)
+        controller.editor_content_view = content
         left_x = 20
         left_w = 280
         right_x = 320
-        right_edge = 940
+        right_edge = 900
         label_w = 100
         field_x = right_x + label_w + 10
         field_w = right_edge - field_x
@@ -405,6 +407,12 @@ def run_snippet_editor(
             content.addSubview_(field)
             return field
 
+        def _hidden_field(value: str = "") -> NSTextField:
+            field = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 1, 1))
+            if value:
+                field.setStringValue_(value)
+            return field
+
         def _text_area(x: int, y: int, width: int, height: int, *, editable: bool) -> NSTextView:
             scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(x, y, width, height))
             scroll.setBorderType_(NSBezelBorder)
@@ -417,7 +425,12 @@ def run_snippet_editor(
             content.addSubview_(scroll)
             return view
 
-        search = NSSearchField.alloc().initWithFrame_(NSMakeRect(left_x, 704, left_w, 28))
+        def _hidden_text_view() -> NSTextView:
+            view = NSTextView.alloc().initWithFrame_(NSMakeRect(0, 0, 1, 1))
+            view.setEditable_(True)
+            return view
+
+        search = NSSearchField.alloc().initWithFrame_(NSMakeRect(left_x, 564, left_w, 28))
         search.setPlaceholderString_(t("editor.search_placeholder"))
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
@@ -428,7 +441,7 @@ def run_snippet_editor(
         controller.search_field = search
         content.addSubview_(search)
 
-        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(left_x, 72, left_w, 616))
+        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(left_x, 72, left_w, 476))
         table_scroll.setBorderType_(NSBezelBorder)
         table_scroll.setHasVerticalScroller_(True)
         table = NSTableView.alloc().initWithFrame_(table_scroll.bounds())
@@ -439,57 +452,31 @@ def run_snippet_editor(
         table_scroll.setDocumentView_(table)
         content.addSubview_(table_scroll)
 
-        _label("Trigger", right_x, 708)
-        controller.trigger_field = _field(field_x, 708, field_w)
+        _label(t("editor.trigger_label"), right_x, 566)
+        controller.trigger_field = _field(field_x, 566, field_w)
 
-        _label("Solo in app", right_x, 674)
-        controller.if_app_field = _field(field_x, 674, field_w)
+        _label(t("editor.app_label"), right_x, 528)
+        controller.if_app_field = _field(field_x, 528, field_w)
 
-        _label("File", right_x, 640)
-        controller.target_file_field = _field(field_x, 640, field_w)
+        _label(t("editor.collection_label"), right_x, 490)
+        controller.target_file_field = _field(field_x, 490, field_w)
         controller.target_file_field.setStringValue_((match_files or ["dev.yml"])[0])
 
-        col1_label_x = right_x
-        col1_field_x = right_x + 108
-        col2_label_x = 620
-        col2_field_x = 730
-        col1_field_w = 170
-        col2_field_w = right_edge - col2_field_x
+        controller.unless_app_field = _hidden_field()
+        controller.if_bundle_field = _hidden_field()
+        controller.unless_bundle_field = _hidden_field()
+        controller.if_title_field = _hidden_field()
+        controller.unless_title_field = _hidden_field()
+        controller.image_field = _hidden_field()
+        controller.regex_field = _hidden_field()
+        controller.priority_field = _hidden_field()
+        controller.force_clipboard_field = _hidden_field()
+        controller.when_view = _hidden_text_view()
+        controller.form_view = _hidden_text_view()
+        controller.vars_view = _hidden_text_view()
 
-        _label("Escludi app", col1_label_x, 598, 100)
-        controller.unless_app_field = _field(col1_field_x, 598, col1_field_w)
-        _label("Bundle", col2_label_x, 598, 100)
-        controller.if_bundle_field = _field(col2_field_x, 598, col2_field_w)
-
-        _label("Escludi bundle", col1_label_x, 566, 100)
-        controller.unless_bundle_field = _field(col1_field_x, 566, col1_field_w)
-        _label("Titolo", col2_label_x, 566, 100)
-        controller.if_title_field = _field(col2_field_x, 566, col2_field_w)
-
-        _label("Escludi titolo", col1_label_x, 534, 100)
-        controller.unless_title_field = _field(col1_field_x, 534, col1_field_w)
-        _label("Immagine", col2_label_x, 534, 100)
-        controller.image_field = _field(col2_field_x, 534, col2_field_w)
-
-        _label("Regex", col1_label_x, 502, 100)
-        controller.regex_field = _field(col1_field_x, 502, col1_field_w)
-        _label("Priorità", col2_label_x, 502, 100)
-        controller.priority_field = _field(col2_field_x, 502, col2_field_w)
-
-        _label("Forza paste", col1_label_x, 470, 100)
-        controller.force_clipboard_field = _field(col1_field_x, 470, col1_field_w)
-
-        _label("when", right_x, 434)
-        controller.when_view = _text_area(field_x, 374, field_w, 54, editable=True)
-
-        _label("Form", right_x, 340)
-        controller.form_view = _text_area(right_x, 258, 292, 76, editable=True)
-
-        _label("Variabili", 628, 340)
-        controller.vars_view = _text_area(628, 258, 312, 76, editable=True)
-
-        _label("Testo", right_x, 228)
-        replace_view = _text_area(right_x, 122, right_edge - right_x, 100, editable=True)
+        _label(t("editor.text_label"), right_x, 452)
+        replace_view = _text_area(right_x, 180, right_edge - right_x, 262, editable=True)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
             "replaceChanged:",
@@ -498,23 +485,23 @@ def run_snippet_editor(
         )
         controller.replace_view = replace_view
 
-        _label("Anteprima", right_x, 92)
-        controller.preview_view = _text_area(right_x, 54, right_edge - right_x, 34, editable=False)
+        _label(t("editor.preview_label"), right_x, 142)
+        controller.preview_view = _text_area(right_x, 72, right_edge - right_x, 62, editable=False)
 
         new_button = NSButton.alloc().initWithFrame_(NSMakeRect(left_x, 16, 80, 28))
-        new_button.setTitle_("Nuovo")
+        new_button.setTitle_(t("editor.new_button"))
         new_button.setTarget_(controller)
         new_button.setAction_("new:")
         content.addSubview_(new_button)
 
         save_button = NSButton.alloc().initWithFrame_(NSMakeRect(108, 16, 80, 28))
-        save_button.setTitle_("Salva")
+        save_button.setTitle_(t("editor.save_button"))
         save_button.setTarget_(controller)
         save_button.setAction_("save:")
         content.addSubview_(save_button)
 
         delete_button = NSButton.alloc().initWithFrame_(NSMakeRect(196, 16, 80, 28))
-        delete_button.setTitle_("Elimina")
+        delete_button.setTitle_(t("editor.delete_button"))
         delete_button.setTarget_(controller)
         delete_button.setAction_("delete:")
         content.addSubview_(delete_button)
@@ -531,8 +518,8 @@ def run_snippet_editor(
         move_button.setAction_("move:")
         content.addSubview_(move_button)
 
-        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(860, 16, 80, 28))
-        close_button.setTitle_("Chiudi")
+        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(820, 16, 80, 28))
+        close_button.setTitle_(t("editor.close_button"))
         close_button.setTarget_(controller)
         close_button.setAction_("close:")
         content.addSubview_(close_button)

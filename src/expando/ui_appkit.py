@@ -28,6 +28,7 @@ from .i18n import t
 from .ui_appkit_runtime import (
     close_appkit_session,
     configure_single_column_table,
+    install_liquid_glass_background,
     run_appkit_session,
     select_first_table_row,
     set_text_view_string,
@@ -128,7 +129,7 @@ def _build_search_controller(items: list[dict[str, str]]) -> _SearchController:
     window.setDelegate_(controller)
     controller.window = window
 
-    content = window.contentView()
+    content = install_liquid_glass_background(window)
     search = NSSearchField.alloc().initWithFrame_(NSMakeRect(16, 372, 688, 28))
     search.setPlaceholderString_(t("menubar.search"))
     NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(

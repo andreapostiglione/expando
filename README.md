@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.12"><img src="https://img.shields.io/badge/version-3.29.12-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.13"><img src="https://img.shields.io/badge/version-3.29.13-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,15 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.12 — Signed bundle seal fix (latest)
+### v3.29.13 — Simpler menu and glass editor (latest)
+
+| Area | What's new |
+|------|------------|
+| **Menu bar** | Main menu now focuses on normal actions: New snippet, Manage snippets, Search, Pause, Permissions, Update Expando |
+| **Advanced** | Backup, restore, snippet library, diagnostics, and restart moved under **Advanced** |
+| **Snippet editor** | Native AppKit editor uses macOS visual-effect material and a simpler form with only user-facing fields visible |
+
+### v3.29.12 — Signed bundle seal fix
 
 | Area | What's new |
 |------|------------|
@@ -82,7 +90,7 @@ The current public build is ready for normal macOS users:
 
 | Area | What's new |
 |------|------------|
-| **Menu bar** | Runtime health in one click · snooze 1h/4h · 🔒 badge when permissions missing |
+| **Menu bar** | Diagnostics in one click · snooze 1h/4h · badge when permissions are missing |
 | **Hub** | Upgrade packages from menu bar with YAML diff preview before applying |
 | **Wizard** | Live permission badges for Accessibility + Input Monitoring |
 | **Repair** | `expando doctor --repair` reinstalls outdated LaunchAgent plist |
@@ -104,7 +112,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**390** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for **Expando.app** when installed from the DMG/Homebrew cask, or for the Python runtime reported by `expando doctor` when running from source.
+**391** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for **Expando.app** when installed from the DMG/Homebrew cask, or for the Python runtime reported by `expando doctor` when running from source.
 
 ### Recent feature releases
 
@@ -190,7 +198,7 @@ Open **System Settings → Privacy & Security** and enable:
 1. **Accessibility** — `Expando.app` for DMG/Homebrew installs, or the runtime shown by `expando doctor` for source installs
 2. **Input Monitoring** — the same app/runtime (required for global key listening)
 
-Verify from the menu bar with **Runtime health**. If you are running from source or have the CLI available:
+Verify from the menu bar with **Avanzate → Diagnostica**. If you are running from source or have the CLI available:
 
 ```bash
 expando doctor
@@ -642,9 +650,9 @@ expando/
 
 | Problem | Fix |
 |---------|-----|
-| Snippets don't expand | Open **Runtime health** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for `Expando.app` (DMG/Homebrew) or the runtime shown by doctor (source/dev) |
+| Snippets don't expand | Open **Avanzate → Diagnostica** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for `Expando.app` (DMG/Homebrew) or the runtime shown by doctor (source/dev) |
 | Worked yesterday, dead today | `expando doctor --repair && expando restart` |
-| Menu bar restart broke snippets | Fixed in v3.28 — update and use **Riavvia servizio** (no duplicate listener) |
+| Menu bar restart broke snippets | Fixed in v3.28 — update and use **Avanzate → Riavvia Expando** (no duplicate listener) |
 | `python3.x` in Privacy settings | Normal only when running from source/dev; grant both permissions to that binary |
 | Multiple instances / stale lock | `expando stop` · `expando doctor --repair` · `expando start` |
 | Config not reloading | `auto_restart: true` in `config/default.yml`; invalid YAML rolls back to `.last-good/` |
@@ -664,7 +672,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.12**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.13**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

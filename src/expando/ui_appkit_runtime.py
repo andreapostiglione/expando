@@ -8,6 +8,12 @@ from AppKit import (
     NSRunContinuesResponse,
     NSTableColumn,
     NSTableViewLastColumnOnlyAutoresizingStyle,
+    NSViewHeightSizable,
+    NSViewWidthSizable,
+    NSVisualEffectBlendingModeBehindWindow,
+    NSVisualEffectMaterialHUDWindow,
+    NSVisualEffectStateActive,
+    NSVisualEffectView,
 )
 from Foundation import NSIndexSet
 
@@ -47,6 +53,25 @@ def set_text_view_string(text_view, value: str) -> None:
     text_view.setEditable_(True)
     text_view.setString_(value)
     text_view.setEditable_(editable)
+
+
+def install_liquid_glass_background(window):
+    """Return a vibrancy-backed content view when AppKit supports it."""
+    content = window.contentView()
+    try:
+        window.setTitlebarAppearsTransparent_(True)
+        window.setMovableByWindowBackground_(True)
+        window.setOpaque_(False)
+        window.setBackgroundColor_(NSColor.clearColor())
+        visual = NSVisualEffectView.alloc().initWithFrame_(content.bounds())
+        visual.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        visual.setBlendingMode_(NSVisualEffectBlendingModeBehindWindow)
+        visual.setMaterial_(NSVisualEffectMaterialHUDWindow)
+        visual.setState_(NSVisualEffectStateActive)
+        content.addSubview_(visual)
+        return visual
+    except Exception:
+        return content
 
 
 def run_appkit_session(builder) -> object | None:

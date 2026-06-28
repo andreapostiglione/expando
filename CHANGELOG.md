@@ -4,6 +4,17 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.13] — 2026-06-28
+
+### Changed
+- Menu bar is now consumer-focused: the main menu keeps New snippet, Manage snippets, Search, Pause, Permissions, Update Expando, and Quit.
+- Backup, restore, snippet library, diagnostics, and restart are grouped under the Advanced menu instead of cluttering the first level.
+- Native AppKit search/editor windows now use macOS visual-effect material for a visible Liquid Glass-style background.
+- Snippet editor now shows only user-facing fields by default while preserving advanced snippet metadata internally.
+
+### Fixed
+- Added menu-layout coverage so developer-oriented actions do not drift back into the main menu.
+
 ## [3.29.12] — 2026-06-28
 
 ### Fixed
@@ -153,6 +164,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.13]: https://github.com/andreapostiglione/expando/compare/v3.29.12...v3.29.13
 [3.29.12]: https://github.com/andreapostiglione/expando/compare/v3.29.11...v3.29.12
 [3.29.11]: https://github.com/andreapostiglione/expando/compare/v3.29.10...v3.29.11
 [3.29.10]: https://github.com/andreapostiglione/expando/compare/v3.29.9...v3.29.10

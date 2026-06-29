@@ -6,12 +6,12 @@
     <description>Expando macOS updates (Sparkle appcast)</description>
     <language>en</language>
     <item>
-      <title>Version 3.29.16</title>
-      <sparkle:version>3.29.16</sparkle:version>
-      <sparkle:shortVersionString>3.29.16</sparkle:shortVersionString>
-      <description><![CDATA[Expando 3.29.16 — see GitHub release notes for details.]]></description>
-      <pubDate>Sun, 28 Jun 2026 14:19:45 +0000</pubDate>
-      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v3.29.16/Expando.dmg" sparkle:edSignature="EFwllDSSJm5bpj2VrCr7WZLWy9bSy5mYFZK53Tdrvho/x9YI3BTaBuKLSxhXdEnt4deNhAwHzoomjKW1GRC4CQ==" length="20087298" type="application/octet-stream"/>
+      <title>Version 3.29.17</title>
+      <sparkle:version>3.29.17</sparkle:version>
+      <sparkle:shortVersionString>3.29.17</sparkle:shortVersionString>
+      <description><![CDATA[Expando 3.29.17 — see GitHub release notes for details.]]></description>
+      <pubDate>Mon, 29 Jun 2026 07:30:19 +0000</pubDate>
+      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v3.29.17/Expando.dmg" sparkle:edSignature="/l0pEjwotxsqi0zvMh/QhicW6dODdQ/wrCuvUIU6MVGUAxox9yr1WHv8Wn7kL5Jl1nS8tgPd2C/cqLG9SerLDA==" length="20089940" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>

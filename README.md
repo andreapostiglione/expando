@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.18"><img src="https://img.shields.io/badge/version-3.29.18-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.19"><img src="https://img.shields.io/badge/version-3.29.19-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,14 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.18 — Native app identity and simpler onboarding (latest)
+### v3.29.19 — Reliable native daemon start (latest)
+
+| Area | What's new |
+|------|------------|
+| **Daemon** | Restart/start now keeps using the installed `Expando.app` launcher instead of falling back to Python |
+| **Release checks** | The distribution verifier now starts the keyboard listener through the native launcher before a DMG can ship |
+
+### v3.29.18 — Native app identity and simpler onboarding
 
 | Area | What's new |
 |------|------------|
@@ -150,7 +157,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**400** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; current DMG/Homebrew builds should appear as `Expando.app`.
+**401** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; current DMG/Homebrew builds should appear as `Expando.app`.
 
 ### Recent feature releases
 
@@ -714,7 +721,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.18**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.19**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

@@ -71,4 +71,21 @@ assert keyboard is not None
 PY
 
 "$APP/Contents/MacOS/expando" --version >/dev/null
+RUN_CONFIG="$(mktemp -d)"
+"$APP/Contents/MacOS/expando" --config-dir "$RUN_CONFIG" run >"$RUN_CONFIG/run.log" 2>&1 &
+RUN_PID="$!"
+sleep 2
+if ! kill -0 "$RUN_PID" 2>/dev/null; then
+  cat "$RUN_CONFIG/run.log" >&2
+  rm -rf "$RUN_CONFIG"
+  echo "Native launcher failed to start the keyboard listener" >&2
+  exit 1
+fi
+kill "$RUN_PID" 2>/dev/null || true
+sleep 1
+if kill -0 "$RUN_PID" 2>/dev/null; then
+  kill -9 "$RUN_PID" 2>/dev/null || true
+fi
+wait "$RUN_PID" 2>/dev/null || true
+rm -rf "$RUN_CONFIG"
 echo "Distribution bundle verification passed for $APP"

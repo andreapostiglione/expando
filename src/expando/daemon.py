@@ -49,16 +49,43 @@ def _app_bundle_executable() -> Path | None:
     if os.environ.get("EXPANDO_USE_APP_BUNDLE", "").lower() in {"0", "false", "no"}:
         return None
 
+    executable = _valid_app_executable(Path(sys.executable))
+    if executable is not None:
+        return executable
+
+    resources = os.environ.get("EXPANDO_RESOURCES")
+    if resources:
+        resources_path = Path(resources).expanduser().resolve()
+        if resources_path.name == "Resources" and resources_path.parent.name == "Contents":
+            executable = _valid_app_executable(
+                resources_path.parent / "MacOS" / "expando"
+            )
+            if executable is not None:
+                return executable
+
     root = Path(__file__).resolve().parent.parent.parent
     candidate = root / "Expando.app" / "Contents" / "MacOS" / "expando"
-    if not candidate.exists() or not os.access(candidate, os.X_OK):
+    executable = _valid_app_executable(candidate)
+    if executable is None:
         return None
 
     # In a git checkout, prefer the local venv unless the app bundle is explicit.
     if (root / ".git").exists() and os.environ.get("EXPANDO_USE_APP_BUNDLE", "") != "1":
         return None
 
-    return candidate
+    return executable
+
+
+def _valid_app_executable(candidate: Path) -> Path | None:
+    try:
+        resolved = candidate.expanduser().resolve()
+    except OSError:
+        return None
+    if not resolved.exists() or not os.access(resolved, os.X_OK):
+        return None
+    if "Expando.app" not in resolved.parts:
+        return None
+    return resolved
 
 
 def start_daemon(config_dir: Path) -> int:

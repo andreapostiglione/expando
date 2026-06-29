@@ -7,7 +7,14 @@ from unittest.mock import patch
 
 import pytest
 
-from expando.daemon import foreground, is_running, restart_foreground_daemon, start_daemon, stop_daemon
+from expando.daemon import (
+    _daemon_command,
+    foreground,
+    is_running,
+    restart_foreground_daemon,
+    start_daemon,
+    stop_daemon,
+)
 from expando.lock import SingleInstanceLock
 from expando.paths import lock_file, pid_file
 
@@ -45,6 +52,29 @@ def test_start_daemon_returns_existing_pid(tmp_path: Path, fake_daemon_command: 
     second = start_daemon(config_dir)
     assert second == first
     stop_daemon(config_dir)
+
+
+def test_daemon_command_uses_installed_app_launcher(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    app_executable = tmp_path / "Expando.app" / "Contents" / "MacOS" / "expando"
+    resources = tmp_path / "Expando.app" / "Contents" / "Resources"
+    app_executable.parent.mkdir(parents=True)
+    resources.mkdir(parents=True)
+    app_executable.write_text("#!/bin/sh\n", encoding="utf-8")
+    app_executable.chmod(0o755)
+    config_dir = tmp_path / "config"
+
+    monkeypatch.setenv("EXPANDO_RESOURCES", str(resources))
+    monkeypatch.setattr(sys, "executable", str(app_executable))
+
+    assert _daemon_command(config_dir) == [
+        str(app_executable.resolve()),
+        "--config-dir",
+        str(config_dir),
+        "run",
+    ]
 
 
 def test_foreground_writes_pid_and_cleans_up(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

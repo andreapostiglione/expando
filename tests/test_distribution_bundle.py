@@ -38,6 +38,7 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     assert "packages/hub/index.json" in verify
     assert "python3.12 is required to verify bundled native dependencies" in verify
     assert "from pynput import keyboard" in verify
+    assert "Native launcher failed to start the keyboard listener" in verify
 
 
 def test_bundled_launch_agent_script_uses_app_executable(tmp_path: Path) -> None:

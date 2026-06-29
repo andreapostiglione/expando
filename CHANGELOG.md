@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.19] — 2026-06-29
+
+### Fixed
+- Daemon restart/start now recognizes the installed `Expando.app` launcher when code runs from bundled `site-packages`, avoiding fallback to `python -m expando`.
+- Distribution verification now starts the keyboard listener through the native launcher, catching PyObjC/pynput failures that `--version` cannot detect.
+
 ## [3.29.18] — 2026-06-29
 
 ### Changed
@@ -204,6 +210,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.19]: https://github.com/andreapostiglione/expando/compare/v3.29.18...v3.29.19
 [3.29.18]: https://github.com/andreapostiglione/expando/compare/v3.29.17...v3.29.18
 [3.29.17]: https://github.com/andreapostiglione/expando/compare/v3.29.16...v3.29.17
 [3.29.16]: https://github.com/andreapostiglione/expando/compare/v3.29.15...v3.29.16

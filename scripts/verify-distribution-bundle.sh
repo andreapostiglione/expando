@@ -34,6 +34,11 @@ if ! grep -q '../MacOS/expando' "$APP/Contents/Resources/scripts/launch-expando.
   exit 1
 fi
 
+if ! file "$APP/Contents/MacOS/expando" | grep -q "Mach-O"; then
+  echo "Distribution launcher must be a native Mach-O executable" >&2
+  exit 1
+fi
+
 if grep -q '/Users/runner/' "$APP/Contents/MacOS/expando" 2>/dev/null; then
   echo "Launcher contains CI runner paths" >&2
   exit 1

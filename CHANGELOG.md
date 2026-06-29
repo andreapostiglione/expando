@@ -4,6 +4,18 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.18] — 2026-06-29
+
+### Changed
+- DMG/Homebrew builds now use a native `Expando.app` launcher that loads Python internally, so macOS Privacy & Security grants permissions to Expando instead of `python3.12`.
+- First-run onboarding uses user-facing permission copy and avoids showing app bundle paths for normal installs.
+- The menu bar now puts normal actions first: New snippet, My snippets, snippet collections, pause, permissions, update, and Support.
+- The AppKit snippet editor hides YAML collection details from the main form and uses a more spacious layout.
+
+### Fixed
+- Doctor output deduplicates repeated permission warnings.
+- Distribution verification now fails if the shipped launcher is not a native Mach-O executable.
+
 ## [3.29.17] — 2026-06-29
 
 ### Fixed
@@ -192,6 +204,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.18]: https://github.com/andreapostiglione/expando/compare/v3.29.17...v3.29.18
 [3.29.17]: https://github.com/andreapostiglione/expando/compare/v3.29.16...v3.29.17
 [3.29.16]: https://github.com/andreapostiglione/expando/compare/v3.29.15...v3.29.16
 [3.29.15]: https://github.com/andreapostiglione/expando/compare/v3.29.14...v3.29.15

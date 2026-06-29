@@ -30,7 +30,9 @@ fi
 if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
   chmod +x "$ROOT/scripts/embed-distribution-python.sh"
   "$ROOT/scripts/embed-distribution-python.sh" "$APP" "$ROOT"
-  cp "$ROOT/scripts/distribution-launcher.sh" "$MACOS/expando"
+  clang -Wall -Wextra -O2 -mmacosx-version-min=12.0 \
+    "$ROOT/scripts/expando-launcher.c" \
+    -o "$MACOS/expando"
 else
   VENV="$RESOURCES/venv"
   rm -rf "$VENV"
@@ -118,5 +120,5 @@ fi
 
 echo "Built $APP (v${VERSION}, distribution=${EXPANDO_DISTRIBUTION:-0})"
 if [[ "${EXPANDO_DISTRIBUTION:-0}" != "1" ]]; then
-  echo "Grant Accessibility permission to Expando.app (not python3.14)"
+  echo "Grant Accessibility and Input Monitoring permission to Expando.app."
 fi

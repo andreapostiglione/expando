@@ -24,6 +24,16 @@ def detect_runtime() -> RuntimeInfo:
         if resources_path.name == "Resources" and resources_path.parent.name == "Contents":
             app_root = resources_path.parent.parent
             if app_root.suffix == ".app":
+                try:
+                    executable.relative_to(app_root)
+                    return RuntimeInfo(
+                        mode="app",
+                        executable=exe_str,
+                        grant_label="Expando.app",
+                        grant_hint=str(app_root),
+                    )
+                except ValueError:
+                    pass
                 return RuntimeInfo(
                     mode="packaged",
                     executable=exe_str,

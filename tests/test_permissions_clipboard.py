@@ -67,5 +67,5 @@ def test_packaged_runtime_notes_only_when_permissions_need_attention() -> None:
                 with patch("expando.permissions._check_input_monitoring_macos", return_value=False):
                     needs_attention = check_permissions()
 
-    assert not any("Installazione app" in note for note in ready.notes)
-    assert any("Installazione app" in note for note in needs_attention.notes)
+    assert not any("Installazione legacy" in note for note in ready.notes)
+    assert any("Installazione legacy" in note for note in needs_attention.notes)

@@ -63,10 +63,10 @@ def test_menubar_keeps_advanced_actions_out_of_main_menu() -> None:
     main, advanced = menu_layout_keys()
     assert "new_snippet" in main
     assert "editor" in main
-    assert "search" in main
+    assert "hub" in main
     assert "advanced" in main
 
-    advanced_only = {"health", "hub", "hub_updates", "backup", "restore", "restart"}
+    advanced_only = {"health", "hub_updates", "backup", "restore", "restart"}
     assert advanced_only.isdisjoint({key for key in main if key})
     assert advanced_only.issubset(set(advanced))
 

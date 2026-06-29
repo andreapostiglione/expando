@@ -10,8 +10,8 @@ Quick fixes for common Expando issues on macOS.
    expando doctor
    ```
 2. **Grant permissions** — System Settings → Privacy & Security:
-   - **Accessibility** for Terminal, Python, or `Expando.app`
-   - **Input Monitoring** for global keyboard listener tests
+   - **Accessibility** for `Expando.app`
+   - **Input Monitoring** for `Expando.app`
 3. **Run setup wizard**
    ```bash
    expando setup
@@ -20,6 +20,9 @@ Quick fixes for common Expando issues on macOS.
    ```bash
    expando match :yourtrigger
    ```
+
+Current DMG/Homebrew builds should appear as `Expando.app` in Privacy & Security.
+If macOS shows `python3.12`, update or reinstall Expando before re-granting permissions.
 
 ## Expando stops after password field
 

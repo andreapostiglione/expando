@@ -225,6 +225,7 @@ def run_doctor(config_dir: Path) -> DoctorReport:
         and not duplicate_triggers
         and (permissions is None or permissions_ready(permissions))
     )
+    warnings = list(dict.fromkeys(warnings))
 
     return DoctorReport(
         ok=ok,

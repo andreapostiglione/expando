@@ -1,7 +1,7 @@
 #import <Cocoa/Cocoa.h>
 #import <Sparkle/Sparkle.h>
 
-@interface ExpandoSparkleDelegate : NSObject <SPUUpdaterDelegate>
+@interface ExpandoSparkleDelegate : NSObject <NSApplicationDelegate, SPUUpdaterDelegate>
 @property(nonatomic, strong) SPUStandardUpdaterController *controller;
 @property(nonatomic, assign) BOOL interactive;
 @end

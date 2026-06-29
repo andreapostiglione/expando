@@ -82,10 +82,9 @@ def run_permission_wizard(config_dir: Path) -> bool:
             body = t("wizard.done")
 
         if runtime and step_id != "done":
-            body = (
-                f"{body}\n\n{t('doctor.grant_target')}: {runtime.grant_label}\n"
-                f"{runtime.grant_hint}"
-            )
+            body = f"{body}\n\n{t('doctor.grant_target')}: {runtime.grant_label}"
+            if runtime.mode != "app":
+                body = f"{body}\n{runtime.grant_hint}"
         if step_id in {"welcome", "done"}:
             body = f"{body}\n\n{_permission_badge_text(status)}"
 
@@ -127,7 +126,7 @@ def run_permission_wizard(config_dir: Path) -> bool:
             if response == NSAlertFirstButtonReturn:
                 open_accessibility_settings()
                 continue
-            if permissions_ready(check_permissions()):
+            if check_permissions().accessibility is True:
                 step_index += 1
             continue
 
@@ -136,7 +135,8 @@ def run_permission_wizard(config_dir: Path) -> bool:
                 open_input_monitoring_settings()
                 continue
             if response == NSAlertSecondButtonReturn:
-                if permissions_ready(check_permissions()):
+                current_status = check_permissions()
+                if current_status.input_monitoring is not False:
                     step_index += 1
                 continue
             step_index += 1

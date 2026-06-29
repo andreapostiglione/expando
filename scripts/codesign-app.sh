@@ -39,6 +39,7 @@ while IFS= read -r -d '' candidate; do
 done < <(find "$APP" -type f \( -perm -111 -o -name "*.so" -o -name "*.dylib" \) -print0 2>/dev/null)
 
 codesign --force --options runtime --timestamp \
+  --entitlements "$ENTITLEMENTS" \
   --sign "$IDENTITY" "$APP/Contents/MacOS/expando"
 
 HELPER="$APP/Contents/MacOS/expando-sparkle"

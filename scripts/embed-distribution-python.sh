@@ -49,7 +49,6 @@ cp -R "$ROOT/packages" "$RESOURCES/packages"
 mkdir -p "$RESOURCES/scripts"
 for script in \
   com.andreapostiglione.expando.plist \
-  distribution-launcher.sh \
   entitlements.plist \
   install-launch-agent.sh \
   launch-expando.sh \

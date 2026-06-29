@@ -30,7 +30,7 @@ _MAIN_MENU_KEYS: tuple[str | None, ...] = (
     None,
     "new_snippet",
     "editor",
-    "search",
+    "hub",
     None,
     "snooze",
     "permissions",
@@ -44,10 +44,9 @@ _MAIN_MENU_KEYS: tuple[str | None, ...] = (
 _ADVANCED_MENU_KEYS: tuple[str, ...] = (
     "backup",
     "restore",
-    "hub",
     "hub_updates",
-    "health",
     "restart",
+    "health",
 )
 
 
@@ -89,7 +88,6 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 "enabled": self.enabled_item,
                 "new_snippet": rumps.MenuItem(t("menubar.new_snippet"), callback=self.new_snippet),
                 "editor": rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
-                "search": rumps.MenuItem(t("menubar.search"), callback=self.search_snippets),
                 "snooze": self.snooze_item,
                 "permissions": self.permissions_item,
                 "updates": rumps.MenuItem(t("menubar.updates"), callback=self.check_updates),
@@ -215,14 +213,6 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
         def upgrade_hub_packages(self, _sender) -> None:
             try:
                 self._upgrade_hub_packages()
-            except Exception as exc:
-                self._notify_action_failed(exc)
-            finally:
-                set_ui_active(False)
-
-        def search_snippets(self, _sender) -> None:
-            try:
-                self.service.open_search()
             except Exception as exc:
                 self._notify_action_failed(exc)
             finally:

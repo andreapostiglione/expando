@@ -313,8 +313,9 @@ def check_permissions(
         elif runtime.mode == "packaged":
             if accessibility is not True or input_monitoring is not True:
                 notes.append(
-                    f"Installazione app: macOS autorizza «{runtime.grant_label}» "
-                    "come runtime di Expando."
+                    "Installazione legacy: macOS sta mostrando un runtime Python "
+                    f"(«{runtime.grant_label}») invece di Expando.app. "
+                    "Aggiorna o reinstalla Expando."
                 )
         else:
             notes.append(

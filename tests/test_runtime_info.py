@@ -24,3 +24,20 @@ def test_detect_runtime_recognizes_packaged_python(monkeypatch, tmp_path):
     assert runtime.mode == "packaged"
     assert runtime.grant_label == "python3.12"
     assert runtime.grant_hint.endswith("Expando.app")
+
+
+def test_detect_runtime_recognizes_native_app_launcher(monkeypatch, tmp_path):
+    resources = tmp_path / "Expando.app" / "Contents" / "Resources"
+    executable = tmp_path / "Expando.app" / "Contents" / "MacOS" / "expando"
+    resources.mkdir(parents=True)
+    executable.parent.mkdir(parents=True)
+    executable.touch()
+
+    monkeypatch.setenv("EXPANDO_RESOURCES", str(resources))
+    monkeypatch.setattr(sys, "executable", str(executable))
+
+    runtime = detect_runtime()
+
+    assert runtime.mode == "app"
+    assert runtime.grant_label == "Expando.app"
+    assert runtime.grant_hint.endswith("Expando.app")

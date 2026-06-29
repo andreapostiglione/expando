@@ -234,7 +234,7 @@ class _SnippetEditorController(NSObject):
         if item and item.get("editable", "1") != "1":
             self.showAlertMessage_(t("editor.duplicate.readonly"))
             return
-        target = self._pick_target_file(t("editor.duplicate.title"), t("editor.duplicate.body"))
+        target = item.get("source_file") or item.get("target_file") or "dev.yml"
         if not target:
             return
         handler = self.handlers.get("duplicate")
@@ -374,7 +374,7 @@ def run_snippet_editor(
         controller.config_dir = config_dir
         controller.match_files = list(match_files or ["dev.yml"])
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, 920, 620),
+            NSMakeRect(0, 0, 960, 660),
             NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
             NSBackingStoreBuffered,
             False,
@@ -385,11 +385,11 @@ def run_snippet_editor(
 
         content = install_liquid_glass_background(window)
         controller.editor_content_view = content
-        left_x = 20
-        left_w = 280
-        right_x = 320
-        right_edge = 900
-        label_w = 100
+        left_x = 24
+        left_w = 292
+        right_x = 340
+        right_edge = 936
+        label_w = 110
         field_x = right_x + label_w + 10
         field_w = right_edge - field_x
 
@@ -430,7 +430,7 @@ def run_snippet_editor(
             view.setEditable_(True)
             return view
 
-        search = NSSearchField.alloc().initWithFrame_(NSMakeRect(left_x, 564, left_w, 28))
+        search = NSSearchField.alloc().initWithFrame_(NSMakeRect(left_x, 604, left_w, 28))
         search.setPlaceholderString_(t("editor.search_placeholder"))
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
@@ -441,7 +441,7 @@ def run_snippet_editor(
         controller.search_field = search
         content.addSubview_(search)
 
-        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(left_x, 72, left_w, 476))
+        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(left_x, 76, left_w, 510))
         table_scroll.setBorderType_(NSBezelBorder)
         table_scroll.setHasVerticalScroller_(True)
         table = NSTableView.alloc().initWithFrame_(table_scroll.bounds())
@@ -452,14 +452,13 @@ def run_snippet_editor(
         table_scroll.setDocumentView_(table)
         content.addSubview_(table_scroll)
 
-        _label(t("editor.trigger_label"), right_x, 566)
-        controller.trigger_field = _field(field_x, 566, field_w)
+        _label(t("editor.trigger_label"), right_x, 606)
+        controller.trigger_field = _field(field_x, 606, field_w)
 
-        _label(t("editor.app_label"), right_x, 528)
-        controller.if_app_field = _field(field_x, 528, field_w)
+        _label(t("editor.app_label"), right_x, 566)
+        controller.if_app_field = _field(field_x, 566, field_w)
 
-        _label(t("editor.collection_label"), right_x, 490)
-        controller.target_file_field = _field(field_x, 490, field_w)
+        controller.target_file_field = _hidden_field()
         controller.target_file_field.setStringValue_((match_files or ["dev.yml"])[0])
 
         controller.unless_app_field = _hidden_field()
@@ -475,8 +474,8 @@ def run_snippet_editor(
         controller.form_view = _hidden_text_view()
         controller.vars_view = _hidden_text_view()
 
-        _label(t("editor.text_label"), right_x, 452)
-        replace_view = _text_area(right_x, 180, right_edge - right_x, 262, editable=True)
+        _label(t("editor.text_label"), right_x, 518)
+        replace_view = _text_area(right_x, 182, right_edge - right_x, 324, editable=True)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
             "replaceChanged:",
@@ -485,40 +484,34 @@ def run_snippet_editor(
         )
         controller.replace_view = replace_view
 
-        _label(t("editor.preview_label"), right_x, 142)
-        controller.preview_view = _text_area(right_x, 72, right_edge - right_x, 62, editable=False)
+        _label(t("editor.preview_label"), right_x, 144)
+        controller.preview_view = _text_area(right_x, 76, right_edge - right_x, 62, editable=False)
 
-        new_button = NSButton.alloc().initWithFrame_(NSMakeRect(left_x, 16, 80, 28))
+        new_button = NSButton.alloc().initWithFrame_(NSMakeRect(left_x, 20, 84, 28))
         new_button.setTitle_(t("editor.new_button"))
         new_button.setTarget_(controller)
         new_button.setAction_("new:")
         content.addSubview_(new_button)
 
-        save_button = NSButton.alloc().initWithFrame_(NSMakeRect(108, 16, 80, 28))
+        save_button = NSButton.alloc().initWithFrame_(NSMakeRect(116, 20, 84, 28))
         save_button.setTitle_(t("editor.save_button"))
         save_button.setTarget_(controller)
         save_button.setAction_("save:")
         content.addSubview_(save_button)
 
-        delete_button = NSButton.alloc().initWithFrame_(NSMakeRect(196, 16, 80, 28))
+        delete_button = NSButton.alloc().initWithFrame_(NSMakeRect(208, 20, 84, 28))
         delete_button.setTitle_(t("editor.delete_button"))
         delete_button.setTarget_(controller)
         delete_button.setAction_("delete:")
         content.addSubview_(delete_button)
 
-        duplicate_button = NSButton.alloc().initWithFrame_(NSMakeRect(284, 16, 90, 28))
+        duplicate_button = NSButton.alloc().initWithFrame_(NSMakeRect(300, 20, 96, 28))
         duplicate_button.setTitle_(t("editor.duplicate.button"))
         duplicate_button.setTarget_(controller)
         duplicate_button.setAction_("duplicate:")
         content.addSubview_(duplicate_button)
 
-        move_button = NSButton.alloc().initWithFrame_(NSMakeRect(382, 16, 80, 28))
-        move_button.setTitle_(t("editor.move.button"))
-        move_button.setTarget_(controller)
-        move_button.setAction_("move:")
-        content.addSubview_(move_button)
-
-        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(820, 16, 80, 28))
+        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(852, 20, 84, 28))
         close_button.setTitle_(t("editor.close_button"))
         close_button.setTarget_(controller)
         close_button.setAction_("close:")

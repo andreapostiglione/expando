@@ -2,13 +2,14 @@ import subprocess
 from pathlib import Path
 
 
-def test_distribution_launcher_defaults_to_run() -> None:
-    launcher = Path(__file__).resolve().parents[1] / "scripts" / "distribution-launcher.sh"
+def test_native_distribution_launcher_defaults_to_run() -> None:
+    launcher = Path(__file__).resolve().parents[1] / "scripts" / "expando-launcher.c"
     text = launcher.read_text(encoding="utf-8")
-    assert 'set -- run' in text
-    assert "python3.12" in text
-    assert "/opt/homebrew/bin/python3 " not in text
-    assert "-m expando" in text
+    assert 'python_argv[3] = "run"' in text
+    assert 'EXPANDO_PYTHON_VERSION "3.12"' in text
+    assert "Py_BytesMain" in text
+    assert 'python_argv[1] = "-m"' in text
+    assert 'python_argv[2] = "expando"' in text
 
 
 def test_verify_distribution_bundle_script_exists() -> None:
@@ -20,7 +21,8 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     root = Path(__file__).resolve().parents[1]
     embed = (root / "scripts" / "embed-distribution-python.sh").read_text(encoding="utf-8")
     verify = (root / "scripts" / "verify-distribution-bundle.sh").read_text(encoding="utf-8")
-    launcher = (root / "scripts" / "distribution-launcher.sh").read_text(encoding="utf-8")
+    native_launcher = (root / "scripts" / "expando-launcher.c").read_text(encoding="utf-8")
+    build = (root / "scripts" / "build-macos-app.sh").read_text(encoding="utf-8")
 
     assert "$RESOURCES/default_config" in embed
     assert "$RESOURCES/packages" in embed
@@ -28,7 +30,9 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     assert "python3.12 is required for distribution dependency bundling" in embed
     assert '"$PY312" -m pip install' in embed
     assert "find \"$SITE_PACKAGES\" -type d -name __pycache__" in embed
-    assert "PYTHONDONTWRITEBYTECODE=1" in launcher
+    assert "setenv(\"PYTHONDONTWRITEBYTECODE\"" in native_launcher
+    assert "expando-launcher.c" in build
+    assert "Distribution launcher must be a native Mach-O executable" in verify
     assert "PYTHONDONTWRITEBYTECODE=1" in verify
     assert "default_config/config/default.yml" in verify
     assert "packages/hub/index.json" in verify
@@ -72,6 +76,20 @@ def test_distribution_build_requires_sparkle_public_key() -> None:
 
     assert "EXPANDO_SPARKLE_PUBLIC_ED_KEY" in text
     assert "SUPublicEDKey" in text
+
+
+def test_codesign_preserves_launcher_entitlements() -> None:
+    root = Path(__file__).resolve().parents[1]
+    script = (root / "scripts" / "codesign-app.sh").read_text(encoding="utf-8")
+    entitlements = (root / "scripts" / "entitlements.plist").read_text(encoding="utf-8")
+
+    launcher_sign = (
+        'codesign --force --options runtime --timestamp \\\n'
+        '  --entitlements "$ENTITLEMENTS" \\\n'
+        '  --sign "$IDENTITY" "$APP/Contents/MacOS/expando"'
+    )
+    assert launcher_sign in script
+    assert "com.apple.security.cs.disable-library-validation" in entitlements
 
 
 def test_appcast_generation_requires_sparkle_signature() -> None:

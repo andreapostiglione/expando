@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.16"><img src="https://img.shields.io/badge/version-3.29.16-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.17"><img src="https://img.shields.io/badge/version-3.29.17-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,15 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.16 — Non-blocking update check (latest)
+### v3.29.17 — Accurate permission recovery (latest)
+
+| Area | What's new |
+|------|------------|
+| **Permissions** | `doctor`, onboarding, and the menu bar now detect the exact macOS TCC grant for the runtime that listens to the keyboard |
+| **Recovery** | If permissions break after an update, Expando shows setup again instead of silently reporting a false OK |
+| **Packaging** | Distribution dependency bundling now uses Python 3.12 explicitly, matching the app runtime |
+
+### v3.29.16 — Non-blocking update check
 
 | Area | What's new |
 |------|------------|
@@ -133,7 +141,7 @@ Production-focused reliability for the daemon, listener, and menu bar:
 | **State files** | Atomic JSON writes for health, crash-loop, injection-health |
 | **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
 
-**394** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; installed builds may appear as `Expando.app` or as the packaged Python runtime depending on macOS.
+**398** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; installed builds may appear as `Expando.app` or as the packaged Python runtime depending on macOS.
 
 ### Recent feature releases
 
@@ -218,6 +226,8 @@ Open **System Settings → Privacy & Security** and enable:
 
 1. **Accessibility** — the app/runtime shown by Expando setup or `expando doctor`
 2. **Input Monitoring** — the same app/runtime (required for global key listening)
+
+On DMG/Homebrew installs, macOS may show the grant target as `python3.12`. That is the bundled runtime Expando uses to listen for typed triggers. Grant both permissions to the exact target shown by Expando.
 
 Verify from the menu bar with **Avanzate → Diagnostica**. If you are running from source or have the CLI available:
 
@@ -671,10 +681,11 @@ expando/
 
 | Problem | Fix |
 |---------|-----|
-| Snippets don't expand | Open **Avanzate → Diagnostica** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for the app/runtime shown there |
+| Snippets don't expand | Open **Configura permessi macOS** from the menu bar, or run `expando doctor`; enable **Accessibility** and **Input Monitoring** for the exact target shown there |
+| `:claude` or another trigger stays typed | The keyboard listener is not receiving events. In macOS Privacy & Security, remove/re-enable the target shown by `expando doctor` in both **Accessibility** and **Input Monitoring** |
 | Worked yesterday, dead today | `expando doctor --repair && expando restart` |
 | Menu bar restart broke snippets | Fixed in v3.28 — update and use **Avanzate → Riavvia Expando** (no duplicate listener) |
-| `python3.x` in Privacy settings | Normal only when running from source/dev; grant both permissions to that binary |
+| `python3.12` in Privacy settings | Normal for the current DMG/Homebrew runtime; grant both permissions to that exact item |
 | Multiple instances / stale lock | `expando stop` · `expando doctor --repair` · `expando start` |
 | Config not reloading | `auto_restart: true` in `config/default.yml`; invalid YAML rolls back to `.last-good/` |
 | Expando disabled after crashes | Safe mode — `expando doctor --repair` clears it |
@@ -693,7 +704,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.16**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.17**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

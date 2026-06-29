@@ -24,12 +24,14 @@ def should_show_onboarding(config_dir: Path, *, force: bool = False) -> bool:
         return False
     if force:
         return True
+    status = check_permissions()
+    if not permissions_ready(status):
+        return True
     if is_onboarding_complete(config_dir):
         return False
-    status = check_permissions()
     if status.runtime and status.runtime.mode == "app":
         return True
-    return not permissions_ready(status)
+    return False
 
 
 def run_onboarding(config_dir: Path, *, force: bool = False) -> None:

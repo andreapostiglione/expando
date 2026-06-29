@@ -25,6 +25,8 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     assert "$RESOURCES/default_config" in embed
     assert "$RESOURCES/packages" in embed
     assert "--no-compile" in embed
+    assert "python3.12 is required for distribution dependency bundling" in embed
+    assert '"$PY312" -m pip install' in embed
     assert "find \"$SITE_PACKAGES\" -type d -name __pycache__" in embed
     assert "PYTHONDONTWRITEBYTECODE=1" in launcher
     assert "PYTHONDONTWRITEBYTECODE=1" in verify

@@ -29,9 +29,44 @@ class PermissionStatus:
     injection_ready: bool | None = None
 
 
-def _check_accessibility_macos(*, prompt: bool = False) -> bool | None:
+@dataclass(frozen=True)
+class _TCCRow:
+    client: str
+    client_type: int | None
+    auth_value: int
+    last_modified: int
+
+
+def _check_accessibility_macos(
+    *,
+    prompt: bool = False,
+    runtime: RuntimeInfo | None = None,
+) -> bool | None:
     if platform.system() != "Darwin":
         return None
+    if runtime is not None:
+        tcc_status = _tcc_permission_for_runtime("kTCCServiceAccessibility", runtime)
+        if tcc_status is not None:
+            return tcc_status
+    pyobjc_status = _check_accessibility_pyobjc(prompt=prompt)
+    if pyobjc_status is not None:
+        return pyobjc_status
+    return _check_accessibility_ctypes(prompt=prompt)
+
+
+def _check_accessibility_pyobjc(*, prompt: bool = False) -> bool | None:
+    try:
+        import HIServices
+
+        if prompt:
+            options = {HIServices.kAXTrustedCheckOptionPrompt: True}
+            return bool(HIServices.AXIsProcessTrustedWithOptions(options))
+        return bool(HIServices.AXIsProcessTrusted())
+    except Exception:
+        return None
+
+
+def _check_accessibility_ctypes(*, prompt: bool = False) -> bool | None:
     try:
         app_services = ctypes.CDLL(
             ctypes.util.find_library("ApplicationServices") or "ApplicationServices"
@@ -63,8 +98,8 @@ def _tcc_db_paths() -> list[Path]:
     ]
 
 
-def _query_tcc(service: str) -> list[tuple[str, int]]:
-    rows: list[tuple[str, int]] = []
+def _query_tcc(service: str) -> list[_TCCRow]:
+    rows: list[_TCCRow] = []
     for db in _tcc_db_paths():
         if not db.exists():
             continue
@@ -73,7 +108,7 @@ def _query_tcc(service: str) -> list[tuple[str, int]]:
                 [
                     "sqlite3",
                     str(db),
-                    "SELECT client, auth_value FROM access "
+                    "SELECT client, client_type, auth_value, last_modified FROM access "
                     f"WHERE service='{service}';",
                 ],
                 capture_output=True,
@@ -83,33 +118,107 @@ def _query_tcc(service: str) -> list[tuple[str, int]]:
         except Exception:
             continue
         if result.returncode != 0:
-            continue
+            try:
+                result = subprocess.run(
+                    [
+                        "sqlite3",
+                        str(db),
+                        "SELECT client, auth_value FROM access "
+                        f"WHERE service='{service}';",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                )
+            except Exception:
+                continue
+            if result.returncode != 0:
+                continue
         for line in result.stdout.splitlines():
             if "|" not in line:
                 continue
-            client, raw_value = line.split("|", 1)
+            parts = line.split("|")
             try:
-                rows.append((client.strip(), int(raw_value.strip())))
+                if len(parts) >= 4:
+                    client, client_type, raw_value, last_modified = parts[:4]
+                    rows.append(
+                        _TCCRow(
+                            client=client.strip(),
+                            client_type=int(client_type.strip()),
+                            auth_value=int(raw_value.strip()),
+                            last_modified=int(last_modified.strip() or "0"),
+                        )
+                    )
+                else:
+                    client, raw_value = parts[:2]
+                    rows.append(
+                        _TCCRow(
+                            client=client.strip(),
+                            client_type=None,
+                            auth_value=int(raw_value.strip()),
+                            last_modified=0,
+                        )
+                    )
             except ValueError:
                 continue
-        if rows:
-            return rows
     return rows
 
 
 def _client_matches_runtime(client: str, runtime: RuntimeInfo) -> bool:
     client_lower = client.casefold()
-    labels = {
-        runtime.grant_label.casefold(),
-        Path(runtime.executable).name.casefold(),
-        "expando.app",
-        "expando",
-        "python",
-        "python3",
-        "python3.14",
-        "python3.12",
-    }
-    return any(label and label in client_lower for label in labels)
+    executable = Path(runtime.executable)
+    executable_name = executable.name.casefold()
+
+    candidate_paths = {str(executable).casefold()}
+    try:
+        candidate_paths.add(str(executable.resolve()).casefold())
+    except OSError:
+        pass
+    if client_lower in candidate_paths:
+        return True
+    if client.startswith("/"):
+        try:
+            if str(Path(client).resolve()).casefold() in candidate_paths:
+                return True
+        except OSError:
+            pass
+        if Path(client).name.casefold() == executable_name:
+            version_hint = _python_version_hint(runtime)
+            if version_hint and version_hint in client_lower:
+                return True
+
+    if runtime.mode == "app":
+        return client_lower in {
+            "com.andreapostiglione.expando",
+            "expando.app",
+            "expando",
+        } or client_lower.endswith("/expando.app")
+
+    return client_lower == runtime.grant_label.casefold()
+
+
+def _python_version_hint(runtime: RuntimeInfo) -> str | None:
+    name = Path(runtime.executable).name.casefold()
+    if name.startswith("python3."):
+        return name
+    parts = Path(runtime.executable).parts
+    for index, part in enumerate(parts):
+        if part == "Versions" and index + 1 < len(parts):
+            version = parts[index + 1]
+            if version.count(".") == 1 and version.replace(".", "").isdigit():
+                return f"python{version}"
+    return None
+
+
+def _tcc_permission_for_runtime(service: str, runtime: RuntimeInfo) -> bool | None:
+    rows = _query_tcc(service)
+    if not rows:
+        return None
+    matched = [row for row in rows if _client_matches_runtime(row.client, runtime)]
+    if not matched:
+        return None
+    latest = max(matched, key=lambda row: row.last_modified)
+    return latest.auth_value in _TCC_ALLOWED
 
 
 def _read_clipboard_text() -> str | None:
@@ -155,13 +264,11 @@ def _check_input_monitoring_macos(runtime: RuntimeInfo) -> bool | None:
     rows = _query_tcc("kTCCServiceListenEvent")
     if not rows:
         return None
-    matched = [
-        auth for client, auth in rows
-        if _client_matches_runtime(client, runtime) and auth in _TCC_ALLOWED
-    ]
-    if matched:
-        return True
-    return False
+    matched = [row for row in rows if _client_matches_runtime(row.client, runtime)]
+    if not matched:
+        return False
+    latest = max(matched, key=lambda row: row.last_modified)
+    return latest.auth_value in _TCC_ALLOWED
 
 
 def open_accessibility_settings() -> None:
@@ -183,7 +290,10 @@ def check_permissions(
 ) -> PermissionStatus:
     notes: list[str] = []
     runtime = detect_runtime() if platform.system() == "Darwin" else None
-    accessibility = _check_accessibility_macos(prompt=prompt_accessibility)
+    accessibility = _check_accessibility_macos(
+        prompt=prompt_accessibility,
+        runtime=runtime,
+    )
     input_monitoring = (
         _check_input_monitoring_macos(runtime) if runtime is not None else None
     )

@@ -4,6 +4,13 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.17] — 2026-06-29
+
+### Fixed
+- `expando doctor`, onboarding, and menu status now check the exact macOS TCC row for the runtime that listens to the keyboard, so Python 3.14 permissions no longer produce a false OK for Python 3.12 installs.
+- Completed onboarding no longer suppresses the permission wizard when permissions break after an update.
+- Distribution dependency bundling now uses Python 3.12 explicitly, matching the runtime that imports native PyObjC wheels.
+
 ## [3.29.16] — 2026-06-28
 
 ### Fixed
@@ -185,6 +192,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.17]: https://github.com/andreapostiglione/expando/compare/v3.29.16...v3.29.17
 [3.29.16]: https://github.com/andreapostiglione/expando/compare/v3.29.15...v3.29.16
 [3.29.15]: https://github.com/andreapostiglione/expando/compare/v3.29.14...v3.29.15
 [3.29.14]: https://github.com/andreapostiglione/expando/compare/v3.29.13...v3.29.14

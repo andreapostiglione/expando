@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-30T08:20:04+00:00",
+  "generated_at": "2026-06-30T08:20:24+00:00",
   "doctor": {
     "ok": true,
     "config_dir": "/Users/runner/Library/Application Support/expando",
@@ -54,7 +54,7 @@
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-30T08:20:04+00:00",
+    "generated_at": "2026-06-30T08:20:24+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
     "approved_count": 10,
@@ -161,12 +161,12 @@
       "ok": 1,
       "failed": 0,
       "last_ok": true,
-      "last_recorded_at": "2026-06-30T08:20:02+00:00",
+      "last_recorded_at": "2026-06-30T08:20:21+00:00",
       "recent_ok_rate": 1.0
     },
     "entries": [
       {
-        "recorded_at": "2026-06-30T08:20:02+00:00",
+        "recorded_at": "2026-06-30T08:20:21+00:00",
         "ok": true,
         "summary": {
           "pass": 11,
@@ -257,9 +257,9 @@
       "total": 35,
       "slow": 0,
       "failed": 0,
-      "last_helper_ms": 376.18,
+      "last_helper_ms": 376.27,
       "last_version": "3.29.21",
-      "last_recorded_at": "2026-06-30T08:20:04+00:00",
+      "last_recorded_at": "2026-06-30T08:20:22+00:00",
       "trend_min_ms": 219.15,
       "trend_max_ms": 470.81,
       "trend_avg_ms": 304.41,
@@ -492,7 +492,7 @@
         }
       },
       {
-        "recorded_at": "2026-06-30T08:20:04+00:00",
+        "recorded_at": "2026-06-30T08:20:22+00:00",
         "version": "3.29.21",
         "tag": "v3.29.21",
         "warn_ms": 15000,
@@ -504,8 +504,8 @@
           "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
           "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
           "framework_present": true,
-          "appcast_fetch_ms": 219.09,
-          "helper_check_ms": 376.18,
+          "appcast_fetch_ms": 101.14,
+          "helper_check_ms": 376.27,
           "appcast_entries": 1,
           "latest_version": "3.29.20",
           "current_version": "3.29.21",
@@ -520,7 +520,7 @@
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-30T08:20:05+00:00",
+    "generated_at": "2026-06-30T08:20:24+00:00",
     "ok": true,
     "packages": [
       {

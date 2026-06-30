@@ -8,6 +8,8 @@ def test_append_and_list_match(tmp_path: Path):
     output = format_match_list(tmp_path)
     assert ":hello" in output
     assert "Hello there" in output
+    assert "dev.yml" not in output
+    assert "Personal" in output
 
 
 def test_import_directory(tmp_path: Path):

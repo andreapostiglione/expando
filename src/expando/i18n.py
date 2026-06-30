@@ -249,6 +249,23 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Non ci sono altre raccolte disponibili.",
         "en": "There are no other collections available.",
     },
+    "editor.collection.personal": {"it": "Personale", "en": "Personal"},
+    "editor.collection.installed": {
+        "it": "Raccolta installata",
+        "en": "Installed collection",
+    },
+    "editor.installed_readonly": {
+        "it": "Le raccolte installate non possono essere modificate da qui.",
+        "en": "Installed collections cannot be edited here.",
+    },
+    "editor.already_in_collection": {
+        "it": "Lo snippet è già in questa raccolta.",
+        "en": "The snippet is already in this collection.",
+    },
+    "editor.duplicate_trigger": {
+        "it": "Esiste già uno snippet con questa abbreviazione: {trigger}",
+        "en": "A snippet already uses this abbreviation: {trigger}",
+    },
     "menubar.restore_failed": {
         "it": "Ripristino fallito: {error}",
         "en": "Restore failed: {error}",
@@ -268,12 +285,12 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.updates": {"it": "Aggiorna Expando", "en": "Update Expando"},
     "menubar.quit": {"it": "Esci", "en": "Quit"},
     "menubar.installed": {
-        "it": "Pacchetto {package} installato",
-        "en": "Installed package {package}",
+        "it": "Raccolta {collection} installata",
+        "en": "Installed collection {collection}",
     },
     "menubar.install_failed": {
-        "it": "Installazione pacchetto fallita: {error}",
-        "en": "Package install failed: {error}",
+        "it": "Installazione raccolta non riuscita: {error}",
+        "en": "Collection install failed: {error}",
     },
     "menubar.restarted": {"it": "Servizio riavviato", "en": "Service restarted"},
     "menubar.up_to_date": {
@@ -335,16 +352,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Update collections ({count})",
     },
     "menubar.hub_up_to_date": {
-        "it": "Tutti i pacchetti hub sono aggiornati.",
-        "en": "All hub packages are up to date.",
+        "it": "Tutte le raccolte sono aggiornate.",
+        "en": "All collections are up to date.",
     },
     "menubar.hub_upgrade_title": {
-        "it": "Aggiornare il pacchetto hub?",
-        "en": "Upgrade this hub package?",
+        "it": "Aggiornare questa raccolta?",
+        "en": "Update this collection?",
     },
     "menubar.hub_upgraded": {
-        "it": "Pacchetto {package} aggiornato.",
-        "en": "Package {package} upgraded.",
+        "it": "Raccolta {collection} aggiornata.",
+        "en": "Collection {collection} updated.",
     },
     "editor.search_placeholder": {
         "it": "Cerca snippet",
@@ -577,8 +594,8 @@ _STRINGS: dict[str, dict[str, str]] = {
     "cli.wrote_file": {"it": "  - scritto {name}", "en": "  - wrote {name}"},
     "cli.warning": {"it": "  ! {message}", "en": "  ! {message}"},
     "cli.hub.up_to_date": {
-        "it": "Tutti i pacchetti hub installati sono aggiornati.",
-        "en": "All installed hub packages are up to date.",
+        "it": "Tutte le raccolte installate sono aggiornate.",
+        "en": "All installed collections are up to date.",
     },
     "cli.hub.outdated_line": {
         "it": "{package}: {local} → {remote}",
@@ -597,13 +614,13 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Start automatically",
     },
     "cli.hub.installed": {"it": "Installato {package} in {path}", "en": "Installed {package} to {path}"},
-    "cli.hub.removed": {"it": "Rimosso pacchetto {package}", "en": "Removed package {package}"},
+    "cli.hub.removed": {"it": "Rimossa raccolta {package}", "en": "Removed collection {package}"},
     "cli.hub.not_installed": {
-        "it": "Pacchetto non installato: {package}",
-        "en": "Package not installed: {package}",
+        "it": "Raccolta non installata: {package}",
+        "en": "Collection not installed: {package}",
     },
-    "cli.hub.already_installed": {"it": "Pacchetto già installato.", "en": "Package already installed."},
-    "cli.hub.no_selection": {"it": "Nessun pacchetto selezionato", "en": "No package selected"},
+    "cli.hub.already_installed": {"it": "Raccolta già installata.", "en": "Collection already installed."},
+    "cli.hub.no_selection": {"it": "Nessuna raccolta selezionata", "en": "No collection selected"},
     "cli.hub.installed_marker": {"it": " [installato]", "en": " [installed]"},
     "cli.hub.publish.ok": {
         "it": "Package {package_id} valido ({matches} snippet).",
@@ -677,7 +694,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Aggiornamento disponibile",
         "en": "Update available",
     },
-    "cli.packages.none": {"it": "Nessun pacchetto installato.", "en": "No packages installed."},
+    "cli.packages.none": {"it": "Nessuna raccolta installata.", "en": "No collections installed."},
     "cli.restored": {"it": "Configurazione ripristinata.", "en": "Configuration restored."},
     "cli.plugins.none": {"it": "Nessun plugin caricato.", "en": "No plugins loaded."},
     "cli.export.written": {"it": "Snippet esportato in {path}", "en": "Snippet exported to {path}"},
@@ -698,8 +715,8 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "registry.title": {"it": "Registry Expando", "en": "Expando registry"},
     "registry.index": {"it": "Hub index", "en": "Hub index"},
-    "registry.hub_packages": {"it": "Hub packages:", "en": "Hub packages:"},
-    "registry.installed_packages": {"it": "Package installati:", "en": "Installed packages:"},
+    "registry.hub_packages": {"it": "Raccolte disponibili:", "en": "Available collections:"},
+    "registry.installed_packages": {"it": "Raccolte installate:", "en": "Installed collections:"},
     "registry.plugins": {"it": "Plugin:", "en": "Plugins:"},
     "sync.config_dir": {"it": "Cartella config", "en": "Config directory"},
     "sync.resolved": {"it": "Percorso reale", "en": "Resolved path"},

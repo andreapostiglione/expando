@@ -216,7 +216,7 @@ def list_cmd(ctx: click.Context) -> None:
 @main.command()
 @click.argument("trigger")
 @click.argument("replace")
-@click.option("--file", "target_file", default="dev.yml", show_default=True, help="Match file to update")
+@click.option("--file", "target_file", default="base.yml", show_default=True, help="Snippet collection to update")
 @click.option("--if-app", multiple=True, help="Restrict snippet to app names")
 @click.option("--unless-app", multiple=True, help="Disable snippet in app names")
 @click.pass_context
@@ -251,7 +251,7 @@ def add(
     required=True,
     help="Built-in template id (email, signature, legal-it, dev, meeting)",
 )
-@click.option("--file", "target_file", default="dev.yml", show_default=True, help="Match file to update")
+@click.option("--file", "target_file", default="base.yml", show_default=True, help="Snippet collection to update")
 @click.pass_context
 def new_cmd(ctx: click.Context, trigger: str, template_id: str, target_file: str) -> None:
     """Create a snippet from a built-in template."""
@@ -327,9 +327,9 @@ def export_cmd(ctx: click.Context, trigger: str, output: Path | None) -> None:
 @main.command("duplicate")
 @click.argument("trigger")
 @click.argument("new_trigger")
-@click.option("--file", "target_file", default="dev.yml", show_default=True)
+@click.option("--file", "target_file", default=None, help="Snippet collection to update")
 @click.pass_context
-def duplicate_cmd(ctx: click.Context, trigger: str, new_trigger: str, target_file: str) -> None:
+def duplicate_cmd(ctx: click.Context, trigger: str, new_trigger: str, target_file: str | None) -> None:
     """Duplicate an editable snippet with a new trigger."""
     try:
         path = duplicate_snippet(

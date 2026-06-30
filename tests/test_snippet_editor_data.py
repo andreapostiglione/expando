@@ -62,8 +62,8 @@ def test_create_and_delete_snippet_entry(tmp_path: Path):
 
 def test_create_rejects_duplicate_trigger(tmp_path: Path):
     config_dir = _setup_config(tmp_path)
-    with pytest.raises(ValueError, match="already exists"):
-        create_snippet_entry(config_dir, ":old", "Duplicate")
+    with pytest.raises(ValueError, match="snippet"):
+        create_snippet_entry(config_dir, ":old", "Duplicate", target_file="dev.yml")
 
 
 def test_form_and_vars_round_trip(tmp_path: Path):
@@ -114,6 +114,16 @@ def test_entries_for_editor_marks_packages_readonly(tmp_path: Path):
     package_rows = [row for row in rows if row["source_file"] == "packages"]
     assert package_rows
     assert package_rows[0]["editable"] == "0"
+    assert ".yml" not in package_rows[0]["label"]
+
+
+def test_entries_for_editor_hides_storage_file_names(tmp_path: Path):
+    config_dir = _setup_config(tmp_path)
+    rows = entries_for_editor(config_dir)
+    old = next(row for row in rows if row["trigger"] == ":old")
+    assert old["label"] == ":old (Personale)"
+    assert ".yml" not in old["label"]
+    assert "dev" not in old["label"].lower()
 
 
 def test_duplicate_snippet_entry_to_other_file(tmp_path: Path):

@@ -80,10 +80,17 @@ def test_editor_ui_copy_is_not_yaml_or_dev_oriented() -> None:
         "editor.move.body",
         "editor.move.readonly",
         "editor.move.no_targets",
+        "menubar.installed",
+        "menubar.install_failed",
+        "menubar.hub_up_to_date",
+        "menubar.hub_upgrade_title",
+        "menubar.hub_upgraded",
     ]
     text = "\n".join(t(key) for key in keys)
     assert "YAML" not in text
     assert "hub" not in text.lower()
+    assert "pacchetto" not in text.lower()
+    assert "package" not in text.lower()
 
 
 def test_editor_source_copy_avoids_storage_terms() -> None:
@@ -97,7 +104,7 @@ def test_editor_source_copy_avoids_storage_terms() -> None:
             "src/expando/snippet_editor_ui.py",
         ]
     )
-    for forbidden in ["package hub", "match/", "file YAML", "YAML di destinazione"]:
+    for forbidden in ["package hub", "match/", "file YAML", "YAML di destinazione", "dev.yml"]:
         assert forbidden not in text
 
 
@@ -117,7 +124,7 @@ def test_build_search_controller_does_not_raise() -> None:
     from expando.ui_appkit import _build_search_controller
 
     controller = _build_search_controller(
-        [{"id": "0", "trigger": ":claude", "label": ":claude", "preview": "claude"}]
+        [{"id": "0", "trigger": ":hello", "label": ":hello", "preview": "Hello"}]
     )
     assert controller.window is not None
     assert controller.table_view.numberOfRows() == 1
@@ -130,7 +137,7 @@ def test_search_controller_keeps_selection_when_row_deselected() -> None:
     controller = _SearchController.alloc().initWithItems_(
         [
             {"id": "0", "trigger": ":date", "label": ":date", "preview": "06/19/2026"},
-            {"id": "1", "trigger": ":claude", "label": ":claude", "preview": "claude"},
+            {"id": "1", "trigger": ":hello", "label": ":hello", "preview": "Hello"},
         ]
     )
     controller.visible = list(controller.items)
@@ -143,14 +150,14 @@ def test_search_controller_keeps_selection_when_row_deselected() -> None:
     controller.table_view = _Table()
     item = controller._selected_item()
     assert item is not None
-    assert item["trigger"] == ":claude"
+    assert item["trigger"] == ":hello"
 
 
 def test_search_controller_accept_uses_focused_item() -> None:
     from expando.ui_appkit import _SearchController
 
     controller = _SearchController.alloc().initWithItems_(
-        [{"id": "3", "trigger": ":claude", "label": ":claude", "preview": "claude"}]
+        [{"id": "3", "trigger": ":hello", "label": ":hello", "preview": "Hello"}]
     )
     controller.visible = list(controller.items)
     controller._focused_item = controller.visible[0]
@@ -168,7 +175,7 @@ def test_search_controller_accept_uses_focused_item() -> None:
     ):
         controller.accept_(None)
 
-    assert controller.result == {"id": "3", "trigger": ":claude"}
+    assert controller.result == {"id": "3", "trigger": ":hello"}
 
 
 def test_configure_single_column_table_adds_column() -> None:

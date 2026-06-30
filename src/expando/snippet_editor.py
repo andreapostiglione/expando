@@ -14,6 +14,7 @@ from .snippet_editor_data import (
     parse_form_from_editor,
     parse_vars_from_editor,
     update_snippet_entry,
+    DEFAULT_SNIPPET_FILE,
 )
 from .snippet_editor_ui import run_snippet_editor
 
@@ -41,7 +42,7 @@ def _parse_editor_payload(payload: dict[str, str]) -> dict:
         "image": payload.get("image", "").strip(),
         "priority": priority,
         "force_clipboard": payload.get("force_clipboard", "").strip() in {"1", "true", "yes"},
-        "target_file": payload.get("target_file", "").strip() or "dev.yml",
+        "target_file": payload.get("target_file", "").strip() or DEFAULT_SNIPPET_FILE,
     }
 
 
@@ -51,7 +52,7 @@ def open_snippet_editor(config_dir: Path, *, initial_new: bool = False) -> dict[
     def reload() -> list[dict[str, str]]:
         rows = entries_for_editor(config_dir)
         for row in rows:
-            row["target_file"] = row.get("source_file", "dev.yml")
+            row["target_file"] = row.get("source_file", DEFAULT_SNIPPET_FILE)
         return rows
 
     def on_save(payload: dict[str, str]) -> str | None:

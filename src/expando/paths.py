@@ -60,7 +60,6 @@ def ensure_default_config(config_dir: Path, package_root: Path) -> None:
         "config/default.yml",
         "config/terminal.yml",
         "match/base.yml",
-        "match/dev.yml",
         "match/packages/core/snippets.yml",
         "plugins/example.py",
         "plugins/README.md",

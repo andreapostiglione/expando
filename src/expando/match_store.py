@@ -9,6 +9,9 @@ from .config import Match, normalize_match
 from .match_utils import extract_triggers
 
 
+DEFAULT_MATCH_FILE = "base.yml"
+
+
 def list_matches(config_dir: Path) -> list[tuple[Match, str]]:
     results: list[tuple[Match, str]] = []
     directory = config_dir / "match"
@@ -88,15 +91,24 @@ def format_match_list(config_dir: Path) -> str:
             scope += f" [bundle: {', '.join(match.if_bundle)}]"
         if match.if_title:
             scope += f" [title: {', '.join(match.if_title)}]"
-        lines.append(f"{trigger:20} {preview:40} ({source}){scope}")
+        lines.append(f"{trigger:20} {preview:40} ({_source_label(source)}){scope}")
     return "\n".join(lines)
+
+
+def _source_label(source: str) -> str:
+    if source == "packages":
+        return "Installed collection"
+    stem = Path(source).stem.strip().lower()
+    if stem in {"base", "dev", "default", "personal"}:
+        return "Personal"
+    return stem.replace("-", " ").replace("_", " ").title() or "Personal"
 
 
 def append_match_entry(
     config_dir: Path,
     entry: dict,
     *,
-    target_file: str = "dev.yml",
+    target_file: str = DEFAULT_MATCH_FILE,
 ) -> Path:
     path = config_dir / "match" / target_file
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -128,7 +140,7 @@ def append_match(
     trigger: str,
     replace: str,
     *,
-    target_file: str = "dev.yml",
+    target_file: str = DEFAULT_MATCH_FILE,
     if_app: list[str] | None = None,
     unless_app: list[str] | None = None,
 ) -> Path:
@@ -188,18 +200,18 @@ def duplicate_snippet(
     trigger: str,
     new_trigger: str,
     *,
-    target_file: str = "dev.yml",
+    target_file: str | None = None,
 ) -> Path:
     found = find_raw_match(config_dir, trigger, editable_only=True)
     if found is None:
         raise ValueError(f"Trigger not found in editable match files: {trigger}")
-    _path, _index, raw = found
+    source_path, _index, raw = found
     entry = dict(raw)
     if "trigger" in entry:
         entry["trigger"] = new_trigger
     else:
         entry["triggers"] = [new_trigger]
-    return append_match_entry(config_dir, entry, target_file=target_file)
+    return append_match_entry(config_dir, entry, target_file=target_file or source_path.name)
 
 
 def import_matches(config_dir: Path, source: Path, *, force: bool = False) -> list[str]:

@@ -7,7 +7,11 @@ import yaml
 
 from .config import Match, Variable, normalize_match
 from .forms import FormField
+from .i18n import t
 from .match_utils import extract_triggers
+
+
+DEFAULT_SNIPPET_FILE = "base.yml"
 
 
 def format_form_for_editor(form: list[FormField]) -> str:
@@ -140,17 +144,17 @@ def _parse_entry_id(entry_id: str) -> tuple[str, int]:
         raise ValueError(f"Invalid snippet id: {entry_id}")
     source_file, raw_index = entry_id.rsplit(":", 1)
     if source_file == "packages":
-        raise ValueError("Hub packages cannot be edited from the snippet editor")
+        raise ValueError(t("editor.installed_readonly"))
     return source_file, int(raw_index)
 
 
 def list_match_files(config_dir: Path) -> list[str]:
     directory = config_dir / "match"
     if not directory.exists():
-        return ["dev.yml"]
+        return [DEFAULT_SNIPPET_FILE]
     files = sorted(path.name for path in directory.glob("*.yml"))
     files.extend(sorted(path.name for path in directory.glob("*.yaml")))
-    return files or ["dev.yml"]
+    return files or [DEFAULT_SNIPPET_FILE]
 
 
 def _parse_csv_field(value: str) -> list[str] | None:
@@ -276,7 +280,7 @@ def move_snippet_entry(
 ) -> SnippetEntry:
     source_file, index = _parse_entry_id(entry_id)
     if source_file == target_file:
-        raise ValueError(f"Snippet is already in {target_file}")
+        raise ValueError(t("editor.already_in_collection"))
 
     source_path = _match_path(config_dir, source_file)
     source_data = _load_match_file(source_path)
@@ -289,7 +293,7 @@ def move_snippet_entry(
     if triggers:
         for item in _load_match_file(_match_path(config_dir, target_file)).get("matches", []) or []:
             if triggers[0] in extract_triggers(item):
-                raise ValueError(f"Trigger already exists in {target_file}: {triggers[0]}")
+                raise ValueError(t("editor.duplicate_trigger").format(trigger=triggers[0]))
 
     target_path = _match_path(config_dir, target_file)
     target_data = _load_match_file(target_path)
@@ -354,7 +358,7 @@ def create_snippet_entry(
     trigger: str,
     replace: str,
     *,
-    target_file: str = "dev.yml",
+    target_file: str = DEFAULT_SNIPPET_FILE,
     if_app: list[str] | None = None,
     unless_app: list[str] | None = None,
     if_bundle: list[str] | None = None,
@@ -374,7 +378,7 @@ def create_snippet_entry(
     matches = list(data.get("matches", []) or [])
     for item in matches:
         if trigger in extract_triggers(item):
-            raise ValueError(f"Trigger already exists in {target_file}: {trigger}")
+            raise ValueError(t("editor.duplicate_trigger").format(trigger=trigger))
     matches.append(
         _build_entry_dict(
             trigger,
@@ -437,7 +441,7 @@ def update_snippet_entry(
         if other_index == index:
             continue
         if trigger in extract_triggers(item):
-            raise ValueError(f"Trigger already exists in {source_file}: {trigger}")
+            raise ValueError(t("editor.duplicate_trigger").format(trigger=trigger))
 
     matches[index] = _build_entry_dict(
         trigger,
@@ -495,11 +499,12 @@ def entries_for_editor(config_dir: Path) -> list[dict[str, str]]:
             scope = f" [{', '.join(entry.match.if_app)}]"
         if entry.match.regex:
             scope += " [regex]"
+        collection = _collection_label(entry.source_file)
         rows.append(
             {
                 "id": entry.entry_id,
                 "trigger": trigger,
-                "label": f"{trigger} ({entry.source_file}){scope}",
+                "label": f"{trigger} ({collection}){scope}",
                 "preview": entry.match.replace,
                 "replace": entry.match.replace,
                 "if_app": ", ".join(entry.match.if_app),
@@ -520,3 +525,14 @@ def entries_for_editor(config_dir: Path) -> list[dict[str, str]]:
             }
         )
     return rows
+
+
+def _collection_label(source_file: str) -> str:
+    if source_file == "packages":
+        return t("editor.collection.installed")
+    name = Path(source_file).stem.strip().lower()
+    if name in {"base", "dev", "default", "personal"}:
+        return t("editor.collection.personal")
+    return name.replace("-", " ").replace("_", " ").title() or t(
+        "editor.collection.personal"
+    )

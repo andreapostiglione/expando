@@ -282,7 +282,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                     user_error(t("menubar.restore_invalid_rolled_back"))
                     return
                 raise
-            user_success(tf("menubar.hub_upgraded", package=package_id))
+                user_success(tf("menubar.hub_upgraded", collection=package_id))
             self._sync_enabled_label()
 
         def _browse_packages(self) -> None:
@@ -299,7 +299,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 return
             try:
                 install_hub_package(self.config_dir, str(package_id))
-                user_success(tf("menubar.installed", package=package_id))
+                user_success(tf("menubar.installed", collection=package_id))
                 self._sync_enabled_label()
             except Exception as exc:
                 user_error(tf("menubar.install_failed", error=exc))

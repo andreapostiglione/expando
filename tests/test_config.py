@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from expando.config import ConfigCompileError, Match, compile_matches, load_config, normalize_match
+from expando.paths import ensure_default_config
 
 
 def test_load_default_config():
@@ -10,6 +11,17 @@ def test_load_default_config():
     bundle = load_config(root / "default_config")
     assert len(bundle.matches) >= 3
     assert bundle.app.toggle_key == "ALT"
+    triggers = {trigger for match in bundle.matches for trigger in match.triggers}
+    assert ":claude" not in triggers
+    assert ":ultraclaude" not in triggers
+
+
+def test_fresh_user_config_does_not_copy_dev_shortcuts(tmp_path: Path):
+    root = Path(__file__).resolve().parents[1]
+    config_dir = tmp_path / "config"
+    ensure_default_config(config_dir, root)
+    assert (config_dir / "match" / "base.yml").exists()
+    assert not (config_dir / "match" / "dev.yml").exists()
 
 
 def test_compile_literal_and_regex():

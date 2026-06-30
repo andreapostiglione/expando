@@ -4,6 +4,15 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.22] — 2026-06-30
+
+### Changed
+- Fresh installs no longer copy developer shortcut snippets into the active user configuration.
+- The default personal snippet target is now `base.yml` instead of `dev.yml`.
+- The snippet editor list shows friendly collection names instead of internal file names.
+- Menu-bar collection messages avoid hub-package terminology.
+- README now prioritizes DMG install, permissions, and UI snippet creation before contributor CLI details.
+
 ## [3.29.21] — 2026-06-30
 
 ### Changed
@@ -226,6 +235,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.22]: https://github.com/andreapostiglione/expando/compare/v3.29.21...v3.29.22
 [3.29.21]: https://github.com/andreapostiglione/expando/compare/v3.29.20...v3.29.21
 [3.29.20]: https://github.com/andreapostiglione/expando/compare/v3.29.19...v3.29.20
 [3.29.19]: https://github.com/andreapostiglione/expando/compare/v3.29.18...v3.29.19

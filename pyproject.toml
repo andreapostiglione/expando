@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "expando"
-version = "3.29.21"
+version = "3.29.22"
 description = "A privacy-first, open-source text expander for macOS"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -32,10 +32,7 @@ where = ["src"]
     "default_config/config/default.yml",
     "default_config/config/terminal.yml",
 ]
-"default_config/match" = [
-    "default_config/match/base.yml",
-    "default_config/match/dev.yml",
-]
+"default_config/match" = ["default_config/match/base.yml"]
 "default_config/match/packages/core" = ["default_config/match/packages/core/snippets.yml"]
 "default_config/match/packages/dev" = ["default_config/match/packages/dev/snippets.yml"]
 "default_config/match/packages/email-it" = ["default_config/match/packages/email-it/snippets.yml"]

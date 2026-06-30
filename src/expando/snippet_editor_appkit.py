@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Callable
 
 from .i18n import t
+from .snippet_editor_data import DEFAULT_SNIPPET_FILE
 from .ui_appkit_runtime import (
     close_appkit_session,
     configure_single_column_table,
@@ -135,7 +136,7 @@ class _SnippetEditorController(NSObject):
             _set_field(self.force_clipboard_field, item.get("force_clipboard", ""))
             _set_field(
                 self.target_file_field,
-                item.get("target_file", item.get("source_file", "dev.yml")),
+                item.get("target_file", item.get("source_file", DEFAULT_SNIPPET_FILE)),
             )
         _set_view(self.form_view, item.get("form", ""))
         _set_view(self.vars_view, item.get("vars", ""))
@@ -179,7 +180,7 @@ class _SnippetEditorController(NSObject):
             _set_field(self.image_field, "")
             _set_field(self.priority_field, "")
             _set_field(self.force_clipboard_field, "")
-            target = (getattr(self, "match_files", None) or ["dev.yml"])[0]
+            target = (getattr(self, "match_files", None) or [DEFAULT_SNIPPET_FILE])[0]
             _set_field(self.target_file_field, target)
             self.when_view.setEditable_(True)
         self.form_view.setEditable_(True)
@@ -234,7 +235,7 @@ class _SnippetEditorController(NSObject):
         if item and item.get("editable", "1") != "1":
             self.showAlertMessage_(t("editor.duplicate.readonly"))
             return
-        target = item.get("source_file") or item.get("target_file") or "dev.yml"
+        target = item.get("source_file") or item.get("target_file") or DEFAULT_SNIPPET_FILE
         if not target:
             return
         handler = self.handlers.get("duplicate")
@@ -282,7 +283,7 @@ class _SnippetEditorController(NSObject):
         self._refresh_list()
 
     def _pick_target_file(self, title: str, message: str) -> str | None:
-        files = list(getattr(self, "match_files", []) or ["dev.yml"])
+        files = list(getattr(self, "match_files", []) or [DEFAULT_SNIPPET_FILE])
         return pick_list_item(
             files,
             title=title,
@@ -372,7 +373,7 @@ def run_snippet_editor(
             reload_items,
         )
         controller.config_dir = config_dir
-        controller.match_files = list(match_files or ["dev.yml"])
+        controller.match_files = list(match_files or [DEFAULT_SNIPPET_FILE])
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
             NSMakeRect(0, 0, 960, 660),
             NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
@@ -459,7 +460,7 @@ def run_snippet_editor(
         controller.if_app_field = _field(field_x, 566, field_w)
 
         controller.target_file_field = _hidden_field()
-        controller.target_file_field.setStringValue_((match_files or ["dev.yml"])[0])
+        controller.target_file_field.setStringValue_((match_files or [DEFAULT_SNIPPET_FILE])[0])
 
         controller.unless_app_field = _hidden_field()
         controller.if_bundle_field = _hidden_field()

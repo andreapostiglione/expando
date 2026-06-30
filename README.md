@@ -10,194 +10,57 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.21"><img src="https://img.shields.io/badge/version-3.29.21-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.22"><img src="https://img.shields.io/badge/version-3.29.22-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
 </p>
 
 ---
 
-## What's new
+## Public release status
 
 Full history: **[CHANGELOG.md](CHANGELOG.md)** · [GitHub Releases](https://github.com/andreapostiglione/expando/releases)
 
-### Release status
-
-The current public build is ready for normal macOS users:
+The current public build is designed for normal macOS users:
 
 - `Expando.dmg` is Developer ID signed, notarized, stapled, and accepted by Gatekeeper.
 - `Expando.app` inside the DMG passes deep codesign verification.
 - `appcast.xml` is signed for Sparkle updates.
+- The app embeds its own runtime, so users do not need Homebrew or Python.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.21 — Friendlier snippet UI (latest)
+macOS still requires **Accessibility** and **Input Monitoring** permissions. Expando cannot enable those automatically; the setup window opens the right System Settings panes and checks the status.
+
+## What's new
+
+### v3.29.22 — Public-ready defaults
 
 | Area | What's new |
 |------|------------|
-| **Snippet editor** | User-facing dialogs now say “collections” instead of YAML files or hub packages |
+| **First launch** | New installs start with neutral, useful snippets instead of developer shortcuts |
+| **Snippet editor** | Snippet lists show friendly collection names, not internal file names |
+| **Menu copy** | Menu actions talk about snippets and collections instead of developer terms |
+| **README** | User setup comes first; developer and CLI details moved lower |
+
+### v3.29.21 — Friendlier snippet UI
+
+| Area | What's new |
+|------|------------|
+| **Snippet editor** | User-facing dialogs say “collections” instead of storage terms |
 | **Onboarding** | Login-start copy is clearer and less implementation-oriented |
-
-### v3.29.20 — Self-contained macOS app
-
-| Area | What's new |
-|------|------------|
-| **DMG** | `Expando.app` now embeds its own Python 3.12 runtime, so normal users do not need Homebrew or Python installed |
-| **Homebrew** | The cask installs only `Expando.app`; `python@3.12` is no longer a user-facing dependency |
-| **Release checks** | The verifier fails if the app ships without the embedded runtime or if the launcher falls back to local developer paths |
-
-### v3.29.19 — Reliable native daemon start
-
-| Area | What's new |
-|------|------------|
-| **Daemon** | Restart/start now keeps using the installed `Expando.app` launcher instead of falling back to Python |
-| **Release checks** | The distribution verifier now starts the keyboard listener through the native launcher before a DMG can ship |
-
-### v3.29.18 — Native app identity and simpler onboarding
-
-| Area | What's new |
-|------|------------|
-| **macOS permissions** | The DMG/Homebrew app now runs through a native `Expando.app` launcher, so Privacy & Security asks for Expando instead of `python3.12` |
-| **Onboarding** | First-run setup now explains the two required macOS permissions in user-facing language |
-| **Menu bar** | Normal actions are front and center: New snippet, My snippets, snippet collections, pause, permissions, update |
-| **Snippet editor** | The editor hides YAML file details from the main form and keeps the layout spacious enough to avoid overlapping labels |
-
-### v3.29.17 — Accurate permission recovery
-
-| Area | What's new |
-|------|------------|
-| **Permissions** | `doctor`, onboarding, and the menu bar now detect the exact macOS TCC grant for the runtime that listens to the keyboard |
-| **Recovery** | If permissions break after an update, Expando shows setup again instead of silently reporting a false OK |
-| **Packaging** | Distribution dependency bundling now uses Python 3.12 explicitly, matching the app runtime |
-
-### v3.29.16 — Non-blocking update check
-
-| Area | What's new |
-|------|------------|
-| **Menu bar** | **Aggiorna Expando** no longer blocks the menu while Sparkle opens its interactive update UI |
-| **Sparkle** | Interactive update checks launch detached; background checks remain synchronous for release verification |
-
-### v3.29.15 — Clean healthy diagnostics
-
-| Area | What's new |
-|------|------------|
-| **Doctor** | Healthy installed apps no longer show permission-target notes as warnings |
-| **Diagnostics** | App/runtime guidance appears only when permissions actually need attention |
-
-### v3.29.14 — Installed-app runtime wording
-
-| Area | What's new |
-|------|------------|
-| **Doctor** | DMG/Homebrew launches that use the packaged Python runtime are shown as an installed app, not as development mode |
-| **Permissions** | Doctor keeps the exact macOS grant target visible without telling normal users they are in a dev setup |
-
-### v3.29.13 — Simpler menu and glass editor
-
-| Area | What's new |
-|------|------------|
-| **Menu bar** | Main menu now focuses on normal actions: New snippet, Manage snippets, Search, Pause, Permissions, Update Expando |
-| **Advanced** | Backup, restore, snippet library, diagnostics, and restart moved under **Advanced** |
-| **Snippet editor** | Native AppKit editor uses macOS visual-effect material and a simpler form with only user-facing fields visible |
-
-### v3.29.12 — Signed bundle seal fix
-
-| Area | What's new |
-|------|------------|
-| **Runtime** | First launch no longer writes Python bytecode into the signed app bundle |
-| **Release** | Distribution build removes `__pycache__` and verifies with bytecode writes disabled |
-
-### v3.29.11 — Sparkle helper runtime fix
-
-| Area | What's new |
-|------|------------|
-| **Sparkle** | Helper links with bundle-local framework RPATH, so it can load `Sparkle.framework` at runtime |
-| **Release** | Distribution verification fails if the helper is missing the Sparkle RPATH |
-
-### v3.29.10 — Runtime launch fix
-
-| Area | What's new |
-|------|------------|
-| **Runtime** | Distribution launcher uses Python 3.12 explicitly, matching bundled native PyObjC wheels |
-| **Homebrew** | Cask generators declare `python@3.12` as a dependency |
-| **Release** | Bundle verification imports PyObjC and `pynput.keyboard` before a DMG is shipped |
-
-### v3.29.9 — LaunchAgent bundle fix
-
-| Area | What's new |
-|------|------------|
-| **Autostart** | Bundled LaunchAgent startup resolves the installed app executable instead of falling back to a source-style venv |
-| **Release** | Distribution verification now checks the bundled launch script before notarized DMGs are shipped |
-
-### v3.29.8 — Editor UI cleanup
-
-| Area | What's new |
-|------|------------|
-| **Snippet editor** | Reworked native AppKit layout to remove overlapping labels and fields |
-| **Editing** | Text areas stay editable after loading snippets instead of being restyled as read-only |
-| **Selection** | Snippet list selection now updates the details panel through the correct AppKit delegate |
-| **Tests** | AppKit coverage checks text editability and direct-control frame overlap |
-
-### v3.29.7 — Snippet creation UX
-
-| Area | What's new |
-|------|------------|
-| **Menu bar** | Direct **New snippet** action opens the editor already in create mode |
-| **Editor** | New-snippet mode starts blank and clears advanced fields before saving |
-| **Tests** | UI bridge and editor coverage for menu-driven snippet creation |
-
-### v3.29.6 — Production hardening
-
-| Area | What's new |
-|------|------------|
-| **Menu bar** | Diagnostics in one click · snooze 1h/4h · badge when permissions are missing |
-| **Hub** | Upgrade packages from menu bar with YAML diff preview before applying |
-| **Wizard** | Live permission badges for Accessibility + Input Monitoring |
-| **Repair** | `expando doctor --repair` reinstalls outdated LaunchAgent plist |
-| **Release** | Distribution bundles verify runtime assets; DMG container and app bundle are signed/notarized; Sparkle appcast and Homebrew cask are verified; live TextEdit E2E is opt-in |
-
-### v3.28 — Stability hardening
-
-Production-focused reliability for the daemon, listener, and menu bar:
-
-| Area | What's improved |
-|------|-----------------|
-| **Listener** | Watchdog retries every 30s if pynput dies — no permanent dead listener |
-| **Engine** | Lock released before render/inject/undo — fixes freeze with form snippets + menu bar |
-| **Restart** | Menu bar restart waits for old PID to exit — no duplicate listeners |
-| **Crash recovery** | Crash reports feed `crash-loop.json`; safe mode + `doctor --repair` clears it |
-| **Config reload** | Waits for stable YAML files; last-good snapshot before applying changes |
-| **Daemon start** | Fails clearly if pid file never appears (no fake parent pid) |
-| **Permissions** | macOS notification on startup when Accessibility or Input Monitoring is missing |
-| **State files** | Atomic JSON writes for health, crash-loop, injection-health |
-| **LaunchAgent** | `ThrottleInterval` 15s to avoid crash-loop respawn storms |
-
-**401** passing automated tests (+ 8 opt-in/skipped E2E checks). Runtime permissions are required for the macOS grant target shown by setup or `expando doctor`; current DMG/Homebrew builds should appear as `Expando.app`.
-
-### Recent feature releases
-
-| Version | Highlights |
-|---------|------------|
-| **v3.27** | Snippet editor: duplicate/move between YAML files · Homebrew tap PR in release CI · native menu bar dialogs |
-| **v3.26** | Scheduled auto-backup · sync conflict detection · plugin allowlist · docs (YAML, Troubleshooting, Architecture) |
-| **v3.25** | `expando health` · support bundle · E2E secure-input + listener watchdog |
-| **v3.24** | `hub upgrade` / `hub outdated` · hub update badge in menu bar · 10 community packages |
-| **v3.18–v3.23** | Hub marketplace Pages · doctor full HTML/JSON · Sparkle/notarization CI · snippet editor AppKit |
-
-Community packages: `typing-it`, `meeting-it`, `writing-it`, `devops-it`, `finance-it`, and more — `expando hub list`.  
-Hub site: [andreapostiglione.github.io/expando/hub-marketplace.html](https://andreapostiglione.github.io/expando/hub-marketplace.html)
 
 ---
 
 ## What is Expando?
 
-Expando is an open-source, system-wide text expander for macOS. Write shortcuts like `:email` or `:claude` in any app — browser, Slack, Terminal, Notes — and they expand instantly into full text, dynamic values, or shell output.
+Expando is an open-source, system-wide text expander for macOS. Write shortcuts like `:email` or `:hello` in any app — browser, Slack, Mail, Notes — and they expand instantly into full text, dates, forms, or saved templates.
 
 **Everything stays on your Mac.** No cloud. No account. No telemetry.
 
 ```
-You type:     :claude
-Expando:      claude --dangerously-skip-permissions
+You type:     :hello
+Expando:      Hi there!
 ```
 
 ---
@@ -211,14 +74,11 @@ Expando:      claude --dangerously-skip-permissions
 | 🔎 | **Fuzzy search** | `⌘⇧E` → live filter + preview panel |
 | 📝 | **Multi-field forms** | Single-window input for dynamic snippets |
 | 🎯 | **Advanced app rules** | Filter by app name, bundle ID, or window title |
-| 📦 | **Packages** | Organize snippets in reusable bundles |
-| 🩺 | **Built-in doctor** | Permissions, repair mode, marketplace sync, crash/safe-mode status |
+| 📦 | **Snippet collections** | Add reusable sets for email, support, legal, sales, and more |
+| 🩺 | **Built-in status check** | Permission and listener checks from the menu bar |
 | 🔄 | **Self-healing** | Listener watchdog, crash-loop backoff, config rollback to last-good |
-| 📡 | **Hub marketplace** | Community packages, submit/review workflow, GitHub Pages |
 | ✨ | **Native Sparkle updates** | Signed DMG, appcast, helper smoke test in release CI |
-| 💾 | **Backup / restore** | One-command config export |
-| 🛡️ | **Shell sandbox** | Whitelist allowed shell commands |
-| 🐍 | **Hackable** | Plain Python + YAML — extend in minutes |
+| 💾 | **Backup / restore** | Manual backups from the menu bar |
 
 ---
 
@@ -240,15 +100,6 @@ macOS will require Accessibility and Input Monitoring permissions. That is expec
 brew install --cask andreapostiglione/tap/expando
 ```
 
-**From source (contributors/development):**
-
-```bash
-git clone https://github.com/andreapostiglione/expando.git
-cd expando
-./install.sh
-./scripts/build-macos-app.sh
-```
-
 Website: [andreapostiglione.github.io/expando](https://andreapostiglione.github.io/expando/)
 
 ### 2. Grant permissions
@@ -259,20 +110,38 @@ Open **System Settings → Privacy & Security** and enable:
 1. **Accessibility** — enable `Expando.app`
 2. **Input Monitoring** — enable `Expando.app`
 
-DMG and Homebrew installs should show `Expando.app`, not Python. If macOS shows `python3.12`, you are on an older build or a legacy repaired install; update or reinstall Expando.
+DMG and Homebrew installs should show `Expando.app`, not Python. If macOS shows `python3.12`, update or reinstall Expando.
 
-Verify from the menu bar with **Supporto → Controlla stato**. If you are running from source or have the CLI available:
+Verify from the menu bar with **Supporto → Controlla stato**.
+
+If snippets do not expand, open **Permessi macOS** from the menu bar and make sure both permissions are enabled for `Expando.app`.
+
+### 3. Create your first snippet
+
+1. Click the Expando menu bar icon.
+2. Choose **Nuovo snippet**.
+3. Enter an abbreviation, for example `:email`.
+4. Enter the text to paste.
+5. Click **Salva**.
+
+You can manage all snippets from **I miei snippet**.
+
+### 4. Keep Expando running
+
+DMG/Homebrew users can open `Expando.app` from `/Applications`. The setup window can enable automatic startup at login.
+
+## For Contributors And Power Users
+
+### Run from source
 
 ```bash
-expando doctor
-expando doctor --repair   # fix stale pid/locks, safe mode, orphan processes
+git clone https://github.com/andreapostiglione/expando.git
+cd expando
+./install.sh
+./scripts/build-macos-app.sh
 ```
 
-### 3. Run
-
-DMG/Homebrew users can open `Expando.app` from `/Applications`.
-
-Source/CLI users:
+### CLI quick start
 
 ```bash
 expando start
@@ -304,20 +173,20 @@ Or install auto-start at login:
 | `expando stop` | Stop daemon |
 | `expando restart` | Restart daemon |
 | `expando status` | Show process status |
-| `expando run` | Run in foreground (debug) |
+| `expando run` | Run in the foreground |
 | `expando path` | Print config directory |
 | `expando list` | List all snippets |
 | `expando add :trigger "text"` | Add a snippet |
-| `expando import ./dir` | Import YAML files |
+| `expando import ./dir` | Import snippet files |
 | `expando search` | Open snippet picker |
 | `expando match :trigger` | Test-render a trigger |
-| `expando edit` | Open `match/base.yml` |
+| `expando edit` | Open the personal snippet collection |
 | `expando doctor` | Full health check (permissions, listener, marketplace) |
 | `expando doctor --repair` | Repair stale pid, locks, orphans, safe mode |
 | `expando setup` | Permission onboarding wizard (macOS) |
 | `expando editor` | Graphical snippet editor (AppKit on macOS) |
 | `expando check-updates` | Check Sparkle appcast for new releases |
-| `expando plugins list` | List loaded Python plugins |
+| `expando plugins list` | List loaded plugins |
 | `expando migrate-espanso` | Import Espanso config with auto backup |
 | `expando migrate-textexpander` | Import TextExpander CSV or Settings.textexpander |
 | `expando migrate-raycast --source file.json` | Import Raycast snippets JSON export |
@@ -369,9 +238,9 @@ Each `migrate-*` command creates a config backup and prints a report (imported, 
 
 | Command | Description |
 |---------|-------------|
-| `expando hub list` | List official + approved community packages |
-| `expando hub install <id>` | Install a hub package into your config |
-| `expando hub publish ./pkg` | Validate, bundle, optionally register a local package |
+| `expando hub list` | List official + approved community collections |
+| `expando hub install <id>` | Install a snippet collection |
+| `expando hub publish ./pkg` | Validate, bundle, optionally register a local collection |
 | `expando hub validate-community` | Validate `packages/community/` (CI pre-submit gate) |
 | `expando hub validate-community --html` | Write trigger similarity dashboard HTML |
 | `expando hub submit init <id>` | Scaffold `hub.json` + `snippets.yml` for a new package |
@@ -392,7 +261,7 @@ Each `migrate-*` command creates a config backup and prints a report (imported, 
 
 ---
 
-## Configuration
+## Advanced Configuration
 
 Config lives at:
 
@@ -403,7 +272,6 @@ Config lives at:
 │   └── terminal.yml     # Profile for Terminal apps
 └── match/
     ├── base.yml         # Your snippets
-    ├── dev.yml          # Dev shortcuts
     └── packages/
         └── core/
             └── snippets.yml
@@ -446,8 +314,8 @@ matches:
 Use `{{USER}}`, `{{HOME}}`, or `{{cwd}}` directly in any `replace` field.
 
 ```yaml
-  - trigger: ":whoami"
-    replace: "{{USER}} @ {{cwd}}"
+  - trigger: ":home"
+    replace: "{{HOME}}"
 ```
 
 ### Interactive form
@@ -468,8 +336,8 @@ Use `{{USER}}`, `{{HOME}}`, or `{{cwd}}` directly in any `replace` field.
 ### Per-app rules
 
 ```yaml
-  - trigger: ":claude"
-    replace: "claude --dangerously-skip-permissions"
+  - trigger: ":project"
+    replace: "cd ~/Projects"
     if_app:
       - Terminal
       - iTerm2
@@ -574,45 +442,44 @@ shell_allowlist:
   - echo
   - git
   - pwd
-  - whoami
 ```
 
 ---
 
-## Packages & hub marketplace
+## Snippet Collections
 
-Drop snippet bundles into `match/packages/<name>/`. Expando loads them automatically.
+Install ready-made collections or drop snippet bundles into `match/packages/<name>/`. Expando loads them automatically.
 
 ```bash
-expando packages              # list installed packages
-expando hub list              # official + approved community packages
-expando hub search email      # search hub packages
-expando hub install core      # install an official package
+expando packages              # list installed collections
+expando hub list              # official + approved community collections
+expando hub search email      # search collections
+expando hub install core      # install an official collection
 expando hub install typing-it # community: address, phone, tax IDs (IT)
 expando hub install meeting-it
 expando hub install writing-it
-expando hub browse            # visual package picker (AppKit on macOS)
+expando hub browse            # visual collection picker (AppKit on macOS)
 expando import ./my-snippets/
 ```
 
-The official index lives in `packages/hub/index.json`. Approved community packages are merged from the remote marketplace (default: [GitHub Pages JSON](https://andreapostiglione.github.io/expando/hub/marketplace.json)). Override with `EXPANDO_HUB_INDEX_URL` or `EXPANDO_HUB_MARKETPLACE_URL`; disable remote with `EXPANDO_HUB_MARKETPLACE_DISABLE=1`.
+The official index lives in `packages/hub/index.json`. Approved community collections are merged from the remote marketplace (default: [GitHub Pages JSON](https://andreapostiglione.github.io/expando/hub/marketplace.json)). Override with `EXPANDO_HUB_INDEX_URL` or `EXPANDO_HUB_MARKETPLACE_URL`; disable remote with `EXPANDO_HUB_MARKETPLACE_DISABLE=1`.
 
 Full guide: [docs/HUB_MARKETPLACE.md](docs/HUB_MARKETPLACE.md)
 
-### Contribute a community package
+### Contribute a community collection
 
 ```bash
-# 1. Scaffold a new package folder
-expando hub submit init my-package --name "My Package" -o ~/hub-packages
+# 1. Scaffold a new collection folder
+expando hub submit init my-collection --name "My Collection" -o ~/hub-collections
 
 # 2. Edit hub.json + snippets.yml, then validate and bundle
-expando hub validate-community    # CI gate: structure + cross-package trigger lint
-expando hub submit run ~/hub-packages/my-package --queue
-expando hub submit status my-package
+expando hub validate-community
+expando hub submit run ~/hub-collections/my-collection --queue
+expando hub submit status my-collection
 
 # Maintainer review (local queue)
 expando hub review list --status pending
-expando hub review approve my-package --reviewer you
+expando hub review approve my-collection --reviewer you
 expando hub portal publish-site   # regenerate docs/hub-marketplace.html + JSON + trigger dashboard
 ```
 
@@ -714,7 +581,7 @@ expando/
 | Problem | Fix |
 |---------|-----|
 | Snippets don't expand | Open **Permessi macOS** from the menu bar; enable **Accessibility** and **Input Monitoring** for `Expando.app` |
-| `:claude` or another trigger stays typed | The keyboard listener is not receiving events. In macOS Privacy & Security, remove/re-enable `Expando.app` in both **Accessibility** and **Input Monitoring** |
+| A trigger stays typed | The keyboard listener is not receiving events. In macOS Privacy & Security, remove/re-enable `Expando.app` in both **Accessibility** and **Input Monitoring** |
 | Worked yesterday, dead today | `expando doctor --repair && expando restart` |
 | Menu bar restart broke snippets | Update and use **Supporto → Riavvia app** |
 | `python3.12` in Privacy settings | Update or reinstall Expando. Current DMG/Homebrew builds ask for `Expando.app` |
@@ -736,7 +603,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.21**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.22**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

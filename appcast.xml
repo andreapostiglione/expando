@@ -10,8 +10,8 @@
       <sparkle:version>3.29.21</sparkle:version>
       <sparkle:shortVersionString>3.29.21</sparkle:shortVersionString>
       <description><![CDATA[Expando 3.29.21 — see GitHub release notes for details.]]></description>
-      <pubDate>Tue, 30 Jun 2026 08:20:10 +0000</pubDate>
-      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v3.29.21/Expando.dmg" sparkle:edSignature="VlorbYQ9wnsp6aaSm9rmJM3LkPi+KS+IxFNc4E0RUVPBXfhsIOn7ueSLRpyF1LEwvAVgHHd/O++LTsNaJZelDw==" length="47913737" type="application/octet-stream"/>
+      <pubDate>Tue, 30 Jun 2026 08:20:32 +0000</pubDate>
+      <enclosure url="https://github.com/andreapostiglione/expando/releases/download/v3.29.21/Expando.dmg" sparkle:edSignature="ZXRxdTwXBlEGs00l7jCLWOsuHj/CY1wWVb5T2DuR0Neorr7Xvsn9xoZAKVNBFxHFgp2fGROz15L9htQCsRnNBQ==" length="47912958" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>

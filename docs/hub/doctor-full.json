@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-06-30T08:53:13+00:00",
+  "generated_at": "2026-06-30T09:03:46+00:00",
   "doctor": {
     "ok": true,
     "config_dir": "/Users/runner/Library/Application Support/expando",
@@ -54,7 +54,7 @@
   },
   "marketplace": {
     "version": 1,
-    "generated_at": "2026-06-30T08:53:13+00:00",
+    "generated_at": "2026-06-30T09:03:46+00:00",
     "remote_url": "https://andreapostiglione.github.io/expando/hub/marketplace.json",
     "available": true,
     "approved_count": 10,
@@ -161,12 +161,12 @@
       "ok": 1,
       "failed": 0,
       "last_ok": true,
-      "last_recorded_at": "2026-06-30T08:53:11+00:00",
+      "last_recorded_at": "2026-06-30T09:03:43+00:00",
       "recent_ok_rate": 1.0
     },
     "entries": [
       {
-        "recorded_at": "2026-06-30T08:53:11+00:00",
+        "recorded_at": "2026-06-30T09:03:43+00:00",
         "ok": true,
         "summary": {
           "pass": 11,
@@ -254,43 +254,18 @@
     "path": "/Users/runner/work/expando/expando/sparkle-benchmark-history.json",
     "version": 1,
     "stats": {
-      "total": 37,
+      "total": 38,
       "slow": 0,
       "failed": 0,
-      "last_helper_ms": 244.99,
-      "last_version": "3.29.23",
-      "last_recorded_at": "2026-06-30T08:53:12+00:00",
+      "last_helper_ms": 288.46,
+      "last_version": "3.29.24",
+      "last_recorded_at": "2026-06-30T09:03:44+00:00",
       "trend_min_ms": 214.0,
       "trend_max_ms": 470.81,
-      "trend_avg_ms": 292.89,
-      "trend_sparkline": "▁▅█▃▅▁▃▁▃▂▅▁▂"
+      "trend_avg_ms": 292.57,
+      "trend_sparkline": "▁▅█▃▅▁▃▁▃▂▅▁▂▃"
     },
     "entries": [
-      {
-        "recorded_at": "2026-06-28T13:54:34+00:00",
-        "version": "3.29.14",
-        "tag": "v3.29.14",
-        "warn_ms": 15000,
-        "fail_ms": 30000,
-        "slow": false,
-        "failed": false,
-        "benchmark": {
-          "sparkle_available": true,
-          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
-          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
-          "framework_present": true,
-          "appcast_fetch_ms": 89.77,
-          "helper_check_ms": 300.7,
-          "appcast_entries": 1,
-          "latest_version": "3.29.13",
-          "current_version": "3.29.14",
-          "update_available": false,
-          "helper_slow": false,
-          "helper_fail": false,
-          "warn_ms": 15000,
-          "fail_ms": 30000
-        }
-      },
       {
         "recorded_at": "2026-06-28T14:05:30+00:00",
         "version": "3.29.15",
@@ -515,12 +490,37 @@
           "warn_ms": 15000,
           "fail_ms": 30000
         }
+      },
+      {
+        "recorded_at": "2026-06-30T09:03:44+00:00",
+        "version": "3.29.24",
+        "tag": "v3.29.24",
+        "warn_ms": 15000,
+        "fail_ms": 30000,
+        "slow": false,
+        "failed": false,
+        "benchmark": {
+          "sparkle_available": true,
+          "app_bundle": "/Users/runner/work/expando/expando/Expando.app",
+          "helper_path": "/Users/runner/work/expando/expando/Expando.app/Contents/MacOS/expando-sparkle",
+          "framework_present": true,
+          "appcast_fetch_ms": 108.21,
+          "helper_check_ms": 288.46,
+          "appcast_entries": 1,
+          "latest_version": "3.29.23",
+          "current_version": "3.29.24",
+          "update_available": false,
+          "helper_slow": false,
+          "helper_fail": false,
+          "warn_ms": 15000,
+          "fail_ms": 30000
+        }
       }
     ]
   },
   "community_validation": {
     "version": 1,
-    "generated_at": "2026-06-30T08:53:14+00:00",
+    "generated_at": "2026-06-30T09:03:46+00:00",
     "ok": true,
     "packages": [
       {
@@ -616,5 +616,5 @@
     ]
   },
   "publish_context": "release-ci",
-  "release_context": "v3.29.23"
+  "release_context": "v3.29.24"
 }

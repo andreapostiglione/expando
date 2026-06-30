@@ -27,17 +27,35 @@ def test_distribution_bundle_scripts_verify_runtime_assets() -> None:
     assert "$RESOURCES/default_config" in embed
     assert "$RESOURCES/packages" in embed
     assert "--no-compile" in embed
-    assert "python3.12 is required for distribution dependency bundling" in embed
+    assert "Python 3.12 framework is required for distribution bundling" in embed
+    assert "Embedded Python.framework" in embed
+    assert "_normalize_python_framework_bundle" in embed
+    assert "_remove_broken_python_framework_symlinks" in embed
+    assert "CFBundlePackageType" in embed
+    assert "_embed_runtime_dylibs" in embed
+    assert "install_name_tool -change" in embed
+    assert "install_name_tool -add_rpath" in embed
+    assert "PYTHON_DYLIB_RPATH" in embed
+    assert "_adhoc_sign_runtime" in embed
     assert '"$PY312" -m pip install' in embed
     assert "find \"$SITE_PACKAGES\" -type d -name __pycache__" in embed
     assert "setenv(\"PYTHONDONTWRITEBYTECODE\"" in native_launcher
+    assert "/opt/homebrew/opt/python@3.12" not in native_launcher
+    assert "/usr/local/opt/python@3.12" not in native_launcher
+    assert "/Library/Frameworks/Python.framework" not in native_launcher
     assert "expando-launcher.c" in build
+    assert "-Wl,-rpath,@executable_path/../Frameworks" in build
     assert "Distribution launcher must be a native Mach-O executable" in verify
+    assert "Missing embedded Python.framework runtime" in verify
+    assert "Embedded Python.framework is missing bundle metadata" in verify
+    assert "Bundle contains local dynamic library references" in verify
     assert "PYTHONDONTWRITEBYTECODE=1" in verify
     assert "default_config/config/default.yml" in verify
     assert "packages/hub/index.json" in verify
     assert "python3.12 is required to verify bundled native dependencies" in verify
     assert "from pynput import keyboard" in verify
+    assert "import ssl" in verify
+    assert "import sqlite3" in verify
     assert "Native launcher failed to start the keyboard listener" in verify
 
 
@@ -90,7 +108,9 @@ def test_codesign_preserves_launcher_entitlements() -> None:
         '  --sign "$IDENTITY" "$APP/Contents/MacOS/expando"'
     )
     assert launcher_sign in script
-    assert "com.apple.security.cs.disable-library-validation" in entitlements
+    assert 'find "$APP/Contents/Frameworks" -type d -name "*.framework"' in script
+    assert "com.apple.security.cs.disable-library-validation" not in entitlements
+    assert "com.apple.security.automation.apple-events" in entitlements
 
 
 def test_appcast_generation_requires_sparkle_signature() -> None:
@@ -126,5 +146,5 @@ def test_homebrew_cask_generators_include_verified_url() -> None:
 
     assert 'verified: "github.com/andreapostiglione/expando/"' in bump
     assert 'verified: "github.com/andreapostiglione/expando/"' in tap_pr
-    assert 'depends_on formula: "python@3.12"' in bump
-    assert 'depends_on formula: "python@3.12"' in tap_pr
+    assert 'depends_on formula: "python@3.12"' not in bump
+    assert 'depends_on formula: "python@3.12"' not in tap_pr

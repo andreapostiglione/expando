@@ -31,6 +31,7 @@ if [[ "${EXPANDO_DISTRIBUTION:-0}" == "1" ]]; then
   chmod +x "$ROOT/scripts/embed-distribution-python.sh"
   "$ROOT/scripts/embed-distribution-python.sh" "$APP" "$ROOT"
   clang -Wall -Wextra -O2 -mmacosx-version-min=12.0 \
+    -Wl,-rpath,@executable_path/../Frameworks \
     "$ROOT/scripts/expando-launcher.c" \
     -o "$MACOS/expando"
 else

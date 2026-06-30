@@ -4,6 +4,16 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.20] — 2026-06-30
+
+### Changed
+- Distribution DMGs now embed `Python.framework` inside `Expando.app`, so fresh user installs no longer need Homebrew or a separate Python runtime.
+- Homebrew cask generation no longer declares `python@3.12` as an end-user dependency.
+
+### Fixed
+- Distribution verification now fails when the embedded Python runtime is missing.
+- The native launcher no longer contains fallback paths to Homebrew or `/Library/Frameworks`, avoiding dev-machine-specific launches in public builds.
+
 ## [3.29.19] — 2026-06-29
 
 ### Fixed
@@ -210,6 +220,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.20]: https://github.com/andreapostiglione/expando/compare/v3.29.19...v3.29.20
 [3.29.19]: https://github.com/andreapostiglione/expando/compare/v3.29.18...v3.29.19
 [3.29.18]: https://github.com/andreapostiglione/expando/compare/v3.29.17...v3.29.18
 [3.29.17]: https://github.com/andreapostiglione/expando/compare/v3.29.16...v3.29.17

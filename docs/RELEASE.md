@@ -2,6 +2,13 @@
 
 ## Local build (signed DMG)
 
+Distribution builds embed `Python.framework` into `Expando.app`. Install a framework
+Python 3.12 locally before building:
+
+```bash
+brew install python@3.12
+```
+
 ```bash
 chmod +x scripts/*.sh
 EXPANDO_DISTRIBUTION=1 EXPANDO_SIGN=1 EXPANDO_NOTARIZE=0 ./scripts/build-dmg.sh
@@ -71,6 +78,7 @@ brew install --cask andreapostiglione/tap/expando
 ```
 
 Update `Casks/expando.rb` in the tap with version + DMG `sha256` after each release.
+Do not add a `python@3.12` cask dependency; the public app bundle is self-contained.
 
 ### Export certificate
 

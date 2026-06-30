@@ -49,6 +49,11 @@ if [[ -f "$HELPER" ]] && file "$HELPER" | grep -q "Mach-O"; then
     --sign "$IDENTITY" "$HELPER"
 fi
 
+while IFS= read -r -d '' framework; do
+  codesign --force --options runtime --timestamp \
+    --sign "$IDENTITY" "$framework"
+done < <(find "$APP/Contents/Frameworks" -type d -name "*.framework" -print0 2>/dev/null)
+
 codesign --force --options runtime --timestamp \
   --entitlements "$ENTITLEMENTS" \
   --sign "$IDENTITY" "$APP"

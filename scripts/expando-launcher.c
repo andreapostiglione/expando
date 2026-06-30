@@ -94,34 +94,20 @@ static int find_python_runtime(
   size_t library_path_size
 ) {
   char embedded_home[PATH_MAX];
-  if (
-    snprintf(
-      embedded_home,
-      sizeof(embedded_home),
-      "%s/Contents/Frameworks/Python.framework/Versions/%s",
-      app_root,
-      EXPANDO_PYTHON_VERSION
-    ) < (int)sizeof(embedded_home)
-  ) {
+  int written = snprintf(
+    embedded_home,
+    sizeof(embedded_home),
+    "%s/Contents/Frameworks/Python.framework/Versions/%s",
+    app_root,
+    EXPANDO_PYTHON_VERSION
+  );
+  if (written >= 0 && (size_t)written < sizeof(embedded_home)) {
     if (python_runtime_from_home(embedded_home, library_path, library_path_size) == 0) {
       return copy_string(python_home, python_home_size, embedded_home);
     }
   }
 
-  const char *homes[] = {
-    "/opt/homebrew/opt/python@3.12/Frameworks/Python.framework/Versions/3.12",
-    "/usr/local/opt/python@3.12/Frameworks/Python.framework/Versions/3.12",
-    "/Library/Frameworks/Python.framework/Versions/3.12",
-    NULL
-  };
-
-  for (int index = 0; homes[index] != NULL; index += 1) {
-    if (python_runtime_from_home(homes[index], library_path, library_path_size) == 0) {
-      return copy_string(python_home, python_home_size, homes[index]);
-    }
-  }
-
-  fprintf(stderr, "Expando requires Python %s. Reinstall Expando from the DMG or Homebrew cask.\n", EXPANDO_PYTHON_VERSION);
+  fprintf(stderr, "Expando is missing its embedded Python %s runtime. Reinstall Expando.\n", EXPANDO_PYTHON_VERSION);
   return -1;
 }
 

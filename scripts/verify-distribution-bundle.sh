@@ -14,6 +14,16 @@ if [[ ! -d "$APP/Contents/Resources/site-packages/expando" ]]; then
   exit 1
 fi
 
+if [[ ! -f "$APP/Contents/Frameworks/Python.framework/Versions/3.12/Python" ]]; then
+  echo "Missing embedded Python.framework runtime" >&2
+  exit 1
+fi
+
+if [[ ! -f "$APP/Contents/Frameworks/Python.framework/Resources/Info.plist" ]]; then
+  echo "Embedded Python.framework is missing bundle metadata" >&2
+  exit 1
+fi
+
 if [[ ! -f "$APP/Contents/Resources/default_config/config/default.yml" ]]; then
   echo "Missing bundled default_config/config/default.yml" >&2
   exit 1
@@ -44,6 +54,21 @@ if grep -q '/Users/runner/' "$APP/Contents/MacOS/expando" 2>/dev/null; then
   exit 1
 fi
 
+LOCAL_DYLIB_REFS="$(
+  find "$APP" -type f \( -perm -111 -o -name "*.so" -o -name "*.dylib" -o -name Python -o -name "python3.12" \) -print0 2>/dev/null \
+    | while IFS= read -r -d '' candidate; do
+        if file "$candidate" | grep -q "Mach-O"; then
+          otool -L "$candidate" 2>/dev/null
+        fi
+      done \
+    | grep -E '/opt/homebrew|/usr/local|/Library/Frameworks/Python.framework' || true
+)"
+if [[ -n "$LOCAL_DYLIB_REFS" ]]; then
+  echo "Bundle contains local dynamic library references" >&2
+  printf '%s\n' "$LOCAL_DYLIB_REFS" >&2
+  exit 1
+fi
+
 SPARKLE_HELPER="$APP/Contents/MacOS/expando-sparkle"
 if [[ -x "$SPARKLE_HELPER" ]] && otool -L "$SPARKLE_HELPER" | grep -q '@rpath/Sparkle.framework'; then
   if ! otool -l "$SPARKLE_HELPER" | grep -q '@executable_path/../Frameworks'; then
@@ -71,6 +96,19 @@ assert keyboard is not None
 PY
 
 "$APP/Contents/MacOS/expando" --version >/dev/null
+"$APP/Contents/Frameworks/Python.framework/Versions/3.12/bin/python3.12" - <<'PY'
+import decimal
+import hashlib
+import lzma
+import sqlite3
+import ssl
+
+assert decimal.Decimal("1.2")
+assert hashlib.sha256(b"x").hexdigest()
+assert lzma is not None
+assert sqlite3.sqlite_version
+assert ssl.OPENSSL_VERSION
+PY
 RUN_CONFIG="$(mktemp -d)"
 "$APP/Contents/MacOS/expando" --config-dir "$RUN_CONFIG" run >"$RUN_CONFIG/run.log" 2>&1 &
 RUN_PID="$!"

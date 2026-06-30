@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.19"><img src="https://img.shields.io/badge/version-3.29.19-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.20"><img src="https://img.shields.io/badge/version-3.29.20-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,15 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.19 — Reliable native daemon start (latest)
+### v3.29.20 — Self-contained macOS app (latest)
+
+| Area | What's new |
+|------|------------|
+| **DMG** | `Expando.app` now embeds its own Python 3.12 runtime, so normal users do not need Homebrew or Python installed |
+| **Homebrew** | The cask installs only `Expando.app`; `python@3.12` is no longer a user-facing dependency |
+| **Release checks** | The verifier fails if the app ships without the embedded runtime or if the launcher falls back to local developer paths |
+
+### v3.29.19 — Reliable native daemon start
 
 | Area | What's new |
 |------|------------|
@@ -721,7 +729,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.19**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.20**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

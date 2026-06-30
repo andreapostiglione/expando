@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-from expando.doctor_repair import diagnose_daemon_state, repair_daemon_state
+from expando.doctor_repair import _is_stale_lock, diagnose_daemon_state, repair_daemon_state
+from expando.lock import SingleInstanceLock
 from expando.paths import lock_file, pid_file
 
 
@@ -74,6 +75,18 @@ def test_repair_releases_stale_lock(tmp_path: Path, monkeypatch):
 
     assert not lock_path.exists()
     assert any(action.startswith("released_stale_lock:") for action in result["actions"])
+
+
+def test_held_lock_with_empty_pid_is_not_stale(tmp_path: Path):
+    config_dir = _setup_config_dir(tmp_path)
+    lock_path = lock_file(config_dir)
+    lock = SingleInstanceLock(lock_path)
+    assert lock.acquire()
+    lock_path.write_text("", encoding="utf-8")
+    try:
+        assert _is_stale_lock(lock_path) is False
+    finally:
+        lock.release()
 
 
 def test_repair_clears_safe_mode(tmp_path: Path):

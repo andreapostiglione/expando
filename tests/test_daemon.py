@@ -101,6 +101,39 @@ def test_foreground_writes_pid_and_cleans_up(tmp_path: Path, monkeypatch: pytest
     assert not lock_file(config_dir).exists()
 
 
+def test_foreground_signal_handler_exits_after_cleanup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    config_dir = tmp_path / "expando"
+    (config_dir / "config").mkdir(parents=True)
+    (config_dir / "match").mkdir(parents=True)
+    (config_dir / "config" / "default.yml").write_text("toggle_key: OFF\n", encoding="utf-8")
+    (config_dir / "match" / "base.yml").write_text(
+        "matches:\n  - trigger: ':x'\n    replace: 'X'\n",
+        encoding="utf-8",
+    )
+    handlers = {}
+
+    def capture_signal(signum, handler):
+        handlers[signum] = handler
+
+    def fake_run_service(_config_dir: Path) -> None:
+        handlers[signal.SIGTERM](signal.SIGTERM, None)
+
+    import signal
+
+    monkeypatch.setattr("expando.daemon.signal.signal", capture_signal)
+    monkeypatch.setattr("expando.listener.run_service", fake_run_service)
+
+    with pytest.raises(SystemExit) as exc:
+        foreground(config_dir)
+
+    assert exc.value.code == 0
+    assert not pid_file(config_dir).exists()
+    assert not lock_file(config_dir).exists()
+
+
 def test_foreground_exits_when_already_running(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     config_dir = tmp_path / "expando"
     config_dir.mkdir(parents=True)

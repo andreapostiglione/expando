@@ -258,9 +258,13 @@ def foreground(config_dir: Path) -> None:
         pid_file(config_dir).unlink(missing_ok=True)
         lock.release()
 
+    def terminate(*_args) -> None:
+        cleanup()
+        raise SystemExit(0)
+
     register_foreground_cleanup(cleanup)
-    signal.signal(signal.SIGTERM, cleanup)
-    signal.signal(signal.SIGINT, cleanup)
+    signal.signal(signal.SIGTERM, terminate)
+    signal.signal(signal.SIGINT, terminate)
     try:
         run_service(config_dir)
     finally:

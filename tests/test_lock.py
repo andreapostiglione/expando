@@ -10,7 +10,9 @@ def test_single_instance_lock(tmp_path: Path):
     second = SingleInstanceLock(lock_path)
 
     assert first.acquire() is True
+    first_pid = lock_path.read_text(encoding="utf-8")
     assert second.acquire() is False
+    assert lock_path.read_text(encoding="utf-8") == first_pid
 
     first.release()
     assert second.acquire() is True
@@ -23,7 +25,9 @@ def test_single_instance_lock_non_blocking(tmp_path: Path):
     second = SingleInstanceLock(lock_path)
 
     assert first.acquire(blocking=False) is True
+    first_pid = lock_path.read_text(encoding="utf-8")
     assert second.acquire(blocking=False) is False
+    assert lock_path.read_text(encoding="utf-8") == first_pid
 
     first.release()
     assert second.acquire(blocking=False) is True

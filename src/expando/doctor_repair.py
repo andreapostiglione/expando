@@ -50,13 +50,6 @@ def _is_stale_lock(path: Path) -> bool:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
             return True
         except BlockingIOError:
-            holder = _lock_holder_pid(path)
-            if holder is None:
-                return True
-            try:
-                os.kill(holder, 0)
-            except OSError:
-                return True
             return False
     finally:
         handle.close()

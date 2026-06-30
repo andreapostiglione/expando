@@ -4,6 +4,13 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.23] — 2026-06-30
+
+### Fixed
+- Single-instance lock acquisition no longer truncates the live lock file before acquiring the file lock.
+- Doctor no longer reports an actively held lock as stale just because its PID text is missing.
+- Foreground daemon SIGTERM/SIGINT handling now exits after cleanup, preventing orphaned listener processes after stop, restart, or upgrade.
+
 ## [3.29.22] — 2026-06-30
 
 ### Changed
@@ -235,6 +242,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.23]: https://github.com/andreapostiglione/expando/compare/v3.29.22...v3.29.23
 [3.29.22]: https://github.com/andreapostiglione/expando/compare/v3.29.21...v3.29.22
 [3.29.21]: https://github.com/andreapostiglione/expando/compare/v3.29.20...v3.29.21
 [3.29.20]: https://github.com/andreapostiglione/expando/compare/v3.29.19...v3.29.20

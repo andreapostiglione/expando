@@ -8,7 +8,7 @@ jobs:
     if: vars.ENABLE_SELF_HOSTED_E2E == 'true'
     runs-on: [self-hosted, macos]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # setup-python@v6 hardcodes /Users/runner on macOS; use system/brew Python instead.
       - name: Setup Python

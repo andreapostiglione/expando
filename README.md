@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.20"><img src="https://img.shields.io/badge/version-3.29.20-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.21"><img src="https://img.shields.io/badge/version-3.29.21-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
@@ -32,7 +32,14 @@ The current public build is ready for normal macOS users:
 - `appcast.xml` is signed for Sparkle updates.
 - Homebrew cask `andreapostiglione/tap/expando` points to the same verified DMG.
 
-### v3.29.20 — Self-contained macOS app (latest)
+### v3.29.21 — Friendlier snippet UI (latest)
+
+| Area | What's new |
+|------|------------|
+| **Snippet editor** | User-facing dialogs now say “collections” instead of YAML files or hub packages |
+| **Onboarding** | Login-start copy is clearer and less implementation-oriented |
+
+### v3.29.20 — Self-contained macOS app
 
 | Area | What's new |
 |------|------------|
@@ -729,7 +736,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.20**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.21**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

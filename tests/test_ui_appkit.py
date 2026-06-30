@@ -71,6 +71,36 @@ def test_menubar_keeps_advanced_actions_out_of_main_menu() -> None:
     assert advanced_only.issubset(set(advanced))
 
 
+def test_editor_ui_copy_is_not_yaml_or_dev_oriented() -> None:
+    from expando.i18n import t
+
+    keys = [
+        "editor.duplicate.body",
+        "editor.duplicate.readonly",
+        "editor.move.body",
+        "editor.move.readonly",
+        "editor.move.no_targets",
+    ]
+    text = "\n".join(t(key) for key in keys)
+    assert "YAML" not in text
+    assert "hub" not in text.lower()
+
+
+def test_editor_source_copy_avoids_storage_terms() -> None:
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    text = "\n".join(
+        (root / path).read_text(encoding="utf-8")
+        for path in [
+            "src/expando/snippet_editor_appkit.py",
+            "src/expando/snippet_editor_ui.py",
+        ]
+    )
+    for forbidden in ["package hub", "match/", "file YAML", "YAML di destinazione"]:
+        assert forbidden not in text
+
+
 def test_load_menubar_nsimage_has_representations() -> None:
     import sys
 

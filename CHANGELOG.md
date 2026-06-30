@@ -4,6 +4,12 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.21] — 2026-06-30
+
+### Changed
+- Snippet editor dialogs now use user-facing “collection” wording instead of YAML or hub-package terminology.
+- First-run onboarding labels the login-start action as automatic startup rather than exposing LaunchAgent wording.
+
 ## [3.29.20] — 2026-06-30
 
 ### Changed
@@ -220,6 +226,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.21]: https://github.com/andreapostiglione/expando/compare/v3.29.20...v3.29.21
 [3.29.20]: https://github.com/andreapostiglione/expando/compare/v3.29.19...v3.29.20
 [3.29.19]: https://github.com/andreapostiglione/expando/compare/v3.29.18...v3.29.19
 [3.29.18]: https://github.com/andreapostiglione/expando/compare/v3.29.17...v3.29.18

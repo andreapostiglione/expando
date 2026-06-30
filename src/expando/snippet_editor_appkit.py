@@ -215,7 +215,7 @@ class _SnippetEditorController(NSObject):
             return
         item = self._selected_item()
         if item and item.get("editable", "1") != "1":
-            self.showAlertMessage_("I package hub non possono essere eliminati da qui.")
+            self.showAlertMessage_("Le raccolte installate non possono essere eliminate da qui.")
             return
         error = self.handlers["delete"](self.current_id)
         if error:

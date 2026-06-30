@@ -220,34 +220,34 @@ _STRINGS: dict[str, dict[str, str]] = {
     "editor.duplicate.button": {"it": "Duplica", "en": "Duplicate"},
     "editor.duplicate.title": {"it": "Duplica snippet", "en": "Duplicate snippet"},
     "editor.duplicate.body": {
-        "it": "Scegli il file YAML di destinazione.",
-        "en": "Choose the destination YAML file.",
+        "it": "Scegli la raccolta di destinazione.",
+        "en": "Choose the destination collection.",
     },
     "editor.duplicate.select": {
         "it": "Seleziona uno snippet da duplicare.",
         "en": "Select a snippet to duplicate.",
     },
     "editor.duplicate.readonly": {
-        "it": "I package hub non possono essere duplicati da qui.",
-        "en": "Hub packages cannot be duplicated from here.",
+        "it": "Le raccolte installate non possono essere duplicate da qui.",
+        "en": "Installed collections cannot be duplicated here.",
     },
     "editor.move.button": {"it": "Sposta", "en": "Move"},
     "editor.move.title": {"it": "Sposta snippet", "en": "Move snippet"},
     "editor.move.body": {
-        "it": "Scegli il file YAML di destinazione.",
-        "en": "Choose the destination YAML file.",
+        "it": "Scegli la raccolta di destinazione.",
+        "en": "Choose the destination collection.",
     },
     "editor.move.select": {
         "it": "Seleziona uno snippet da spostare.",
         "en": "Select a snippet to move.",
     },
     "editor.move.readonly": {
-        "it": "I package hub non possono essere spostati da qui.",
-        "en": "Hub packages cannot be moved from here.",
+        "it": "Le raccolte installate non possono essere spostate da qui.",
+        "en": "Installed collections cannot be moved here.",
     },
     "editor.move.no_targets": {
-        "it": "Non ci sono altri file YAML disponibili.",
-        "en": "There are no other YAML files available.",
+        "it": "Non ci sono altre raccolte disponibili.",
+        "en": "There are no other collections available.",
     },
     "menubar.restore_failed": {
         "it": "Ripristino fallito: {error}",
@@ -593,8 +593,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "{count} hub updates available: {packages} (run `expando hub outdated`)",
     },
     "wizard.install_launch_agent": {
-        "it": "Apri al login",
-        "en": "Open at login",
+        "it": "Avvia automaticamente",
+        "en": "Start automatically",
     },
     "cli.hub.installed": {"it": "Installato {package} in {path}", "en": "Installed {package} to {path}"},
     "cli.hub.removed": {"it": "Rimosso pacchetto {package}", "en": "Removed package {package}"},

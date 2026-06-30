@@ -214,7 +214,7 @@ class SnippetEditor:
         self.status_var.set(
             "Modifica lo snippet selezionato."
             if editable
-            else "I package hub sono in sola lettura. Installa in match/ per modificarli."
+            else "Le raccolte installate sono in sola lettura."
         )
         self._update_preview()
 
@@ -248,7 +248,7 @@ class SnippetEditor:
         self.vars_text.delete("1.0", tk.END)
         self.replace_text.configure(state=tk.NORMAL)
         self.replace_text.delete("1.0", tk.END)
-        self.status_var.set("Nuovo snippet — salva per aggiungerlo a dev.yml.")
+        self.status_var.set("Nuovo snippet — salva per aggiungerlo alla tua raccolta.")
         self._update_preview()
 
     def _save_snippet(self) -> None:
@@ -276,7 +276,7 @@ class SnippetEditor:
             messagebox.showinfo("Expando", "Seleziona uno snippet da eliminare.")
             return
         if self._selected_item() and self._selected_item().get("editable", "1") != "1":
-            messagebox.showerror("Expando", "I package hub non possono essere eliminati da qui.")
+            messagebox.showerror("Expando", "Le raccolte installate non possono essere eliminate da qui.")
             return
         if not messagebox.askyesno("Expando", "Eliminare questo snippet?"):
             return

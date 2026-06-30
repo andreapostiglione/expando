@@ -4,6 +4,11 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.24] — 2026-06-30
+
+### Fixed
+- Lock files are now opened without truncating existing holder information and without append-mode PID concatenation after restart.
+
 ## [3.29.23] — 2026-06-30
 
 ### Fixed
@@ -242,6 +247,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.24]: https://github.com/andreapostiglione/expando/compare/v3.29.23...v3.29.24
 [3.29.23]: https://github.com/andreapostiglione/expando/compare/v3.29.22...v3.29.23
 [3.29.22]: https://github.com/andreapostiglione/expando/compare/v3.29.21...v3.29.22
 [3.29.21]: https://github.com/andreapostiglione/expando/compare/v3.29.20...v3.29.21

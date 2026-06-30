@@ -16,6 +16,7 @@ def test_single_instance_lock(tmp_path: Path):
 
     first.release()
     assert second.acquire() is True
+    assert lock_path.read_text(encoding="utf-8") == str(os.getpid())
     second.release()
 
 
@@ -31,4 +32,5 @@ def test_single_instance_lock_non_blocking(tmp_path: Path):
 
     first.release()
     assert second.acquire(blocking=False) is True
+    assert lock_path.read_text(encoding="utf-8") == str(os.getpid())
     second.release()

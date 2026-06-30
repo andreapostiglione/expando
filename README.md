@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.23"><img src="https://img.shields.io/badge/version-3.29.23-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.24"><img src="https://img.shields.io/badge/version-3.29.24-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
@@ -33,6 +33,12 @@ The current public build is designed for normal macOS users:
 macOS still requires **Accessibility** and **Input Monitoring** permissions. Expando cannot enable those automatically; the setup window opens the right System Settings panes and checks the status.
 
 ## What's new
+
+### v3.29.24 — Lock file correctness
+
+| Area | What's new |
+|------|------------|
+| **Daemon lock** | Lock files are updated in-place after restart instead of appending PID text |
 
 ### v3.29.23 — Clean restart and doctor state
 
@@ -610,7 +616,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.23**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.24**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

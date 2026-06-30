@@ -12,7 +12,8 @@ class SingleInstanceLock:
 
     def acquire(self, *, blocking: bool = False) -> bool:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._handle = open(self.path, "a+", encoding="utf-8")
+        mode = "r+" if self.path.exists() else "w+"
+        self._handle = open(self.path, mode, encoding="utf-8")
         flags = fcntl.LOCK_EX if blocking else fcntl.LOCK_EX | fcntl.LOCK_NB
         try:
             fcntl.flock(self._handle.fileno(), flags)

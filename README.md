@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.24"><img src="https://img.shields.io/badge/version-3.29.24-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.25"><img src="https://img.shields.io/badge/version-3.29.25-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
@@ -34,6 +34,15 @@ macOS still requires **Accessibility** and **Input Monitoring** permissions. Exp
 
 ## What's new
 
+### v3.29.25 — Expansion reliability
+
+| Area | What's new |
+|------|------------|
+| **Triggers** | Printable keys are handled on key-press so Shift+punctuation (e.g. `:grok` on Italian keyboards) expands more reliably |
+| **Terminals** | Trigger delete uses reliable backspaces (no partial leftovers like `:grogrok` before paste) |
+| **Same-line retype** | After an expansion, a short mute + buffer clear so delete and type another trigger on the same line works |
+| **Latency** | Skips a slow Secure Input AX probe when Carbon already reports inactive; caches app context and profile YAML |
+
 ### v3.29.24 — Lock file correctness
 
 | Area | What's new |
@@ -55,13 +64,6 @@ macOS still requires **Accessibility** and **Input Monitoring** permissions. Exp
 | **Snippet editor** | Snippet lists show friendly collection names, not internal file names |
 | **Menu copy** | Menu actions talk about snippets and collections instead of developer terms |
 | **README** | User setup comes first; developer and CLI details moved lower |
-
-### v3.29.21 — Friendlier snippet UI
-
-| Area | What's new |
-|------|------------|
-| **Snippet editor** | User-facing dialogs say “collections” instead of storage terms |
-| **Onboarding** | Login-start copy is clearer and less implementation-oriented |
 
 ---
 
@@ -593,8 +595,8 @@ expando/
 
 | Problem | Fix |
 |---------|-----|
-| Snippets don't expand | Open **Permessi macOS** from the menu bar; enable **Accessibility** and **Input Monitoring** for `Expando.app` |
-| A trigger stays typed | The keyboard listener is not receiving events. In macOS Privacy & Security, remove/re-enable `Expando.app` in both **Accessibility** and **Input Monitoring** |
+| Snippets don't expand | Open **Permessi macOS** from the menu bar; enable **Accessibility** and **Input Monitoring** for `Expando.app` (not only `python3.x`) |
+| A trigger stays typed / needs retries | Often Input Monitoring missing for `Expando.app`, or Shift+punctuation lost on non-US layouts — grant both privacy panes for `Expando.app` and retry; `//trigger` style aliases avoid Shift |
 | Worked yesterday, dead today | `expando doctor --repair && expando restart` |
 | Menu bar restart broke snippets | Update and use **Supporto → Riavvia app** |
 | `python3.12` in Privacy settings | Update or reinstall Expando. Current DMG/Homebrew builds ask for `Expando.app` |
@@ -616,7 +618,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.24**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.25**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

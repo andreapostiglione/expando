@@ -41,7 +41,7 @@ macOS still requires **Accessibility** and **Input Monitoring** permissions. Exp
 | **Triggers** | Printable keys are handled on key-press so Shift+punctuation (e.g. `:grok` on Italian keyboards) expands more reliably |
 | **Terminals** | Trigger delete uses reliable backspaces (no partial leftovers like `:grogrok` before paste) |
 | **Same-line retype** | After an expansion, a short mute + buffer clear so delete and type another trigger on the same line works |
-| **Latency** | Skips a slow Secure Input AX probe when Carbon already reports inactive; caches app context and profile YAML |
+| **Latency** | Skips a slow Secure Input AX probe when Carbon already reports inactive; caches profile YAML by mtime |
 
 ### v3.29.24 — Lock file correctness
 

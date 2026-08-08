@@ -36,13 +36,10 @@ def _run_applescript(script: str) -> str | None:
 
 
 _CONTEXT_CACHE: TimedCache[AppContext] = TimedCache(ttl_seconds=1.0)
-# Short TTL for the fast NSWorkspace path: called on every keystroke.
-_FAST_CONTEXT_CACHE: TimedCache[AppContext] = TimedCache(ttl_seconds=0.15)
 
 
 def invalidate_frontmost_context_cache() -> None:
     _CONTEXT_CACHE.invalidate()
-    _FAST_CONTEXT_CACHE.invalidate()
 
 
 def _fetch_frontmost_context_nsworkspace() -> AppContext | None:
@@ -122,13 +119,12 @@ def _fetch_frontmost_context_slow() -> AppContext:
 
 
 def get_frontmost_context() -> AppContext:
-    def _fast() -> AppContext:
-        fast = _fetch_frontmost_context_nsworkspace()
-        if fast is not None:
-            return fast
-        return _CONTEXT_CACHE.get(_fetch_frontmost_context_slow)
-
-    return _FAST_CONTEXT_CACHE.get(_fast)
+    # NSWorkspace path must not be cached: profile filters and app rules need the
+    # real frontmost app on every keystroke (see test_app_context_fresh).
+    fast = _fetch_frontmost_context_nsworkspace()
+    if fast is not None:
+        return fast
+    return _CONTEXT_CACHE.get(_fetch_frontmost_context_slow)
 
 
 def get_frontmost_app() -> str | None:

@@ -74,13 +74,15 @@ def _probe_secure_input_ax() -> bool:
 
 
 def _probe_secure_input_active() -> bool:
+    # Prefer the fast Carbon probe. The AX/osascript fallback costs ~300ms and
+    # runs on the expansion path. Only fall back when the native probe is
+    # unavailable (None), not when it explicitly reports inactive.
     native = _probe_secure_input_native()
     if native is True:
         return True
-    ax = _probe_secure_input_ax()
     if native is False:
-        return ax
-    return ax
+        return False
+    return _probe_secure_input_ax()
 
 
 def is_secure_input_active() -> bool:

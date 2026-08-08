@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -470,6 +471,9 @@ class ExpansionEngine:
             adjusted_cursor_left = cursor_left + len(suffix)
 
         try:
+            # Brief settle so the host app commits the last keystroke (expansion
+            # now runs on key-down for printable chars).
+            time.sleep(0.03)
             self.injector.delete_chars(len(typed_text))
             pasted_image = False
             if match.image and self._config_dir is not None:

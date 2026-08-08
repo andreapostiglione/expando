@@ -324,7 +324,7 @@ class KeyboardService:
         with self._state_lock:
             return self._injecting_depth > 0
 
-    def _schedule_injecting_end(self, delay: float = 0.15) -> None:
+    def _schedule_injecting_end(self, delay: float = 0.08) -> None:
         timer = threading.Timer(delay, self._finish_injecting)
         timer.daemon = True
         with self._state_lock:
@@ -334,9 +334,16 @@ class KeyboardService:
     def _finish_injecting(self) -> None:
         with self._state_lock:
             self._injecting_depth = max(0, self._injecting_depth - 1)
+            still_injecting = self._injecting_depth > 0
             self._injecting_timers = [
                 item for item in self._injecting_timers if item.is_alive()
             ]
+        # Clean buffer after synthetic keys drain so the next same-line trigger works.
+        if not still_injecting:
+            try:
+                self.engine.clear_buffer()
+            except Exception:
+                logger.debug("Failed to clear buffer after inject", exc_info=True)
 
     def _track_modifier_press(self, key) -> None:
         if key in {
@@ -390,23 +397,38 @@ class KeyboardService:
                 self._last_toggle_press = 0.0
             else:
                 self._last_toggle_press = now
-
-    def _on_release(self, key) -> None:
-        if is_ui_active() or self._is_injecting():
             return
-        self._track_modifier_release(key)
+
+        if self._is_injecting():
+            return
 
         try:
             if key == Key.backspace:
                 self.engine.handle_backspace()
                 return
 
+            # Printable chars on PRESS (not release). On non-US layouts,
+            # Shift+punctuation often loses key.char on release when Shift is
+            # released first — making triggers like ":grok" intermittent.
             if hasattr(key, "char") and key.char is not None:
-                self._maybe_expand(self.engine.handle_char(key.char))
-                return
+                char = key.char
+                self._run_expansion(lambda c=char: self.engine.handle_char(c))
+        except Exception:
+            logger.exception("Expansion failed")
 
-            if isinstance(key, Key):
-                self._maybe_expand(self.engine.handle_key(key))
+    def _on_release(self, key) -> None:
+        if is_ui_active():
+            self._track_modifier_release(key)
+            return
+        if self._is_injecting():
+            self._track_modifier_release(key)
+            return
+        self._track_modifier_release(key)
+
+        try:
+            # Word-break specials only; printable chars are handled on press.
+            if isinstance(key, Key) and key in {Key.space, Key.enter, Key.tab}:
+                self._run_expansion(lambda k=key: self.engine.handle_key(k))
         except Exception:
             logger.exception("Expansion failed")
 
@@ -421,10 +443,34 @@ class KeyboardService:
                 logger.debug("Failed to schedule snippet search on main thread", exc_info=True)
         threading.Thread(target=self.open_search, daemon=True).start()
 
+    def _run_expansion(self, action: Callable[[], bool]) -> None:
+        """Match+inject while ignoring synthetic key events.
+
+        Mute must be short: a long mute after expand made delete+retype of another
+        trigger on the same line fail (keys never entered the buffer).
+        """
+        self._set_injecting(True)
+        expanded = False
+        try:
+            expanded = bool(action())
+        finally:
+            if expanded:
+                try:
+                    self.engine.clear_buffer()
+                except Exception:
+                    logger.debug("Failed to clear buffer after expand", exc_info=True)
+                self._schedule_injecting_end(delay=0.08)
+            else:
+                self._set_injecting(False)
+
     def _maybe_expand(self, expanded: bool) -> None:
         if expanded:
+            try:
+                self.engine.clear_buffer()
+            except Exception:
+                logger.debug("Failed to clear buffer after expand", exc_info=True)
             self._set_injecting(True)
-            self._schedule_injecting_end()
+            self._schedule_injecting_end(delay=0.08)
 
 
 def build_service(config_dir: Path) -> KeyboardService:

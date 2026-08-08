@@ -9,10 +9,25 @@ import yaml
 from .app_context import app_matches_pattern, get_frontmost_app
 from .config import AppConfig
 
+# Cache profile YAML by path+mtime so the per-keystroke path does not re-parse.
+_PROFILE_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+
 
 def _load_profile_file(path: Path) -> dict[str, Any]:
+    key = str(path)
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return {}
+    cached = _PROFILE_CACHE.get(key)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
     with path.open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle) or {}
+        data = yaml.safe_load(handle) or {}
+    if not isinstance(data, dict):
+        data = {}
+    _PROFILE_CACHE[key] = (mtime, data)
+    return data
 
 
 def _profile_matches_app(profile_data: dict[str, Any], app_name: str | None) -> bool:

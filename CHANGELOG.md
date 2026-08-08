@@ -4,6 +4,19 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.25] — 2026-08-08
+
+### Fixed
+- Expansion reliability for Italian keyboard layouts: printable characters are now handled on key **press** instead of release, so Shift+punctuation triggers like `:grok` / `:claude` no longer drop the `:` when Shift is released early.
+- Partial trigger leftovers after expansion (e.g. `:grogrok`): delete always uses individual backspaces (Shift+Left selection is unreliable in terminals).
+- Second expansion on the same line after delete failed because inject mute lasted too long (~450ms) and swallowed the next trigger; mute is now short (~80ms) and the buffer is cleared after inject.
+- Secure Input check no longer runs a ~300ms AppleScript AX probe when Carbon already reports secure input as inactive (was adding typing lag on the event-tap path).
+- Frontmost-app lookup is cached briefly and profile YAML is cached by mtime so every keystroke is cheaper.
+
+### Changed
+- Clipboard paste path waits briefly after backspaces so terminals finish processing deletes before Cmd+V.
+- Injector typing path bulk-types simple strings when not forced to clipboard.
+
 ## [3.29.24] — 2026-06-30
 
 ### Fixed

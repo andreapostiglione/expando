@@ -26,11 +26,15 @@ class TextInjector:
         self._lock = threading.RLock()
 
     def delete_chars(self, count: int) -> None:
+        # Always individual backspaces. Selection shortcuts (Shift+Left) are
+        # unreliable in terminals and leave trigger leftovers before paste.
         with self._lock:
+            if count <= 0:
+                return
             for _ in range(count):
                 self.keyboard.press(Key.backspace)
                 self.keyboard.release(Key.backspace)
-                time.sleep(0.005)
+                time.sleep(0.012)
 
     def inject_image(self, image_path: Path) -> bool:
         if self._system != "Darwin":
@@ -69,16 +73,20 @@ class TextInjector:
         return len(text) >= self.settings.clipboard_threshold or "\n" in text
 
     def _inject_via_typing(self, text: str) -> None:
+        if "\n" not in text and "\t" not in text:
+            self.keyboard.type(text)
+            return
         for char in text:
             if char == "\n":
                 self.keyboard.press(Key.enter)
                 self.keyboard.release(Key.enter)
+                time.sleep(0.002)
             elif char == "\t":
                 self.keyboard.press(Key.tab)
                 self.keyboard.release(Key.tab)
+                time.sleep(0.002)
             else:
                 self.keyboard.type(char)
-            time.sleep(0.003)
 
     def _inject_via_clipboard(self, text: str) -> None:
         if self._system == "Darwin":
@@ -111,10 +119,12 @@ class TextInjector:
     def _mac_clipboard_paste(self, text: str) -> None:
         previous = subprocess.run(["pbpaste"], capture_output=True, text=True)
         subprocess.run(["pbcopy"], input=text, text=True, check=True)
+        # Let the target app finish processing backspaces before paste.
+        time.sleep(0.03)
         with self.keyboard.pressed(Key.cmd):
             self.keyboard.press("v")
             self.keyboard.release("v")
-        time.sleep(0.05)
+        time.sleep(0.06)
         if previous.returncode == 0:
             subprocess.run(["pbcopy"], input=previous.stdout, text=True)
 

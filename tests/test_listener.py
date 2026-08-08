@@ -17,11 +17,12 @@ class _KeyChar:
 
 
 def _type_chars(service: KeyboardService, text: str) -> None:
+    # Printable chars are handled on press (reliable for Shift+punctuation).
     for char in text:
-        service._on_release(_KeyChar(char))
+        service._on_press(_KeyChar(char))
 
 
-def test_listener_expands_on_char_release(keyboard_service: KeyboardService):
+def test_listener_expands_on_char_press(keyboard_service: KeyboardService):
     _type_chars(keyboard_service, ":hi")
     keyboard_service.engine.injector.delete_chars.assert_called_once_with(3)
     keyboard_service.engine.injector.inject.assert_called_once_with(

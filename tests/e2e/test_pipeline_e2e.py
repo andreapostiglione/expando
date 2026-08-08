@@ -15,8 +15,9 @@ class _KeyChar:
 
 
 def _type_chars(service: KeyboardService, text: str) -> None:
+    # Printable chars are handled on press (same as production listener).
     for char in text:
-        service._on_release(_KeyChar(char))
+        service._on_press(_KeyChar(char))
 
 
 def test_build_service_expands_trigger_end_to_end(e2e_config_dir):

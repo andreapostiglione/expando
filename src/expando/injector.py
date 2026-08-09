@@ -25,16 +25,18 @@ class TextInjector:
         self._system = platform.system()
         self._lock = threading.RLock()
 
-    def delete_chars(self, count: int) -> None:
+    def delete_chars(self, count: int, *, delay: float | None = None) -> None:
         # Always individual backspaces. Selection shortcuts (Shift+Left) are
         # unreliable in terminals and leave trigger leftovers before paste.
+        step = 0.012 if delay is None else max(0.0, float(delay))
         with self._lock:
             if count <= 0:
                 return
             for _ in range(count):
                 self.keyboard.press(Key.backspace)
                 self.keyboard.release(Key.backspace)
-                time.sleep(0.012)
+                if step:
+                    time.sleep(step)
 
     def inject_image(self, image_path: Path) -> bool:
         if self._system != "Darwin":
@@ -47,8 +49,11 @@ class TextInjector:
         force_clipboard: bool = False,
         *,
         cursor_left: int | None = None,
+        post_delete_settle: float | None = None,
     ) -> None:
         with self._lock:
+            if post_delete_settle and post_delete_settle > 0:
+                time.sleep(post_delete_settle)
             use_clipboard = force_clipboard or self._should_use_clipboard(text)
             if use_clipboard:
                 self._inject_via_clipboard(text)

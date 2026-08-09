@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.25"><img src="https://img.shields.io/badge/version-3.29.25-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.26"><img src="https://img.shields.io/badge/version-3.29.26-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
@@ -33,6 +33,17 @@ The current public build is designed for normal macOS users:
 macOS still requires **Accessibility** and **Input Monitoring** permissions. Expando cannot enable those automatically; the setup window opens the right System Settings panes and checks the status.
 
 ## What's new
+
+### v3.29.26 — Reliability + hot path + UX
+
+| Area | What's new |
+|------|------------|
+| **Terminal inject** | Per-app profiles: slower backspaces + clipboard force in Terminal/Warp/Cursor/etc. |
+| **Layout-safe triggers** | Defaults include `//hello`, `//date`, `//now` (no Shift needed) |
+| **Hot path** | Match/inject runs on a background worker (event-tap stays light) |
+| **Search** | Pin favorites (★) — pinned triggers sort first |
+| **Stats** | Menu: expansion counters + last expansion (local only) |
+| **Feedback** | Optional `notify_on_expand` toast after each expansion |
 
 ### v3.29.25 — Expansion reliability
 
@@ -618,7 +629,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.25**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.26**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

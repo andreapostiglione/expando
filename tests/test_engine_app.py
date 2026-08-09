@@ -34,7 +34,7 @@ def test_engine_expands_inside_if_app():
         [Match(triggers=[":hi"], replace="Hello", if_app=["Terminal"])]
     )
     engine.injector.inject = lambda *args, **kwargs: None  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),
@@ -49,7 +49,7 @@ def test_engine_respects_bundle_filter():
         [Match(triggers=[":hi"], replace="Hello", if_bundle=["com.apple.Terminal"])]
     )
     engine.injector.inject = lambda *args, **kwargs: None  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal", bundle_id="com.apple.Safari"),
@@ -63,7 +63,7 @@ def test_engine_force_break_expands_without_word_break():
         [Match(triggers=[":hi"], replace="Hello", word_break=True, force_break=True)]
     )
     engine.injector.inject = lambda *args, **kwargs: None  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),
@@ -78,7 +78,7 @@ def test_engine_word_break_replaces_trigger_and_separator():
     deleted: list[int] = []
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: deleted.append(count)  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: deleted.append(count)  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",

@@ -45,7 +45,7 @@ def test_engine_notifies_when_if_app_blocks():
     )
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",
@@ -86,7 +86,7 @@ def test_engine_notifies_shell_denied():
         block_notifier=notifier,
     )
     engine.injector.inject = lambda text, **kwargs: None  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",

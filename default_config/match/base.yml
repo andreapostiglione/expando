@@ -1,8 +1,13 @@
 matches:
-  - trigger: ":hello"
+  # Prefer // aliases on non-US keyboards (no Shift required for colon).
+  - triggers:
+      - ":hello"
+      - "//hello"
     replace: "Hi there!"
 
-  - trigger: ":date"
+  - triggers:
+      - ":date"
+      - "//date"
     replace: "{{mydate}}"
     vars:
       - name: mydate
@@ -10,7 +15,9 @@ matches:
         params:
           format: "%d/%m/%Y"
 
-  - trigger: ":now"
+  - triggers:
+      - ":now"
+      - "//now"
     replace: "{{ts}}"
     vars:
       - name: ts

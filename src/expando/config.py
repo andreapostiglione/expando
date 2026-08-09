@@ -34,6 +34,8 @@ class AppConfig:
     check_updates: bool = True
     update_feed_url: str = ""
     track_expansions: bool = False
+    notify_on_expand: bool = False
+    terminal_apps: list[str] = field(default_factory=list)
     plugins_allowlist: list[str] = field(default_factory=list)
     auto_backup: str = "weekly"
     auto_backup_retention: int = 7
@@ -223,6 +225,8 @@ def load_app_config(path: Path) -> AppConfig:
         check_updates=bool(data.get("check_updates", True)),
         update_feed_url=str(data.get("update_feed_url", "") or ""),
         track_expansions=bool(data.get("track_expansions", False)),
+        notify_on_expand=bool(data.get("notify_on_expand", False)),
+        terminal_apps=[str(item) for item in data.get("terminal_apps", []) or []],
         plugins_allowlist=[
             str(item) for item in data.get("plugins_allowlist", []) or []
         ],

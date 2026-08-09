@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import platform
+import queue
 import threading
 import time
 from pathlib import Path
@@ -89,6 +90,11 @@ class KeyboardService:
         self._listener_dead = False
         self.on_listener_dead: Callable[[], None] | None = None
         self.on_listener_recovered: Callable[[], None] | None = None
+        # Offload match+inject from the CGEventTap callback thread.
+        self._event_queue: queue.Queue[Callable[[], None] | None] = queue.Queue()
+        self._worker_stop = threading.Event()
+        self._worker: threading.Thread | None = None
+        self._async_enabled = False
         self._watchdog = ListenerWatchdog(
             is_alive=self.is_listener_alive,
             restart=self._restart_listener_with_health,
@@ -111,8 +117,16 @@ class KeyboardService:
                 logger.info("Search ignored: Expando is disabled")
                 return
             config = self.engine.config
-            items = build_search_items(config.matches, config.app)
-            picked = pick_snippet(items, app_config=config.app)
+            items = build_search_items(
+                config.matches,
+                config.app,
+                config_dir=self.config_dir,
+            )
+            picked = pick_snippet(
+                items,
+                app_config=config.app,
+                config_dir=self.config_dir,
+            )
             if not picked:
                 return
             text = resolve_snippet_text(picked.match, app_config=config.app)
@@ -235,11 +249,73 @@ class KeyboardService:
         from .ui_state import set_ui_active
 
         set_ui_active(False)
+        self._start_key_worker()
         self._sync_file_watcher()
         self.restart_listener()
         self._watchdog.start()
         self._schedule_permission_check()
         logger.info("Expando keyboard listener started")
+
+    def _start_key_worker(self) -> None:
+        if self._worker is not None and self._worker.is_alive():
+            self._async_enabled = True
+            return
+        self._worker_stop.clear()
+        self._worker = threading.Thread(
+            target=self._key_worker_loop,
+            name="expando-key-worker",
+            daemon=True,
+        )
+        self._worker.start()
+        self._async_enabled = True
+
+    def _stop_key_worker(self) -> None:
+        self._async_enabled = False
+        self._worker_stop.set()
+        try:
+            self._event_queue.put_nowait(None)
+        except Exception:
+            pass
+        worker = self._worker
+        if worker is not None and worker.is_alive():
+            worker.join(timeout=1.0)
+        self._worker = None
+        # Drain residual jobs so tests stay deterministic.
+        while True:
+            try:
+                item = self._event_queue.get_nowait()
+            except queue.Empty:
+                break
+            if item is not None:
+                try:
+                    item()
+                except Exception:
+                    logger.exception("Drained key worker job failed")
+
+    def _key_worker_loop(self) -> None:
+        while not self._worker_stop.is_set():
+            try:
+                item = self._event_queue.get(timeout=0.25)
+            except queue.Empty:
+                continue
+            if item is None:
+                break
+            try:
+                item()
+            except Exception:
+                logger.exception("Key worker job failed")
+
+    def _dispatch(self, action: Callable[[], None]) -> None:
+        """Run on worker thread when listening; sync when tests call handlers directly."""
+        if (
+            self._async_enabled
+            and self._worker is not None
+            and self._worker.is_alive()
+            and not self._worker_stop.is_set()
+        ):
+            self._event_queue.put(action)
+            return
+        action()
 
     def _schedule_permission_check(self) -> None:
         def _check() -> None:
@@ -308,6 +384,7 @@ class KeyboardService:
             if self._observer.is_alive():
                 logger.warning("Config file watcher did not stop within 2s")
             self._observer = None
+        self._stop_key_worker()
 
     def join(self) -> None:
         if self._listener:
@@ -399,22 +476,32 @@ class KeyboardService:
                 self._last_toggle_press = now
             return
 
+        # During inject mute, ignore synthetic backspaces/paste but allow real
+        # user typing so the next trigger on the same line is not dropped.
         if self._is_injecting():
-            return
-
-        try:
             if key == Key.backspace:
-                self.engine.handle_backspace()
                 return
-
-            # Printable chars on PRESS (not release). On non-US layouts,
-            # Shift+punctuation often loses key.char on release when Shift is
-            # released first — making triggers like ":grok" intermittent.
             if hasattr(key, "char") and key.char is not None:
                 char = key.char
-                self._run_expansion(lambda c=char: self.engine.handle_char(c))
-        except Exception:
-            logger.exception("Expansion failed")
+                if char.lower() == "v" and Key.cmd in self._pressed_modifiers:
+                    return
+            else:
+                return
+
+        if key == Key.backspace:
+            self._dispatch(self.engine.handle_backspace)
+            return
+
+        # Printable chars on PRESS (not release). On non-US layouts,
+        # Shift+punctuation often loses key.char on release when Shift is
+        # released first — making triggers like ":grok" intermittent.
+        if hasattr(key, "char") and key.char is not None:
+            char = key.char
+            self._dispatch(
+                lambda c=char: self._run_expansion(
+                    lambda: self.engine.handle_char(c)
+                )
+            )
 
     def _on_release(self, key) -> None:
         if is_ui_active():
@@ -425,12 +512,11 @@ class KeyboardService:
             return
         self._track_modifier_release(key)
 
-        try:
-            # Word-break specials only; printable chars are handled on press.
-            if isinstance(key, Key) and key in {Key.space, Key.enter, Key.tab}:
-                self._run_expansion(lambda k=key: self.engine.handle_key(k))
-        except Exception:
-            logger.exception("Expansion failed")
+        # Word-break specials only; printable chars are handled on press.
+        if isinstance(key, Key) and key in {Key.space, Key.enter, Key.tab}:
+            self._dispatch(
+                lambda k=key: self._run_expansion(lambda: self.engine.handle_key(k))
+            )
 
     def _schedule_open_search(self) -> None:
         if platform.system() == "Darwin":
@@ -449,7 +535,9 @@ class KeyboardService:
         Mute must be short: a long mute after expand made delete+retype of another
         trigger on the same line fail (keys never entered the buffer).
         """
-        self._set_injecting(True)
+        was_injecting = self._is_injecting()
+        if not was_injecting:
+            self._set_injecting(True)
         expanded = False
         try:
             expanded = bool(action())
@@ -459,8 +547,11 @@ class KeyboardService:
                     self.engine.clear_buffer()
                 except Exception:
                     logger.debug("Failed to clear buffer after expand", exc_info=True)
+                # Hold a single mute window for synthetic key drain.
+                with self._state_lock:
+                    self._injecting_depth = 1
                 self._schedule_injecting_end(delay=0.08)
-            else:
+            elif not was_injecting:
                 self._set_injecting(False)
 
     def _maybe_expand(self, expanded: bool) -> None:
@@ -477,9 +568,10 @@ def build_service(config_dir: Path) -> KeyboardService:
     def _on_expand(result) -> None:
         logger.info("Expanded %r -> %r", result.trigger, result.replacement)
         try:
-            from .expansion_stats import record_expansion
+            from .expansion_stats import record_expansion, record_last_expansion
 
             record_expansion(config_dir, result.trigger)
+            record_last_expansion(config_dir, result.trigger, result.replacement)
         except Exception:
             logger.exception("Failed to record expansion stats")
         try:
@@ -488,6 +580,27 @@ def build_service(config_dir: Path) -> KeyboardService:
             record_health_expansion(config_dir, result.trigger)
         except Exception:
             logger.debug("Failed to record expansion health metric", exc_info=True)
+        try:
+            from .config import load_app_config
+            from .i18n import tf
+            from .notifications import notify
+            from .paths import config_file
+
+            app = load_app_config(config_file(config_dir))
+            if app.notify_on_expand:
+                preview = (result.replacement or "").strip().replace("\n", " ")
+                if len(preview) > 48:
+                    preview = preview[:47] + "…"
+                notify(
+                    "Expando",
+                    tf(
+                        "notify.expanded",
+                        trigger=result.trigger,
+                        preview=preview or result.trigger,
+                    ),
+                )
+        except Exception:
+            logger.debug("Expansion toast failed", exc_info=True)
 
     engine = build_engine(config_dir, on_expand=_on_expand)
     return KeyboardService(config_dir=config_dir, engine=engine)

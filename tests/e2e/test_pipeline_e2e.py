@@ -26,7 +26,7 @@ def test_build_service_expands_trigger_end_to_end(e2e_config_dir):
     deleted: list[int] = []
 
     service.engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    service.engine.injector.delete_chars = lambda count: deleted.append(count)  # type: ignore[method-assign]
+    service.engine.injector.delete_chars = lambda count, **kwargs: deleted.append(count)  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",
@@ -43,7 +43,7 @@ def test_build_service_respects_if_app_filter(e2e_config_dir):
     injected: list[str] = []
 
     service.engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    service.engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    service.engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",
@@ -72,7 +72,7 @@ def test_build_service_expands_image_trigger_end_to_end(e2e_config_dir):
         lambda path: injected_images.append(path) or True
     )
     service.engine.injector.inject = lambda text, **kwargs: injected_text.append(text)  # type: ignore[method-assign]
-    service.engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    service.engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",
@@ -91,7 +91,7 @@ def test_build_service_undo_shortcut_end_to_end(e2e_config_dir):
     deleted: list[int] = []
 
     service.engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    service.engine.injector.delete_chars = lambda count: deleted.append(count)  # type: ignore[method-assign]
+    service.engine.injector.delete_chars = lambda count, **kwargs: deleted.append(count)  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",

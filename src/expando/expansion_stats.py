@@ -80,6 +80,9 @@ def format_stats_report(config_dir: Path) -> str:
         f"{t('stats.recording')}: {'on' if stats.enabled else 'off'}",
         f"{t('stats.total')}: {stats.total}",
     ]
+    last = load_last_expansion(config_dir)
+    if last:
+        lines.append(f"{t('stats.last')}: {last.get('trigger', '')}")
     if stats.updated_at:
         lines.append(f"{t('stats.updated')}: {stats.updated_at}")
     if stats.by_trigger:
@@ -90,3 +93,38 @@ def format_stats_report(config_dir: Path) -> str:
         ):
             lines.append(f"  {trigger:20} {count}")
     return "\n".join(lines)
+
+
+def top_triggers(config_dir: Path, *, limit: int = 20) -> list[tuple[str, int]]:
+    stats = load_stats(config_dir)
+    ranked = sorted(
+        stats.by_trigger.items(),
+        key=lambda item: (-item[1], item[0]),
+    )
+    return ranked[: max(0, limit)]
+
+
+def last_expansion_file(config_dir: Path) -> Path:
+    return config_dir / "last_expansion.json"
+
+
+def record_last_expansion(config_dir: Path, trigger: str, replacement: str) -> None:
+    path = last_expansion_file(config_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "trigger": trigger,
+        "replacement_preview": (replacement or "")[:120],
+        "at": datetime.now(timezone.utc).isoformat(),
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def load_last_expansion(config_dir: Path) -> dict:
+    path = last_expansion_file(config_dir)
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}

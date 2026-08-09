@@ -81,7 +81,7 @@ def run_engine_benchmark(
     engine = ExpansionEngine(config=config, injector=injector)
 
     engine.injector.inject = lambda text, **kwargs: None  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",

@@ -4,6 +4,20 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.26] — 2026-08-08
+
+### Added
+- **Inject profiles**: terminal-like apps (Terminal, iTerm, Warp, Cursor, VS Code, …) use longer backspace timing and force clipboard paste for safer expansion.
+- **Layout-safe default aliases**: fresh configs include `//hello`, `//date`, `//now` alongside colon triggers.
+- **Async key worker**: match/inject run off the CGEventTap callback thread so typing stays responsive.
+- **Search pins**: pin/unpin favorites from Support → menu; pinned triggers sort first in fuzzy search.
+- **Expansion stats menu**: Support → Expansion stats (with local last-expansion snapshot).
+- **Optional expand toast**: `notify_on_expand: true` in `config/default.yml`.
+- Soak tests for colon/`//`/`;` trigger aliases and inject profile selection.
+
+### Changed
+- While inject mute is active, synthetic Cmd+V/backspace are ignored but real user typing of the next trigger is still accepted (same-line retype).
+
 ## [3.29.25] — 2026-08-08
 
 ### Fixed

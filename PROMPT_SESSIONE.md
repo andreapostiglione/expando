@@ -1,7 +1,7 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.29.25 | **Branch:** main  
+**Versione:** 3.29.26 | **Branch:** main  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Ultima sessione (2026-08-08) — expansion reliability
@@ -45,3 +45,24 @@
 - Release DMG/appcast 3.29.25 + Homebrew cask bump
 - Queue asincrona fuori dall’event-tap per lag digitazione residuale
 - Trigger default senza `:` nei default package (layout non-US)
+
+## Sprint A+B+C (2026-08-08) → v3.29.26
+
+### A Reliability
+- inject_profiles: terminal apps force clipboard + slower backspace
+- default // aliases in base.yml
+- soak tests for : / // / ; triggers
+- inject mute allows real typing (blocks only synthetic Cmd+V/backspace)
+
+### B Hot path
+- async key worker off CGEventTap (`_dispatch` + queue)
+- unit test `test_async_key_worker`
+
+### C UX
+- search pins (search_pins.json) + ★ ranking
+- menubar stats + pin toggle
+- notify_on_expand optional toast + last_expansion.json
+
+### Verify
+- 411 unit tests pass; e2e pipeline 4 pass
+

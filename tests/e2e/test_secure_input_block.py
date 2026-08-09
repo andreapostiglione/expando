@@ -61,7 +61,7 @@ def test_engine_respects_secure_input_flag(e2e_config_dir, monkeypatch):
     injected: list[str] = []
     deleted: list[int] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: deleted.append(count)  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: deleted.append(count)  # type: ignore[method-assign]
 
     with patch(
         "expando.engine.get_frontmost_context",

@@ -22,7 +22,7 @@ def test_engine_ignore_case_trigger():
     )
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="iTerm2"),

@@ -23,12 +23,15 @@ def _type_chars(service: KeyboardService, text: str) -> None:
 
 
 def test_listener_expands_on_char_press(keyboard_service: KeyboardService):
+    from unittest.mock import ANY
+
     _type_chars(keyboard_service, ":hi")
-    keyboard_service.engine.injector.delete_chars.assert_called_once_with(3)
+    keyboard_service.engine.injector.delete_chars.assert_called_once_with(3, delay=ANY)
     keyboard_service.engine.injector.inject.assert_called_once_with(
         "Hello",
-        force_clipboard=False,
+        force_clipboard=ANY,
         cursor_left=None,
+        post_delete_settle=ANY,
     )
 
 
@@ -67,10 +70,22 @@ def test_listener_undo_shortcut(keyboard_service: KeyboardService):
     inject.assert_called_with(":hi")
 
 
-def test_listener_skips_expansion_while_injecting(keyboard_service: KeyboardService):
+def test_listener_ignores_synthetic_paste_while_injecting(keyboard_service: KeyboardService):
+    from pynput.keyboard import Key
+
+    keyboard_service._set_injecting(True)
+    keyboard_service._track_modifier_press(Key.cmd)
+    # Synthetic Cmd+V during inject must not pollute the buffer / expand.
+    keyboard_service._on_press(_KeyChar("v"))
+    keyboard_service.engine.injector.inject.assert_not_called()
+
+
+def test_listener_allows_user_typing_while_inject_mute(keyboard_service: KeyboardService):
+    # After an expansion, a short mute ignores synthetic keys but real typing
+    # of the next trigger must still work on the same line.
     keyboard_service._set_injecting(True)
     _type_chars(keyboard_service, ":hi")
-    keyboard_service.engine.injector.inject.assert_not_called()
+    keyboard_service.engine.injector.inject.assert_called()
 
 
 def test_listener_skips_when_ui_active(keyboard_service: KeyboardService, monkeypatch: pytest.MonkeyPatch):
@@ -88,14 +103,17 @@ def test_listener_config_reload_picks_up_new_match(
         "matches:\n  - trigger: ':bye'\n    replace: 'Goodbye'\n",
         encoding="utf-8",
     )
+    from unittest.mock import ANY
+
     keyboard_service.apply_config_reload()
     keyboard_service.engine.injector.inject.reset_mock()
     keyboard_service.engine.injector.delete_chars.reset_mock()
     _type_chars(keyboard_service, ":bye")
     keyboard_service.engine.injector.inject.assert_called_once_with(
         "Goodbye",
-        force_clipboard=False,
+        force_clipboard=ANY,
         cursor_left=None,
+        post_delete_settle=ANY,
     )
 
 

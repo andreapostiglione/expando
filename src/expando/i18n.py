@@ -705,10 +705,37 @@ _STRINGS: dict[str, dict[str, str]] = {
     "stats.config": {"it": "Config track_expansions", "en": "Config track_expansions"},
     "stats.recording": {"it": "Registrazione attiva", "en": "Recording enabled"},
     "stats.total": {"it": "Espansioni totali", "en": "Total expansions"},
+    "stats.last": {"it": "Ultima espansione", "en": "Last expansion"},
     "stats.updated": {"it": "Ultimo aggiornamento", "en": "Last updated"},
     "stats.by_trigger": {"it": "Per trigger:", "en": "By trigger:"},
     "stats.enabled": {"it": "Statistiche locali attivate.", "en": "Local stats recording enabled."},
     "stats.disabled": {"it": "Statistiche locali disattivate.", "en": "Local stats recording disabled."},
+    "menubar.stats": {"it": "Statistiche espansioni", "en": "Expansion stats"},
+    "menubar.stats_enable_title": {
+        "it": "Attivare le statistiche?",
+        "en": "Enable stats recording?",
+    },
+    "menubar.stats_enable_body": {
+        "it": "Expando può contare le espansioni in locale (niente cloud).",
+        "en": "Expando can count expansions locally (no cloud).",
+    },
+    "menubar.pin": {"it": "Fissa / togli pin ricerca", "en": "Pin / unpin search favorite"},
+    "menubar.pin_empty": {
+        "it": "Nessuno snippet da fissare.",
+        "en": "No snippets available to pin.",
+    },
+    "menubar.pin_added": {
+        "it": "Fissato in ricerca: {trigger}",
+        "en": "Pinned in search: {trigger}",
+    },
+    "menubar.pin_removed": {
+        "it": "Rimosso dai preferiti: {trigger}",
+        "en": "Unpinned: {trigger}",
+    },
+    "notify.expanded": {
+        "it": "Espanso {trigger} → {preview}",
+        "en": "Expanded {trigger} → {preview}",
+    },
     "stats.need_config": {
         "it": "Imposta track_expansions: true in config/default.yml per abilitare il conteggio.",
         "en": "Set track_expansions: true in config/default.yml to allow counting.",

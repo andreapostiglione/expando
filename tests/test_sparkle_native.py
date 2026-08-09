@@ -6,8 +6,9 @@ from expando.sparkle_native import (
 from expando.paths import package_root
 
 
-def test_sparkle_framework_path_when_missing():
-    bundle = package_root() / "Expando.app"
+def test_sparkle_framework_path_when_missing(tmp_path):
+    # Use a synthetic bundle so a local Expando.app checkout does not fail the test.
+    bundle = tmp_path / "Missing.app"
     assert sparkle_framework_path(bundle) is None
 
 

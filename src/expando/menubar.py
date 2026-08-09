@@ -47,6 +47,8 @@ _ADVANCED_MENU_KEYS: tuple[str, ...] = (
     "hub_updates",
     "restart",
     "health",
+    "stats",
+    "pin",
 )
 
 
@@ -98,6 +100,8 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 "hub": rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
                 "hub_updates": self.hub_updates_item,
                 "health": self.health_item,
+                "stats": rumps.MenuItem(t("menubar.stats"), callback=self.show_stats),
+                "pin": rumps.MenuItem(t("menubar.pin"), callback=self.pin_snippet),
                 "restart": rumps.MenuItem(t("menubar.restart"), callback=self.restart_service),
             }
             for key in _ADVANCED_MENU_KEYS:
@@ -183,6 +187,64 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
 
             document = build_health_document(self.config_dir)
             user_info(format_health_report(document))
+
+        def show_stats(self, _sender) -> None:
+            from .expansion_stats import format_stats_report, is_tracking_enabled, set_tracking_enabled
+            from .paths import config_file
+            from .config import load_app_config
+
+            app = load_app_config(config_file(self.config_dir))
+            if not app.track_expansions:
+                user_info(t("stats.need_config"))
+                return
+            if not is_tracking_enabled(self.config_dir):
+                if user_confirm(t("menubar.stats_enable_title"), t("menubar.stats_enable_body")):
+                    set_tracking_enabled(self.config_dir, True)
+            user_info(format_stats_report(self.config_dir))
+
+        def pin_snippet(self, _sender) -> None:
+            from .search import build_search_items
+            from .search_pins import is_pinned, pin_trigger, unpin_trigger
+            from .ui_bridge import show_search_picker
+
+            set_ui_active(True)
+            try:
+                config = self.service.engine.config
+                items = build_search_items(
+                    config.matches,
+                    config.app,
+                    config_dir=self.config_dir,
+                )
+                payload = [
+                    {
+                        "id": item.trigger,
+                        "trigger": item.trigger,
+                        "label": (
+                            f"★ {item.trigger}" if is_pinned(self.config_dir, item.trigger) else item.trigger
+                        ),
+                        "preview": item.match.replace[:80],
+                    }
+                    for item in items[:80]
+                ]
+                if not payload:
+                    user_info(t("menubar.pin_empty"))
+                    return
+                picked = show_search_picker(payload)
+                if not picked:
+                    return
+                trigger = str(picked.get("id") or picked.get("trigger") or "")
+                if not trigger:
+                    return
+                if is_pinned(self.config_dir, trigger):
+                    unpin_trigger(self.config_dir, trigger)
+                    user_success(tf("menubar.pin_removed", trigger=trigger))
+                else:
+                    pin_trigger(self.config_dir, trigger)
+                    user_success(tf("menubar.pin_added", trigger=trigger))
+            except Exception as exc:
+                self._notify_action_failed(exc)
+            finally:
+                set_ui_active(False)
 
         def open_permissions(self, _sender) -> None:
             from .onboarding import run_onboarding

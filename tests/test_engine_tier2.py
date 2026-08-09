@@ -28,7 +28,7 @@ def test_engine_higher_priority_wins():
     )
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),
@@ -44,7 +44,7 @@ def test_engine_propagate_case():
     )
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),
@@ -61,7 +61,7 @@ def test_engine_blocks_secure_input():
     )
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),
@@ -76,7 +76,7 @@ def test_engine_undo_last():
     deleted: list[int] = []
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: deleted.append(count)  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: deleted.append(count)  # type: ignore[method-assign]
     with patch(
         "expando.engine.get_frontmost_context",
         return_value=AppContext(name="Terminal"),

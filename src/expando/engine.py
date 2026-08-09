@@ -471,10 +471,19 @@ class ExpansionEngine:
             adjusted_cursor_left = cursor_left + len(suffix)
 
         try:
-            # Brief settle so the host app commits the last keystroke (expansion
-            # now runs on key-down for printable chars).
-            time.sleep(0.03)
-            self.injector.delete_chars(len(typed_text))
+            from .inject_profiles import resolve_inject_profile
+
+            profile = resolve_inject_profile(
+                context.name,
+                context.bundle_id,
+                extra_terminal_apps=list(getattr(config.app, "terminal_apps", []) or []),
+            )
+            # Settle so the host app commits the last keystroke (chars on key-down).
+            time.sleep(profile.pre_delete_settle)
+            self.injector.delete_chars(
+                len(typed_text),
+                delay=profile.backspace_delay,
+            )
             pasted_image = False
             if match.image and self._config_dir is not None:
                 try:
@@ -487,19 +496,26 @@ class ExpansionEngine:
                 except RuntimeError as exc:
                     logger.warning("Image expansion failed for %r: %s", trigger, exc)
 
+            force_clipboard = (
+                match.force_clipboard
+                or bool(match.image)
+                or profile.force_clipboard
+            )
             if pasted_image:
                 if suffix:
                     self.injector.inject(
                         suffix,
                         cursor_left=adjusted_cursor_left,
+                        post_delete_settle=profile.post_delete_settle,
                     )
                 elif cursor_left:
                     self.injector.move_cursor_left(cursor_left)
             else:
                 self.injector.inject(
                     inserted_text,
-                    force_clipboard=match.force_clipboard or bool(match.image),
+                    force_clipboard=force_clipboard,
                     cursor_left=adjusted_cursor_left,
+                    post_delete_settle=profile.post_delete_settle,
                 )
         except Exception:
             if self._config_dir is not None:

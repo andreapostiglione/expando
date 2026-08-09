@@ -22,6 +22,13 @@ shell_allowlist:
 notify_on_block: true
 notify_cooldown_seconds: 30
 
+# Optional toast after each successful expansion (can be noisy)
+# notify_on_expand: false
+
+# Extra app names treated as terminals for safer inject (clipboard + slower backspace)
+# terminal_apps:
+#   - MyTerminal
+
 # Log verbosity: DEBUG, INFO, WARNING, ERROR (or EXPANDO_LOG_LEVEL env)
 log_level: INFO
 

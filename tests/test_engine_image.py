@@ -24,7 +24,7 @@ def test_engine_image_expansion_falls_back_to_replace(tmp_path: Path):
 
     injected: list[str] = []
     engine.injector.inject = lambda text, **kwargs: injected.append(text)  # type: ignore[method-assign]
-    engine.injector.delete_chars = lambda count: None  # type: ignore[method-assign]
+    engine.injector.delete_chars = lambda count, **kwargs: None  # type: ignore[method-assign]
     engine.injector.inject_image = lambda path: False  # type: ignore[method-assign]
 
     with patch(

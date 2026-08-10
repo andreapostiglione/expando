@@ -4,20 +4,24 @@ import objc
 from Foundation import NSIndexSet, NSNotificationCenter, NSObject
 from AppKit import (
     NSAlert,
-    NSAlertFirstButtonReturn,
     NSBackingStoreBuffered,
     NSBezelBorder,
-    NSButton,
     NSControlTextDidChangeNotification,
     NSMakeRect,
-    NSSearchField,
     NSScrollView,
+    NSSearchField,
     NSTableView,
     NSTextField,
     NSTextView,
+    NSView,
+    NSViewHeightSizable,
+    NSViewWidthSizable,
     NSWindow,
     NSWindowStyleMaskClosable,
+    NSWindowStyleMaskFullSizeContentView,
+    NSWindowStyleMaskResizable,
     NSWindowStyleMaskTitled,
+    NSColor,
 )
 from pathlib import Path
 from typing import Callable
@@ -27,13 +31,38 @@ from .snippet_editor_data import DEFAULT_SNIPPET_FILE
 from .ui_appkit_runtime import (
     close_appkit_session,
     configure_single_column_table,
-    install_liquid_glass_background,
     run_appkit_session,
     select_first_table_row,
     set_text_view_string,
-    style_readonly_text_view,
 )
 from .ui_file_picker import pick_list_item
+from .ui_theme import (
+    SIDEBAR_WIDTH,
+    SPACE_LG,
+    SPACE_MD,
+    SPACE_SM,
+    TOOLBAR_HEIGHT,
+    WINDOW_HEIGHT,
+    WINDOW_WIDTH,
+    color_control_bg,
+    color_field_bg,
+    color_label,
+    color_secondary,
+    color_separator,
+    font_body,
+    font_caption,
+    font_mono,
+    font_section,
+    font_title,
+    make_button,
+    make_content_effect,
+    make_label,
+    make_panel_view,
+    make_sidebar_effect,
+    make_text_field,
+    style_editor_text_view,
+    style_sidebar_table,
+)
 
 
 def _set_field(field: NSTextField, value: str) -> None:
@@ -67,7 +96,10 @@ class _SnippetEditorController(NSObject):
 
     def tableView_objectValueForTableColumn_row_(self, _table_view, _column, row):
         item = self.visible[row]
-        return item.get("label", item.get("trigger", ""))
+        trigger = item.get("trigger", "")
+        source = item.get("label", trigger)
+        # Compact list: trigger primary; collection hint already in label from data layer.
+        return source
 
     def searchChanged_(self, notification):
         sender = notification.object()
@@ -76,9 +108,12 @@ class _SnippetEditorController(NSObject):
 
         self.visible = fuzzy_filter_search_items(query, self.items)
         self.table_view.reloadData()
+        self._update_count_label()
         if self.visible:
             select_first_table_row(self.table_view)
             self._load_selection()
+        else:
+            self._show_empty_state()
 
     def tableViewSelectionDidChange_(self, _notification):
         self._load_selection()
@@ -92,34 +127,41 @@ class _SnippetEditorController(NSObject):
             return None
         return self.visible[row]
 
+    def _show_empty_state(self) -> None:
+        self.current_id = None
+        _set_field(self.trigger_field, "")
+        _set_field(self.if_app_field, "")
+        if hasattr(self, "unless_app_field"):
+            _set_field(self.unless_app_field, "")
+            _set_field(self.if_bundle_field, "")
+            _set_field(self.unless_bundle_field, "")
+            _set_field(self.if_title_field, "")
+            _set_field(self.unless_title_field, "")
+            _set_field(self.regex_field, "")
+            _set_view(self.when_view, "")
+            _set_field(self.image_field, "")
+            _set_field(self.priority_field, "")
+            _set_field(self.force_clipboard_field, "")
+            _set_field(self.target_file_field, "")
+        _set_view(self.form_view, "")
+        _set_view(self.vars_view, "")
+        _set_view(self.replace_view, "")
+        self.replace_view.setEditable_(True)
+        self.form_view.setEditable_(True)
+        self.vars_view.setEditable_(True)
+        if hasattr(self, "when_view"):
+            self.when_view.setEditable_(True)
+        if hasattr(self, "empty_hint"):
+            self.empty_hint.setHidden_(False)
+        self._update_preview()
+
     def _load_selection(self) -> None:
         item = self._selected_item()
         if not item:
-            self.current_id = None
-            _set_field(self.trigger_field, "")
-            _set_field(self.if_app_field, "")
-            if hasattr(self, "unless_app_field"):
-                _set_field(self.unless_app_field, "")
-                _set_field(self.if_bundle_field, "")
-                _set_field(self.unless_bundle_field, "")
-                _set_field(self.if_title_field, "")
-                _set_field(self.unless_title_field, "")
-                _set_field(self.regex_field, "")
-                _set_view(self.when_view, "")
-                _set_field(self.image_field, "")
-                _set_field(self.priority_field, "")
-                _set_field(self.force_clipboard_field, "")
-                _set_field(self.target_file_field, "")
-            _set_view(self.form_view, "")
-            _set_view(self.vars_view, "")
-            _set_view(self.replace_view, "")
-            self.replace_view.setEditable_(True)
-            self.form_view.setEditable_(True)
-            self.vars_view.setEditable_(True)
-            if hasattr(self, "when_view"):
-                self.when_view.setEditable_(True)
-            self._update_preview()
+            self._show_empty_state()
             return
+        if hasattr(self, "empty_hint"):
+            self.empty_hint.setHidden_(True)
         self.current_id = item.get("id")
         _set_field(self.trigger_field, item.get("trigger", ""))
         _set_field(self.if_app_field, item.get("if_app", ""))
@@ -165,8 +207,20 @@ class _SnippetEditorController(NSObject):
             return
         _set_view(self.preview_view, replace_text)
 
+    def _update_count_label(self) -> None:
+        if not hasattr(self, "count_label"):
+            return
+        total = len(self.items)
+        shown = len(self.visible)
+        if shown == total:
+            self.count_label.setStringValue_(f"{total} snippet")
+        else:
+            self.count_label.setStringValue_(f"{shown} / {total}")
+
     def new_(self, _sender):
         self.current_id = None
+        if hasattr(self, "empty_hint"):
+            self.empty_hint.setHidden_(True)
         _set_field(self.trigger_field, ":nuovo")
         _set_field(self.if_app_field, "")
         if hasattr(self, "unless_app_field"):
@@ -190,6 +244,10 @@ class _SnippetEditorController(NSObject):
         self.replace_view.setEditable_(True)
         _set_view(self.replace_view, "")
         self._update_preview()
+        try:
+            self.window.makeFirstResponder_(self.trigger_field)
+        except Exception:
+            pass
 
     def save_(self, _sender):
         payload = self._payload()
@@ -209,6 +267,7 @@ class _SnippetEditorController(NSObject):
         self.items[:] = self.reload_items()
         self.visible = list(self.items)
         self.table_view.reloadData()
+        self._update_count_label()
 
     def delete_(self, _sender):
         if not self.current_id:
@@ -226,6 +285,12 @@ class _SnippetEditorController(NSObject):
         self.items[:] = self.reload_items()
         self.visible = list(self.items)
         self.table_view.reloadData()
+        self._update_count_label()
+        if self.visible:
+            select_first_table_row(self.table_view)
+            self._load_selection()
+        else:
+            self._show_empty_state()
 
     def duplicate_(self, _sender):
         if not self.current_id:
@@ -282,20 +347,11 @@ class _SnippetEditorController(NSObject):
         self.result = {"moved": "1"}
         self._refresh_list()
 
-    def _pick_target_file(self, title: str, message: str) -> str | None:
-        files = list(getattr(self, "match_files", []) or [DEFAULT_SNIPPET_FILE])
-        return pick_list_item(
-            files,
-            title=title,
-            message=message,
-            confirm_label=t("ui.confirm"),
-            cancel_label=t("ui.cancel"),
-        )
-
     def _refresh_list(self, *, select_trigger: str = "") -> None:
         self.items[:] = self.reload_items()
         self.visible = list(self.items)
         self.table_view.reloadData()
+        self._update_count_label()
         if select_trigger:
             for row, item in enumerate(self.visible):
                 if item.get("trigger") == select_trigger:
@@ -374,65 +430,96 @@ def run_snippet_editor(
         )
         controller.config_dir = config_dir
         controller.match_files = list(match_files or [DEFAULT_SNIPPET_FILE])
+
+        win_w = WINDOW_WIDTH
+        win_h = WINDOW_HEIGHT
+        style = (
+            NSWindowStyleMaskTitled
+            | NSWindowStyleMaskClosable
+            | NSWindowStyleMaskResizable
+            | NSWindowStyleMaskFullSizeContentView
+        )
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, 960, 660),
-            NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
+            NSMakeRect(0, 0, win_w, win_h),
+            style,
             NSBackingStoreBuffered,
             False,
         )
         window.setTitle_(t("editor.window_title"))
+        window.setMinSize_((900, 560))
+        window.setTitlebarAppearsTransparent_(True)
+        try:
+            # Unified titlebar + content for a modern macOS tool look.
+            from AppKit import NSWindowTitleVisible
+
+            window.setTitleVisibility_(NSWindowTitleVisible)
+        except Exception:
+            pass
         window.setDelegate_(controller)
         controller.window = window
 
-        content = install_liquid_glass_background(window)
-        controller.editor_content_view = content
-        left_x = 24
-        left_w = 292
-        right_x = 340
-        right_edge = 936
-        label_w = 110
-        field_x = right_x + label_w + 10
-        field_w = right_edge - field_x
+        root = window.contentView()
+        root.setWantsLayer_(True)
 
-        def _label(text: str, x: int, y: int, width: int = label_w) -> NSTextField:
-            label = NSTextField.alloc().initWithFrame_(NSMakeRect(x, y, width, 22))
-            label.setStringValue_(text)
-            label.setEditable_(False)
-            label.setBezeled_(False)
-            label.setDrawsBackground_(False)
-            content.addSubview_(label)
-            return label
+        # Three non-overlapping top-level regions for layout tests:
+        # toolbar (bottom full width), sidebar (left), main (right).
+        toolbar_h = TOOLBAR_HEIGHT
+        sidebar_w = SIDEBAR_WIDTH
+        content_h = win_h - toolbar_h
+        content_y = toolbar_h
+        main_x = sidebar_w
+        main_w = win_w - sidebar_w
 
-        def _field(x: int, y: int, width: int) -> NSTextField:
-            field = NSTextField.alloc().initWithFrame_(NSMakeRect(x, y - 2, width, 24))
-            content.addSubview_(field)
-            return field
+        # --- Toolbar (y=0) ---
+        toolbar = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, win_w, toolbar_h))
+        toolbar.setAutoresizingMask_(NSViewWidthSizable)
+        toolbar.setWantsLayer_(True)
+        if toolbar.layer() is not None:
+            try:
+                toolbar.layer().setBackgroundColor_(color_control_bg().CGColor())
+            except Exception:
+                pass
+        root.addSubview_(toolbar)
 
-        def _hidden_field(value: str = "") -> NSTextField:
-            field = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 1, 1))
-            if value:
-                field.setStringValue_(value)
-            return field
+        # --- Sidebar (left, above toolbar) ---
+        sidebar = make_sidebar_effect(NSMakeRect(0, content_y, sidebar_w, content_h))
+        root.addSubview_(sidebar)
 
-        def _text_area(x: int, y: int, width: int, height: int, *, editable: bool) -> NSTextView:
-            scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(x, y, width, height))
-            scroll.setBorderType_(NSBezelBorder)
-            scroll.setHasVerticalScroller_(True)
-            view = NSTextView.alloc().initWithFrame_(scroll.bounds())
-            view.setEditable_(editable)
-            if not editable:
-                style_readonly_text_view(view)
-            scroll.setDocumentView_(view)
-            content.addSubview_(scroll)
-            return view
+        # --- Main content (right, above toolbar) ---
+        main = make_content_effect(NSMakeRect(main_x, content_y, main_w, content_h))
+        root.addSubview_(main)
 
-        def _hidden_text_view() -> NSTextView:
-            view = NSTextView.alloc().initWithFrame_(NSMakeRect(0, 0, 1, 1))
-            view.setEditable_(True)
-            return view
+        controller.editor_content_view = root
 
-        search = NSSearchField.alloc().initWithFrame_(NSMakeRect(left_x, 604, left_w, 28))
+        # Sidebar chrome
+        side_pad = SPACE_MD
+        title = make_label(
+            "Snippet",
+            x=side_pad,
+            y=content_h - 44,
+            width=sidebar_w - side_pad * 2,
+            height=24,
+        )
+        title.setFont_(font_title())
+        title.setTextColor_(color_label())
+        sidebar.addSubview_(title)
+
+        count = make_label(
+            f"{len(items)} snippet",
+            x=side_pad,
+            y=content_h - 62,
+            width=sidebar_w - side_pad * 2,
+            height=16,
+            secondary=True,
+        )
+        controller.count_label = count
+        sidebar.addSubview_(count)
+
+        search = NSSearchField.alloc().initWithFrame_(
+            NSMakeRect(side_pad, content_h - 100, sidebar_w - side_pad * 2, 30)
+        )
         search.setPlaceholderString_(t("editor.search_placeholder"))
+        search.setFont_(font_body())
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
             "searchChanged:",
@@ -440,28 +527,99 @@ def run_snippet_editor(
             search,
         )
         controller.search_field = search
-        content.addSubview_(search)
+        sidebar.addSubview_(search)
 
-        table_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(left_x, 76, left_w, 510))
+        table_top = content_h - 116
+        table_h = table_top - SPACE_MD
+        table_scroll = NSScrollView.alloc().initWithFrame_(
+            NSMakeRect(side_pad, SPACE_MD, sidebar_w - side_pad * 2, table_h)
+        )
         table_scroll.setBorderType_(NSBezelBorder)
         table_scroll.setHasVerticalScroller_(True)
+        table_scroll.setDrawsBackground_(False)
+        try:
+            table_scroll.setBorderType_(0)  # no border — cleaner sidebar
+        except Exception:
+            pass
         table = NSTableView.alloc().initWithFrame_(table_scroll.bounds())
         configure_single_column_table(table)
+        style_sidebar_table(table)
         table.setDelegate_(controller)
         table.setDataSource_(controller)
         controller.table_view = table
         table_scroll.setDocumentView_(table)
-        content.addSubview_(table_scroll)
+        sidebar.addSubview_(table_scroll)
 
-        _label(t("editor.trigger_label"), right_x, 606)
-        controller.trigger_field = _field(field_x, 606, field_w)
+        # Main form layout (coordinates relative to main view)
+        pad = SPACE_LG
+        form_w = main_w - pad * 2
+        label_w = 120.0
+        field_x = pad + label_w + SPACE_SM
+        field_w = form_w - label_w - SPACE_SM
 
-        _label(t("editor.app_label"), right_x, 566)
-        controller.if_app_field = _field(field_x, 566, field_w)
+        heading = make_label(
+            "Dettaglio",
+            x=pad,
+            y=content_h - 44,
+            width=form_w,
+            height=24,
+        )
+        heading.setFont_(font_title())
+        main.addSubview_(heading)
+
+        empty_hint = make_label(
+            "Seleziona uno snippet a sinistra, oppure crea un nuovo abbreviazione.",
+            x=pad,
+            y=content_h - 72,
+            width=form_w,
+            height=18,
+            secondary=True,
+        )
+        empty_hint.setHidden_(True)
+        controller.empty_hint = empty_hint
+        main.addSubview_(empty_hint)
+
+        # Trigger
+        y = content_h - 110
+        main.addSubview_(
+            make_label(t("editor.trigger_label"), x=pad, y=y + 4, width=label_w, secondary=True)
+        )
+        controller.trigger_field = make_text_field(
+            x=field_x,
+            y=y,
+            width=field_w,
+            mono=True,
+            placeholder=":email  oppure  //email",
+        )
+        main.addSubview_(controller.trigger_field)
+
+        # App filter
+        y = content_h - 150
+        main.addSubview_(
+            make_label(t("editor.app_label"), x=pad, y=y + 4, width=label_w, secondary=True)
+        )
+        controller.if_app_field = make_text_field(
+            x=field_x,
+            y=y,
+            width=field_w,
+            placeholder="es. Mail, Slack (vuoto = ovunque)",
+        )
+        main.addSubview_(controller.if_app_field)
+
+        # Hidden advanced fields (preserved for data model / advanced edits)
+        def _hidden_field(value: str = "") -> NSTextField:
+            field = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 1, 1))
+            if value:
+                field.setStringValue_(value)
+            return field
+
+        def _hidden_text_view() -> NSTextView:
+            view = NSTextView.alloc().initWithFrame_(NSMakeRect(0, 0, 1, 1))
+            view.setEditable_(True)
+            return view
 
         controller.target_file_field = _hidden_field()
         controller.target_file_field.setStringValue_((match_files or [DEFAULT_SNIPPET_FILE])[0])
-
         controller.unless_app_field = _hidden_field()
         controller.if_bundle_field = _hidden_field()
         controller.unless_bundle_field = _hidden_field()
@@ -475,8 +633,31 @@ def run_snippet_editor(
         controller.form_view = _hidden_text_view()
         controller.vars_view = _hidden_text_view()
 
-        _label(t("editor.text_label"), right_x, 518)
-        replace_view = _text_area(right_x, 182, right_edge - right_x, 324, editable=True)
+        # Expansion body
+        y = content_h - 186
+        section = make_label(
+            t("editor.text_label").upper() if False else t("editor.text_label"),
+            x=pad,
+            y=y,
+            width=form_w,
+            section=True,
+        )
+        section.setFont_(font_section())
+        main.addSubview_(section)
+
+        replace_h = 280.0
+        replace_y = y - 12 - replace_h
+        replace_scroll = NSScrollView.alloc().initWithFrame_(
+            NSMakeRect(pad, replace_y, form_w, replace_h)
+        )
+        replace_scroll.setBorderType_(NSBezelBorder)
+        replace_scroll.setHasVerticalScroller_(True)
+        replace_scroll.setDrawsBackground_(True)
+        replace_scroll.setBackgroundColor_(color_field_bg())
+        replace_view = NSTextView.alloc().initWithFrame_(replace_scroll.bounds())
+        style_editor_text_view(replace_view, editable=True, mono=False)
+        replace_scroll.setDocumentView_(replace_view)
+        main.addSubview_(replace_scroll)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             controller,
             "replaceChanged:",
@@ -485,41 +666,105 @@ def run_snippet_editor(
         )
         controller.replace_view = replace_view
 
-        _label(t("editor.preview_label"), right_x, 144)
-        controller.preview_view = _text_area(right_x, 76, right_edge - right_x, 62, editable=False)
+        # Preview card
+        prev_label_y = replace_y - 28
+        main.addSubview_(
+            make_label(t("editor.preview_label"), x=pad, y=prev_label_y, width=form_w, section=True)
+        )
+        prev_h = 72.0
+        prev_y = prev_label_y - 8 - prev_h
+        if prev_y < SPACE_MD:
+            prev_y = SPACE_MD
+            prev_h = max(48.0, prev_label_y - 8 - prev_y)
+        preview_scroll = NSScrollView.alloc().initWithFrame_(
+            NSMakeRect(pad, prev_y, form_w, prev_h)
+        )
+        preview_scroll.setBorderType_(NSBezelBorder)
+        preview_scroll.setHasVerticalScroller_(True)
+        preview_scroll.setDrawsBackground_(True)
+        try:
+            preview_scroll.setBackgroundColor_(NSColor.underPageBackgroundColor())
+        except Exception:
+            preview_scroll.setBackgroundColor_(color_control_bg())
+        preview_view = NSTextView.alloc().initWithFrame_(preview_scroll.bounds())
+        style_editor_text_view(preview_view, editable=False, mono=True)
+        preview_view.setTextColor_(color_secondary())
+        preview_scroll.setDocumentView_(preview_view)
+        main.addSubview_(preview_scroll)
+        controller.preview_view = preview_view
 
-        new_button = NSButton.alloc().initWithFrame_(NSMakeRect(left_x, 20, 84, 28))
-        new_button.setTitle_(t("editor.new_button"))
+        # Toolbar buttons (relative to toolbar view, y≈12)
+        btn_y = 12.0
+        new_button = make_button(t("editor.new_button"), x=SPACE_MD, y=btn_y, width=92)
         new_button.setTarget_(controller)
         new_button.setAction_("new:")
-        content.addSubview_(new_button)
+        toolbar.addSubview_(new_button)
 
-        save_button = NSButton.alloc().initWithFrame_(NSMakeRect(116, 20, 84, 28))
-        save_button.setTitle_(t("editor.save_button"))
+        save_button = make_button(
+            t("editor.save_button"),
+            x=SPACE_MD + 100,
+            y=btn_y,
+            width=100,
+            primary=True,
+        )
         save_button.setTarget_(controller)
         save_button.setAction_("save:")
-        content.addSubview_(save_button)
+        toolbar.addSubview_(save_button)
 
-        delete_button = NSButton.alloc().initWithFrame_(NSMakeRect(208, 20, 84, 28))
-        delete_button.setTitle_(t("editor.delete_button"))
+        delete_button = make_button(
+            t("editor.delete_button"),
+            x=SPACE_MD + 212,
+            y=btn_y,
+            width=92,
+            destructive=True,
+        )
         delete_button.setTarget_(controller)
         delete_button.setAction_("delete:")
-        content.addSubview_(delete_button)
+        toolbar.addSubview_(delete_button)
 
-        duplicate_button = NSButton.alloc().initWithFrame_(NSMakeRect(300, 20, 96, 28))
-        duplicate_button.setTitle_(t("editor.duplicate.button"))
+        duplicate_button = make_button(
+            t("editor.duplicate.button"),
+            x=SPACE_MD + 316,
+            y=btn_y,
+            width=100,
+        )
         duplicate_button.setTarget_(controller)
         duplicate_button.setAction_("duplicate:")
-        content.addSubview_(duplicate_button)
+        toolbar.addSubview_(duplicate_button)
 
-        close_button = NSButton.alloc().initWithFrame_(NSMakeRect(852, 20, 84, 28))
-        close_button.setTitle_(t("editor.close_button"))
+        close_button = make_button(
+            t("editor.close_button"),
+            x=win_w - SPACE_MD - 100,
+            y=btn_y,
+            width=100,
+        )
         close_button.setTarget_(controller)
         close_button.setAction_("close:")
-        content.addSubview_(close_button)
+        toolbar.addSubview_(close_button)
+
+        # Hairline above toolbar (as part of toolbar, not overlapping siblings)
+        hairline = NSView.alloc().initWithFrame_(NSMakeRect(0, toolbar_h - 1, win_w, 1))
+        hairline.setWantsLayer_(True)
+        if hairline.layer() is not None:
+            try:
+                hairline.layer().setBackgroundColor_(color_separator().CGColor())
+            except Exception:
+                pass
+        toolbar.addSubview_(hairline)
+
+        # Vertical divider between sidebar and main (drawn on main left edge via border)
+        divider = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 1, content_h))
+        divider.setWantsLayer_(True)
+        if divider.layer() is not None:
+            try:
+                divider.layer().setBackgroundColor_(color_separator().CGColor())
+            except Exception:
+                pass
+        main.addSubview_(divider)
 
         window.center()
         window.makeKeyAndOrderFront_(None)
+        controller._update_count_label()
         if initial_new:
             controller.new_(None)
         elif controller.visible:

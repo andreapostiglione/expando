@@ -4,7 +4,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
-## [3.29.26] — 2026-08-08
+## [3.29.26] — 2026-08-10
 
 ### Added
 - **Inject profiles**: terminal-like apps (Terminal, iTerm, Warp, Cursor, VS Code, …) use longer backspace timing and force clipboard paste for safer expansion.

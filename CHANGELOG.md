@@ -4,6 +4,8 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.28] — 2026-08-10
+
 ### Fixed
 - Studio save no longer destroys multi-trigger aliases (`//hello`) or unknown YAML flags (`word_break`, `label`, …); updates merge into the existing match.
 - Studio **Nuovo**/clear resets all advanced/hidden fields (no inheritance from the previous selection).
@@ -299,6 +301,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.28]: https://github.com/andreapostiglione/expando/compare/v3.29.27...v3.29.28
 [3.29.27]: https://github.com/andreapostiglione/expando/compare/v3.29.26...v3.29.27
 [3.29.26]: https://github.com/andreapostiglione/expando/compare/v3.29.25...v3.29.26
 [3.29.25]: https://github.com/andreapostiglione/expando/compare/v3.29.24...v3.29.25

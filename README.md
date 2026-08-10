@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.27"><img src="https://img.shields.io/badge/version-3.29.27-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.28"><img src="https://img.shields.io/badge/version-3.29.28-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
@@ -33,6 +33,15 @@ The current public build is designed for normal macOS users:
 macOS still requires **Accessibility** and **Input Monitoring** permissions. Expando cannot enable those automatically; the setup window opens the right System Settings panes and checks the status.
 
 ## What's new
+
+### v3.29.28 — Studio data integrity + expansion hardening
+
+| Area | What's new |
+|------|------------|
+| **Safe Studio save** | Multi-trigger aliases (`//hello`) and extra YAML flags survive edits |
+| **New/clear** | No inheritance of advanced fields from the previous snippet |
+| **Expansion** | Safer inject mute, buffer clear on app change, regex `left_word`, Xcode not treated as terminal |
+| **Reliability** | Atomic match file writes; snippet list reloads after installing a collection |
 
 ### v3.29.27 — Unified Studio + Liquid Glass
 
@@ -617,7 +626,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.27**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.28**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

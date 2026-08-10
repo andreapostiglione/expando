@@ -6,6 +6,7 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ### Changed
 - **Unified Studio UI**: Nuovo snippet, Gestisci snippet and Raccolte are one native macOS window (segmented control + list + detail). Menubar exposes a single entry: **Snippet e raccolte…**. Layout follows Apple utility patterns (transparent titlebar, traffic-light safe top bar, sidebar list, content detail, ⌘N/⌘S/⌘D).
+- **Liquid Glass Studio** (macOS 26 Tahoe): floating glass sidebar + detail cards via `NSGlassEffectView`, glass button bezels, capsule section switcher, soft ambient window backdrop. Falls back to vibrancy materials on older macOS.
 
 ## [3.29.26] — 2026-08-10
 

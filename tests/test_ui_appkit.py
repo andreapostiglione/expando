@@ -272,8 +272,19 @@ def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -
         _, bx, by, bw, bh = second
         return ax < bx + bw and ax + aw > bx and ay < by + bh and ay + ah > by
 
-    # Studio root has toolbar + nav + list + main (non-overlapping).
+    # Full-window backdrop may sit under chrome (Liquid Glass ambient layer).
+    # Overlap check only for non-decorative root children.
+    def is_backdrop(frame) -> bool:
+        name, x, y, w, h = frame
+        return name == "NSVisualEffectView" and x == 0 and y == 0 and w >= 1000
+
     assert len(frames) >= 3
-    for index, first in enumerate(frames):
-        for second in frames[index + 1 :]:
+    interactive = [frame for frame in frames if not is_backdrop(frame)]
+    assert len(interactive) >= 2
+    for index, first in enumerate(interactive):
+        for second in interactive[index + 1 :]:
             assert not overlaps(first, second), (first, second)
+
+    # Glass panels (list + detail) should exist somewhere in the hierarchy.
+    class_names = " ".join(frame[0] for frame in frames)
+    assert "Glass" in class_names or "VisualEffect" in class_names

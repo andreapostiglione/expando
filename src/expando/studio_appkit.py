@@ -1,25 +1,23 @@
 """Unified Expando Studio — snippets + collections in one native macOS window.
 
-Layout follows Apple's utility formula (macos-design-skill):
+Liquid Glass layout (macOS 26 Tahoe + fallback):
 
   [●●●  Snippet | Raccolte          Nuovo  Salva  Elimina  Duplica  Chiudi]
-  ┌──────────────────┬────────────────────────────────────────────────────┐
-  │ search + list    │ detail (form / collection)                         │
-  └──────────────────┴────────────────────────────────────────────────────┘
+  ┌──────────────────┐  ┌────────────────────────────────────────────────┐
+  │ glass sidebar    │  │ glass detail card                              │
+  │ search + list    │  │ form / collection                              │
+  └──────────────────┘  └────────────────────────────────────────────────┘
 
-One menubar entry → one window. Section switch is a segmented control, not
-separate dialogs.
+One menubar entry → one window. Section switch is a segmented control.
 """
 
 from __future__ import annotations
 
 import objc
-from Foundation import NSIndexSet, NSNotificationCenter, NSObject
+from Foundation import NSNotificationCenter, NSObject
 from AppKit import (
     NSAlert,
     NSBackingStoreBuffered,
-    NSBezelBorder,
-    NSButton,
     NSControlTextDidChangeNotification,
     NSMakeRect,
     NSScrollView,
@@ -55,34 +53,33 @@ from .ui_appkit_runtime import (
     set_text_view_string,
 )
 from .ui_theme import (
+    RADIUS_CARD,
+    RADIUS_SIDEBAR,
     SPACE_LG,
     SPACE_MD,
     SPACE_SM,
-    color_control_bg,
-    color_field_bg,
-    color_label,
     color_secondary,
-    color_separator,
     font_body,
-    font_caption,
-    font_mono,
-    font_section,
     font_title,
     make_button,
-    make_content_effect,
+    make_glass_container,
+    make_glass_panel,
     make_label,
-    make_sidebar_effect,
     make_text_field,
+    make_window_backdrop,
     style_editor_text_view,
+    style_scroll_field,
     style_sidebar_table,
 )
 
 # Traffic-light safe inset + action bar (full-size content view).
-TOP_BAR_H = 52.0
-TRAFFIC_LIGHT_PAD = 78.0
-LIST_WIDTH = 300.0
-WINDOW_W = 1100.0
-WINDOW_H = 700.0
+TOP_BAR_H = 56.0
+TRAFFIC_LIGHT_PAD = 82.0
+LIST_WIDTH = 288.0
+WINDOW_W = 1120.0
+WINDOW_H = 720.0
+EDGE = 14.0
+GAP = 12.0
 
 SECTION_SNIPPETS = "snippets"
 SECTION_COLLECTIONS = "collections"
@@ -94,17 +91,6 @@ def _set_field(field: NSTextField, value: str) -> None:
 
 def _set_view(view: NSTextView, value: str) -> None:
     set_text_view_string(view, value)
-
-
-def _hairline(x: float, y: float, w: float, h: float) -> NSView:
-    line = NSView.alloc().initWithFrame_(NSMakeRect(x, y, w, h))
-    line.setWantsLayer_(True)
-    if line.layer() is not None:
-        try:
-            line.layer().setBackgroundColor_(color_separator().CGColor())
-        except Exception:
-            pass
-    return line
 
 
 class _StudioController(NSObject):
@@ -500,39 +486,48 @@ def run_expando_studio(
             False,
         )
         window.setTitle_(t("studio.window_title"))
-        window.setMinSize_((920, 560))
+        window.setMinSize_((940, 580))
         window.setTitlebarAppearsTransparent_(True)
         window.setTitleVisibility_(NSWindowTitleHidden)
+        try:
+            window.setBackgroundColor_(NSColor.clearColor())
+        except Exception:
+            pass
         window.setDelegate_(controller)
         controller.window = window
         root = window.contentView()
         controller.editor_content_view = root
 
-        top_h = TOP_BAR_H
-        body_h = win_h - top_h
-        body_y = 0.0
+        # Soft ambient backdrop — Liquid Glass samples light from surroundings
+        backdrop = make_window_backdrop(NSMakeRect(0, 0, win_w, win_h))
+        root.addSubview_(backdrop)
 
-        # --- Top bar (global actions + section switch, draggable with traffic lights) ---
-        top = NSView.alloc().initWithFrame_(NSMakeRect(0, body_h, win_w, top_h))
+        top_h = TOP_BAR_H
+        # Floating panels sit below the titlebar chrome with edge insets
+        body_bottom = EDGE
+        body_h = win_h - top_h - body_bottom
+        body_y = body_bottom
+
+        # --- Top bar (draggable, transparent; controls use glass bezels) ---
+        top = NSView.alloc().initWithFrame_(NSMakeRect(0, win_h - top_h, win_w, top_h))
         top.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
-        top.setWantsLayer_(True)
-        if top.layer() is not None:
-            try:
-                top.layer().setBackgroundColor_(color_control_bg().CGColor())
-            except Exception:
-                pass
         root.addSubview_(top)
 
-        # Segmented section switcher (replaces disconnected menu entries)
         segment = NSSegmentedControl.alloc().initWithFrame_(
-            NSMakeRect(TRAFFIC_LIGHT_PAD, 12, 260, 28)
+            NSMakeRect(TRAFFIC_LIGHT_PAD, 14, 268, 28)
         )
         segment.setSegmentCount_(2)
         segment.setLabel_forSegment_(t("studio.nav.snippets"), 0)
         segment.setLabel_forSegment_(t("studio.nav.collections"), 1)
         try:
-            segment.setWidth_forSegment_(120, 0)
-            segment.setWidth_forSegment_(120, 1)
+            from AppKit import NSSegmentStyleCapsule
+
+            segment.setSegmentStyle_(NSSegmentStyleCapsule)
+        except Exception:
+            pass
+        try:
+            segment.setWidth_forSegment_(124, 0)
+            segment.setWidth_forSegment_(124, 1)
         except Exception:
             pass
         segment.setTarget_(controller)
@@ -540,17 +535,17 @@ def run_expando_studio(
         controller.segment = segment
         top.addSubview_(segment)
 
-        # Actions — right-aligned cluster
-        btn_y = 10.0
-        close_btn = make_button(t("editor.close_button"), x=win_w - SPACE_MD - 88, y=btn_y, width=88)
+        btn_y = 12.0
+        close_btn = make_button(
+            t("editor.close_button"), x=win_w - EDGE - 88, y=btn_y, width=88
+        )
         close_btn.setTarget_(controller)
         close_btn.setAction_("close:")
-        close_btn.setAutoresizingMask_(NSViewMinYMargin)  # keep right via manual frame; ok at open
         top.addSubview_(close_btn)
 
         controller.btn_install = make_button(
             t("studio.collections.install"),
-            x=win_w - SPACE_MD - 88 - 12 - 140,
+            x=win_w - EDGE - 88 - 12 - 140,
             y=btn_y,
             width=140,
             primary=True,
@@ -560,8 +555,7 @@ def run_expando_studio(
         controller.btn_install.setHidden_(True)
         top.addSubview_(controller.btn_install)
 
-        # Snippet actions (hidden on collections)
-        ax = win_w - SPACE_MD - 88 - 12
+        ax = win_w - EDGE - 88 - 12
         specs = [
             ("btn_duplicate", t("editor.duplicate.button"), 100, "duplicate:", False, False),
             ("btn_delete", t("editor.delete_button"), 90, "delete:", False, True),
@@ -578,7 +572,6 @@ def run_expando_studio(
             setattr(controller, attr, btn)
             top.addSubview_(btn)
 
-        # Keyboard shortcuts (native feel)
         try:
             controller.btn_new.setKeyEquivalent_("n")
             controller.btn_new.setKeyEquivalentModifierMask_(NSEventModifierFlagCommand)
@@ -589,21 +582,39 @@ def run_expando_studio(
         except Exception:
             pass
 
-        top.addSubview_(_hairline(0, 0, win_w, 1))
+        # --- Glass body: floating sidebar + detail (merge when close on Tahoe) ---
+        glass_host, glass_body = make_glass_container(
+            NSMakeRect(0, 0, win_w, win_h - top_h),
+            spacing=GAP + 8,
+        )
+        glass_host.setFrame_(NSMakeRect(0, 0, win_w, win_h - top_h))
+        glass_host.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        root.addSubview_(glass_host)
 
-        # --- List column (sidebar material) ---
-        list_panel = make_sidebar_effect(NSMakeRect(0, body_y, LIST_WIDTH, body_h))
-        list_panel.setAutoresizingMask_(NSViewHeightSizable | NSViewMaxXMargin)
-        root.addSubview_(list_panel)
+        list_x = EDGE
+        list_frame = NSMakeRect(list_x, body_y, LIST_WIDTH, body_h)
+        list_shell, list_panel = make_glass_panel(
+            list_frame,
+            corner_radius=RADIUS_SIDEBAR,
+            clear=False,
+            tint=True,
+            autoresizing=NSViewHeightSizable | NSViewMaxXMargin,
+        )
+        glass_body.addSubview_(list_shell)
 
         count = make_label(
-            "", x=SPACE_MD, y=body_h - 28, width=LIST_WIDTH - SPACE_MD * 2, height=16, secondary=True
+            "",
+            x=SPACE_MD,
+            y=body_h - 30,
+            width=LIST_WIDTH - SPACE_MD * 2,
+            height=16,
+            secondary=True,
         )
         controller.count_label = count
         list_panel.addSubview_(count)
 
         search = NSSearchField.alloc().initWithFrame_(
-            NSMakeRect(12, body_h - 62, LIST_WIDTH - 24, 28)
+            NSMakeRect(12, body_h - 64, LIST_WIDTH - 24, 30)
         )
         search.setPlaceholderString_(t("editor.search_placeholder"))
         search.setFont_(font_body())
@@ -614,7 +625,7 @@ def run_expando_studio(
         list_panel.addSubview_(search)
 
         list_scroll = NSScrollView.alloc().initWithFrame_(
-            NSMakeRect(8, 8, LIST_WIDTH - 16, body_h - 78)
+            NSMakeRect(10, 12, LIST_WIDTH - 20, body_h - 84)
         )
         list_scroll.setDrawsBackground_(False)
         list_scroll.setBorderType_(0)
@@ -629,35 +640,40 @@ def run_expando_studio(
         list_scroll.setDocumentView_(list_table)
         list_panel.addSubview_(list_scroll)
 
-        list_panel.addSubview_(_hairline(LIST_WIDTH - 1, 0, 1, body_h))
-
-        # --- Main content ---
-        main_x = LIST_WIDTH
-        main_w = win_w - LIST_WIDTH
-        main = make_content_effect(NSMakeRect(main_x, body_y, main_w, body_h))
-        main.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
-        root.addSubview_(main)
+        # Detail glass card
+        main_x = EDGE + LIST_WIDTH + GAP
+        main_w = win_w - main_x - EDGE
+        main_frame = NSMakeRect(main_x, body_y, main_w, body_h)
+        main_shell, main = make_glass_panel(
+            main_frame,
+            corner_radius=RADIUS_CARD,
+            clear=False,
+            tint=False,
+            autoresizing=NSViewWidthSizable | NSViewHeightSizable,
+        )
+        glass_body.addSubview_(main_shell)
 
         pad = SPACE_LG
         form_w = main_w - pad * 2
-        label_w = 110.0
+        label_w = 104.0
         field_x = pad + label_w + SPACE_SM
         field_w = form_w - label_w - SPACE_SM
 
-        # Snippets detail
         detail_snippets = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, main_w, body_h))
         detail_snippets.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
         controller.detail_snippets = detail_snippets
         main.addSubview_(detail_snippets)
 
-        heading = make_label(t("studio.detail.snippet"), x=pad, y=body_h - 36, width=form_w, height=22)
+        heading = make_label(
+            t("studio.detail.snippet"), x=pad, y=body_h - 38, width=form_w, height=24
+        )
         heading.setFont_(font_title())
         detail_snippets.addSubview_(heading)
 
         empty_hint = make_label(
             t("studio.snippets.empty"),
             x=pad,
-            y=body_h - 58,
+            y=body_h - 62,
             width=form_w,
             height=18,
             secondary=True,
@@ -665,18 +681,18 @@ def run_expando_studio(
         controller.empty_hint = empty_hint
         detail_snippets.addSubview_(empty_hint)
 
-        y = body_h - 96
+        y = body_h - 104
         detail_snippets.addSubview_(
-            make_label(t("editor.trigger_label"), x=pad, y=y + 4, width=label_w, secondary=True)
+            make_label(t("editor.trigger_label"), x=pad, y=y + 6, width=label_w, secondary=True)
         )
         controller.trigger_field = make_text_field(
             x=field_x, y=y, width=field_w, mono=True, placeholder=":email  ·  //email"
         )
         detail_snippets.addSubview_(controller.trigger_field)
 
-        y = body_h - 136
+        y = body_h - 148
         detail_snippets.addSubview_(
-            make_label(t("editor.app_label"), x=pad, y=y + 4, width=label_w, secondary=True)
+            make_label(t("editor.app_label"), x=pad, y=y + 6, width=label_w, secondary=True)
         )
         controller.if_app_field = make_text_field(
             x=field_x, y=y, width=field_w, placeholder="Mail, Slack… (vuoto = ovunque)"
@@ -708,19 +724,18 @@ def run_expando_studio(
         controller.form_view = _hidden_tv()
         controller.vars_view = _hidden_tv()
 
-        y = body_h - 172
+        y = body_h - 186
         detail_snippets.addSubview_(
             make_label(t("editor.text_label"), x=pad, y=y, width=form_w, section=True)
         )
-        replace_h = 250.0
-        replace_y = y - 10 - replace_h
+        replace_h = 248.0
+        replace_y = y - 12 - replace_h
         replace_scroll = NSScrollView.alloc().initWithFrame_(
             NSMakeRect(pad, replace_y, form_w, replace_h)
         )
-        replace_scroll.setBorderType_(NSBezelBorder)
         replace_scroll.setHasVerticalScroller_(True)
-        replace_scroll.setBackgroundColor_(color_field_bg())
         replace_scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        style_scroll_field(replace_scroll)
         replace_view = NSTextView.alloc().initWithFrame_(replace_scroll.bounds())
         style_editor_text_view(replace_view, editable=True)
         replace_scroll.setDocumentView_(replace_view)
@@ -730,22 +745,24 @@ def run_expando_studio(
         )
         controller.replace_view = replace_view
 
-        prev_label_y = replace_y - 26
+        prev_label_y = replace_y - 28
         detail_snippets.addSubview_(
             make_label(t("editor.preview_label"), x=pad, y=prev_label_y, width=form_w, section=True)
         )
-        prev_h = 72.0
-        prev_y = max(12.0, prev_label_y - 8 - prev_h)
+        prev_h = 76.0
+        prev_y = max(16.0, prev_label_y - 10 - prev_h)
         preview_scroll = NSScrollView.alloc().initWithFrame_(
             NSMakeRect(pad, prev_y, form_w, prev_h)
         )
-        preview_scroll.setBorderType_(NSBezelBorder)
         preview_scroll.setHasVerticalScroller_(True)
         preview_scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+        style_scroll_field(preview_scroll)
         try:
-            preview_scroll.setBackgroundColor_(NSColor.underPageBackgroundColor())
+            preview_scroll.setBackgroundColor_(
+                NSColor.underPageBackgroundColor().colorWithAlphaComponent_(0.55)
+            )
         except Exception:
-            preview_scroll.setBackgroundColor_(color_control_bg())
+            pass
         preview_view = NSTextView.alloc().initWithFrame_(preview_scroll.bounds())
         style_editor_text_view(preview_view, editable=False, mono=True)
         preview_view.setTextColor_(color_secondary())
@@ -761,12 +778,12 @@ def run_expando_studio(
         main.addSubview_(detail_collections)
 
         col_heading = make_label(
-            t("studio.detail.collection"), x=pad, y=body_h - 36, width=form_w, height=22
+            t("studio.detail.collection"), x=pad, y=body_h - 38, width=form_w, height=24
         )
         col_heading.setFont_(font_title())
         detail_collections.addSubview_(col_heading)
 
-        controller.collection_title = make_text_field(x=pad, y=body_h - 80, width=form_w)
+        controller.collection_title = make_text_field(x=pad, y=body_h - 84, width=form_w)
         controller.collection_title.setEditable_(False)
         controller.collection_title.setBezeled_(False)
         controller.collection_title.setDrawsBackground_(False)
@@ -774,11 +791,11 @@ def run_expando_studio(
         detail_collections.addSubview_(controller.collection_title)
 
         body_scroll = NSScrollView.alloc().initWithFrame_(
-            NSMakeRect(pad, 24, form_w, body_h - 120)
+            NSMakeRect(pad, 20, form_w, body_h - 120)
         )
-        body_scroll.setBorderType_(NSBezelBorder)
         body_scroll.setHasVerticalScroller_(True)
         body_scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        style_scroll_field(body_scroll)
         body_view = NSTextView.alloc().initWithFrame_(body_scroll.bounds())
         style_editor_text_view(body_view, editable=False)
         body_scroll.setDocumentView_(body_view)

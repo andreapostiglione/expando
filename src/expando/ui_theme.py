@@ -1,9 +1,12 @@
-"""AppKit visual tokens for Expando product UI (snippet editor, pickers)."""
+"""AppKit visual tokens for Expando product UI.
+
+On macOS 26+ (Tahoe) prefers Liquid Glass via NSGlassEffectView / glass
+bezels. Falls back to NSVisualEffectView on older systems.
+"""
 
 from __future__ import annotations
 
 from AppKit import (
-    NSBezierPath,
     NSButton,
     NSButtonTypeMomentaryPushIn,
     NSColor,
@@ -20,6 +23,7 @@ from AppKit import (
     NSViewWidthSizable,
     NSVisualEffectBlendingModeBehindWindow,
     NSVisualEffectMaterialSidebar,
+    NSVisualEffectMaterialUnderWindowBackground,
     NSVisualEffectMaterialWindowBackground,
     NSVisualEffectStateActive,
     NSVisualEffectView,
@@ -37,11 +41,26 @@ SIDEBAR_WIDTH = 300.0
 WINDOW_WIDTH = 1080.0
 WINDOW_HEIGHT = 720.0
 TOOLBAR_HEIGHT = 56.0
-ROW_HEIGHT = 34.0
+ROW_HEIGHT = 36.0
+
+# Liquid Glass radii
+RADIUS_CONTROL = 10.0
+RADIUS_CARD = 18.0
+RADIUS_SIDEBAR = 20.0
+RADIUS_WINDOW_INSET = 12.0
+
+
+def _has_glass() -> bool:
+    try:
+        from AppKit import NSGlassEffectView  # noqa: F401
+
+        return True
+    except Exception:
+        return False
 
 
 def font_title() -> NSFont:
-    return NSFont.systemFontOfSize_weight_(20.0, NSFontWeightSemibold)
+    return NSFont.systemFontOfSize_weight_(22.0, NSFontWeightSemibold)
 
 
 def font_section() -> NSFont:
@@ -77,7 +96,11 @@ def color_tertiary():
 
 
 def color_field_bg():
-    return NSColor.textBackgroundColor()
+    # Slight translucency so glass shows through on Tahoe
+    try:
+        return NSColor.textBackgroundColor().colorWithAlphaComponent_(0.72)
+    except Exception:
+        return NSColor.textBackgroundColor()
 
 
 def color_control_bg():
@@ -90,6 +113,14 @@ def color_separator():
 
 def color_accent():
     return NSColor.controlAccentColor()
+
+
+def color_glass_tint():
+    """Very soft accent wash for glass panels."""
+    try:
+        return NSColor.controlAccentColor().colorWithAlphaComponent_(0.08)
+    except Exception:
+        return None
 
 
 def make_label(
@@ -125,7 +156,7 @@ def make_text_field(
     x: float,
     y: float,
     width: float,
-    height: float = 28.0,
+    height: float = 30.0,
     mono: bool = False,
     placeholder: str = "",
 ) -> NSTextField:
@@ -135,6 +166,10 @@ def make_text_field(
     field.setBackgroundColor_(color_field_bg())
     field.setDrawsBackground_(True)
     field.setBezeled_(True)
+    try:
+        field.setFocusRingType_(1)  # exterior
+    except Exception:
+        pass
     if placeholder:
         try:
             field.setPlaceholderString_(placeholder)
@@ -155,19 +190,25 @@ def make_button(
 ) -> NSButton:
     button = NSButton.alloc().initWithFrame_(NSMakeRect(x, y, width, height))
     button.setTitle_(title)
-    button.setBezelStyle_(NSBezelStyleRounded)
     button.setButtonType_(NSButtonTypeMomentaryPushIn)
     button.setFont_(NSFont.systemFontOfSize_weight_(13.0, NSFontWeightMedium))
+    # Prefer Liquid Glass bezel on macOS 26+
+    try:
+        from AppKit import NSBezelStyleGlass
+
+        button.setBezelStyle_(NSBezelStyleGlass)
+    except Exception:
+        button.setBezelStyle_(NSBezelStyleRounded)
     if primary:
         try:
             button.setKeyEquivalent_("\r")
         except Exception:
             pass
-        # Emphasize primary action when AppKit supports it.
         try:
-            from AppKit import NSControlStateValueOn
-
+            # Emphasize primary control when supported
             button.setHighlighted_(False)
+            if hasattr(button, "setHasDestructiveAction_"):
+                pass
         except Exception:
             pass
     if destructive:
@@ -194,9 +235,107 @@ def make_content_effect(frame) -> NSVisualEffectView:
     visual = NSVisualEffectView.alloc().initWithFrame_(frame)
     visual.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
     visual.setBlendingMode_(NSVisualEffectBlendingModeBehindWindow)
-    visual.setMaterial_(NSVisualEffectMaterialWindowBackground)
+    try:
+        visual.setMaterial_(NSVisualEffectMaterialUnderWindowBackground)
+    except Exception:
+        visual.setMaterial_(NSVisualEffectMaterialWindowBackground)
     visual.setState_(NSVisualEffectStateActive)
     return visual
+
+
+def make_window_backdrop(frame) -> NSView:
+    """Full-window soft backdrop so Liquid Glass has something ambient to sample."""
+    visual = NSVisualEffectView.alloc().initWithFrame_(frame)
+    visual.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+    visual.setBlendingMode_(NSVisualEffectBlendingModeBehindWindow)
+    try:
+        visual.setMaterial_(NSVisualEffectMaterialUnderWindowBackground)
+    except Exception:
+        visual.setMaterial_(NSVisualEffectMaterialWindowBackground)
+    visual.setState_(NSVisualEffectStateActive)
+    return visual
+
+
+def make_glass_panel(
+    frame,
+    *,
+    corner_radius: float = RADIUS_CARD,
+    clear: bool = False,
+    tint: bool = False,
+    autoresizing: int | None = None,
+) -> tuple[NSView, NSView]:
+    """Return (shell, content) — shell is glass on Tahoe, vibrancy fallback otherwise.
+
+    Put all interactive subviews into *content*.
+    """
+    if _has_glass():
+        from AppKit import (
+            NSGlassEffectView,
+            NSGlassEffectViewStyleClear,
+            NSGlassEffectViewStyleRegular,
+        )
+
+        glass = NSGlassEffectView.alloc().initWithFrame_(frame)
+        glass.setCornerRadius_(corner_radius)
+        try:
+            glass.setStyle_(
+                NSGlassEffectViewStyleClear if clear else NSGlassEffectViewStyleRegular
+            )
+        except Exception:
+            pass
+        if tint:
+            tint_color = color_glass_tint()
+            if tint_color is not None:
+                try:
+                    glass.setTintColor_(tint_color)
+                except Exception:
+                    pass
+        if autoresizing is not None:
+            glass.setAutoresizingMask_(autoresizing)
+        else:
+            glass.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+
+        content = NSView.alloc().initWithFrame_(glass.bounds())
+        content.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        glass.setContentView_(content)
+        return glass, content
+
+    # Fallback: soft vibrancy card
+    shell = make_sidebar_effect(frame) if clear else make_content_effect(frame)
+    if autoresizing is not None:
+        shell.setAutoresizingMask_(autoresizing)
+    shell.setWantsLayer_(True)
+    if shell.layer() is not None:
+        try:
+            shell.layer().setCornerRadius_(corner_radius)
+            shell.layer().setMasksToBounds_(True)
+        except Exception:
+            pass
+    content = NSView.alloc().initWithFrame_(shell.bounds())
+    content.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+    shell.addSubview_(content)
+    return shell, content
+
+
+def make_glass_container(frame, *, spacing: float = 16.0) -> tuple[NSView, NSView]:
+    """Container that merges nearby glass surfaces (Tahoe). Falls back to plain view."""
+    try:
+        from AppKit import NSGlassEffectContainerView
+
+        container = NSGlassEffectContainerView.alloc().initWithFrame_(frame)
+        container.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        try:
+            container.setSpacing_(spacing)
+        except Exception:
+            pass
+        content = NSView.alloc().initWithFrame_(container.bounds())
+        content.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        container.setContentView_(content)
+        return container, content
+    except Exception:
+        host = NSView.alloc().initWithFrame_(frame)
+        host.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        return host, host
 
 
 def make_panel_view(
@@ -206,16 +345,20 @@ def make_panel_view(
     width: float,
     height: float,
 ) -> NSView:
-    """Soft card surface for grouped content."""
+    """Soft card surface for grouped content (legacy helper)."""
     panel = NSView.alloc().initWithFrame_(NSMakeRect(x, y, width, height))
     panel.setWantsLayer_(True)
     layer = panel.layer()
     if layer is not None:
         try:
-            layer.setCornerRadius_(10.0)
-            layer.setBackgroundColor_(color_control_bg().CGColor())
-            layer.setBorderWidth_(1.0)
-            layer.setBorderColor_(color_separator().CGColor())
+            layer.setCornerRadius_(RADIUS_CARD)
+            layer.setBackgroundColor_(
+                NSColor.controlBackgroundColor().colorWithAlphaComponent_(0.55).CGColor()
+            )
+            layer.setBorderWidth_(0.5)
+            layer.setBorderColor_(
+                NSColor.separatorColor().colorWithAlphaComponent_(0.35).CGColor()
+            )
         except Exception:
             pass
     return panel
@@ -232,6 +375,7 @@ def style_editor_text_view(text_view, *, editable: bool = True, mono: bool = Fal
     try:
         text_view.setAutomaticQuoteSubstitutionEnabled_(False)
         text_view.setAutomaticDashSubstitutionEnabled_(False)
+        text_view.setTextContainerInset_((8.0, 10.0))
     except Exception:
         pass
 
@@ -242,6 +386,7 @@ def style_sidebar_table(table) -> None:
     try:
         table.setBackgroundColor_(NSColor.clearColor())
         table.setSelectionHighlightStyle_(1)  # regular
+        table.setIntercellSpacing_((0.0, 4.0))
     except Exception:
         pass
     try:
@@ -250,3 +395,21 @@ def style_sidebar_table(table) -> None:
         table.setRowSizeStyle_(NSTableViewRowSizeStyleMedium)
     except Exception:
         pass
+
+
+def style_scroll_field(scroll_view, *, inset: bool = True) -> None:
+    """Round, soft scrollable field shell that sits on glass."""
+    scroll_view.setBorderType_(0)
+    scroll_view.setDrawsBackground_(True)
+    scroll_view.setBackgroundColor_(color_field_bg())
+    scroll_view.setWantsLayer_(True)
+    if scroll_view.layer() is not None:
+        try:
+            scroll_view.layer().setCornerRadius_(RADIUS_CONTROL)
+            scroll_view.layer().setMasksToBounds_(True)
+            scroll_view.layer().setBorderWidth_(0.5)
+            scroll_view.layer().setBorderColor_(
+                NSColor.separatorColor().colorWithAlphaComponent_(0.28).CGColor()
+            )
+        except Exception:
+            pass

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.26"><img src="https://img.shields.io/badge/version-3.29.26-blue?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/andreapostiglione/expando/releases/tag/v3.29.27"><img src="https://img.shields.io/badge/version-3.29.27-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" /></a>
   <a href="https://github.com/andreapostiglione/expando/actions"><img src="https://img.shields.io/github/actions/workflow/status/andreapostiglione/expando/ci.yml?branch=main&style=flat-square&label=CI" alt="CI" /></a>
@@ -34,6 +34,16 @@ macOS still requires **Accessibility** and **Input Monitoring** permissions. Exp
 
 ## What's new
 
+### v3.29.27 — Unified Studio + Liquid Glass
+
+| Area | What's new |
+|------|------------|
+| **One Studio window** | New, manage, and collections live in a single native surface — menu: **Snippet e raccolte…** |
+| **Segmented nav** | Switch **My snippets** / **Collections** without leaving the window |
+| **Liquid Glass** | On macOS 26 Tahoe: floating glass sidebar + detail cards (`NSGlassEffectView`), glass buttons, capsule control |
+| **Shortcuts** | ⌘N new · ⌘S save · ⌘D duplicate |
+| **Fallback** | Older macOS keeps vibrancy materials and the same layout |
+
 ### v3.29.26 — Reliability + hot path + UX
 
 | Area | What's new |
@@ -53,28 +63,6 @@ macOS still requires **Accessibility** and **Input Monitoring** permissions. Exp
 | **Terminals** | Trigger delete uses reliable backspaces (no partial leftovers like `:grogrok` before paste) |
 | **Same-line retype** | After an expansion, a short mute + buffer clear so delete and type another trigger on the same line works |
 | **Latency** | Skips a slow Secure Input AX probe when Carbon already reports inactive; caches profile YAML by mtime |
-
-### v3.29.24 — Lock file correctness
-
-| Area | What's new |
-|------|------------|
-| **Daemon lock** | Lock files are updated in-place after restart instead of appending PID text |
-
-### v3.29.23 — Clean restart and doctor state
-
-| Area | What's new |
-|------|------------|
-| **Restart/upgrade** | Old listener processes now exit cleanly on stop/restart |
-| **Doctor** | Held lock files are no longer reported as stale if the PID text is missing |
-
-### v3.29.22 — Public-ready defaults
-
-| Area | What's new |
-|------|------------|
-| **First launch** | New installs start with neutral, useful snippets instead of developer shortcuts |
-| **Snippet editor** | Snippet lists show friendly collection names, not internal file names |
-| **Menu copy** | Menu actions talk about snippets and collections instead of developer terms |
-| **README** | User setup comes first; developer and CLI details moved lower |
 
 ---
 
@@ -96,11 +84,12 @@ Expando:      Hi there!
 | | Feature | Benefit |
 |---|---------|---------|
 | 🔒 | **100% local** | Your snippets never leave your machine |
-| 📟 | **Menu bar native** | Always-visible status, toggle, new snippet, search, edit |
+| 📟 | **Menu bar native** | Always-visible status, toggle, search, Studio |
+| 🪟 | **Studio UI** | One window for snippets + collections (Liquid Glass on macOS 26) |
 | 🔎 | **Fuzzy search** | `⌘⇧E` → live filter + preview panel |
 | 📝 | **Multi-field forms** | Single-window input for dynamic snippets |
 | 🎯 | **Advanced app rules** | Filter by app name, bundle ID, or window title |
-| 📦 | **Snippet collections** | Add reusable sets for email, support, legal, sales, and more |
+| 📦 | **Snippet collections** | Install reusable sets from Studio → Collections |
 | 🩺 | **Built-in status check** | Permission and listener checks from the menu bar |
 | 🔄 | **Self-healing** | Listener watchdog, crash-loop backoff, config rollback to last-good |
 | ✨ | **Native Sparkle updates** | Signed DMG, appcast, helper smoke test in release CI |
@@ -145,12 +134,11 @@ If snippets do not expand, open **Permessi macOS** from the menu bar and make su
 ### 3. Create your first snippet
 
 1. Click the Expando menu bar icon.
-2. Choose **Nuovo snippet**.
-3. Enter an abbreviation, for example `:email`.
-4. Enter the text to paste.
-5. Click **Salva**.
+2. Choose **Snippet e raccolte…** (Studio).
+3. Click **Nuovo**, enter a trigger (e.g. `:email`) and the expansion text.
+4. Click **Salva** (or press ⌘S).
 
-You can manage all snippets from **I miei snippet**.
+Browse ready-made packs from the same window: switch to **Raccolte** / **Collections** and install.
 
 ### 4. Keep Expando running
 
@@ -187,7 +175,7 @@ Or install auto-start at login:
 |----------|--------|
 | `⌥⌥` (double Alt) | Toggle Expando on/off |
 | `⌘⇧E` | Open snippet search picker |
-| Menu bar icon | Status, new snippet, search, edit, restart, quit |
+| Menu bar icon | Status, search, Studio (snippets & collections), restart, quit |
 
 ---
 
@@ -629,7 +617,7 @@ More: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Roadmap
 
-Current release: **v3.29.26**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
+Current release: **v3.29.27**. See [ROADMAP.md](ROADMAP.md) for completed sprints and backlog.
 
 ## Contributing
 

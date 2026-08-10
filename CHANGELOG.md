@@ -4,9 +4,15 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+## [3.29.27] — 2026-08-10
+
+### Added
+- **Expando Studio**: single native window for snippets and collections (segmented control + list + detail). Menubar entry **Snippet e raccolte…** replaces separate new / manage / hub entry points.
+- Keyboard shortcuts in Studio: ⌘N new, ⌘S save, ⌘D duplicate.
+
 ### Changed
-- **Unified Studio UI**: Nuovo snippet, Gestisci snippet and Raccolte are one native macOS window (segmented control + list + detail). Menubar exposes a single entry: **Snippet e raccolte…**. Layout follows Apple utility patterns (transparent titlebar, traffic-light safe top bar, sidebar list, content detail, ⌘N/⌘S/⌘D).
-- **Liquid Glass Studio** (macOS 26 Tahoe): floating glass sidebar + detail cards via `NSGlassEffectView`, glass button bezels, capsule section switcher, soft ambient window backdrop. Falls back to vibrancy materials on older macOS.
+- Studio layout follows Apple utility patterns: transparent titlebar, traffic-light safe top bar, floating sidebar list, content detail.
+- **Liquid Glass Studio** on macOS 26 Tahoe: floating glass sidebar + detail cards via `NSGlassEffectView`, glass button bezels (`NSBezelStyleGlass`), capsule section switcher, ambient under-window backdrop. Vibrancy fallback on older macOS.
 
 ## [3.29.26] — 2026-08-10
 
@@ -278,6 +284,9 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 - Plugin allowlist, crash trend HTML, docs (YAML / Troubleshooting / Architecture)
 - E2E nightly workflow + runner failover documentation
 
+[3.29.27]: https://github.com/andreapostiglione/expando/compare/v3.29.26...v3.29.27
+[3.29.26]: https://github.com/andreapostiglione/expando/compare/v3.29.25...v3.29.26
+[3.29.25]: https://github.com/andreapostiglione/expando/compare/v3.29.24...v3.29.25
 [3.29.24]: https://github.com/andreapostiglione/expando/compare/v3.29.23...v3.29.24
 [3.29.23]: https://github.com/andreapostiglione/expando/compare/v3.29.22...v3.29.23
 [3.29.22]: https://github.com/andreapostiglione/expando/compare/v3.29.21...v3.29.22

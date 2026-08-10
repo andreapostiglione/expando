@@ -1,7 +1,7 @@
 # Expando — sessione compatta
 
 **Repo:** https://github.com/andreapostiglione/expando  
-**Versione:** 3.29.26 | **Branch:** main  
+**Versione:** 3.29.27 | **Branch:** main  
 **Team ID:** 68Q8CQBQQV (Inochi Srl Developer ID)
 
 ## Ultima sessione (2026-08-08) — expansion reliability

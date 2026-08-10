@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Community packages queue. status: pending | approved | rejected",
-  "updated_at": "2026-08-08T16:13:55+00:00",
+  "updated_at": "2026-08-10T06:35:09+00:00",
   "packages": [
     {
       "id": "devops-it",

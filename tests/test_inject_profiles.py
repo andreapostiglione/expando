@@ -25,3 +25,12 @@ def test_resolve_profiles():
 def test_extra_terminal_apps():
     assert is_terminal_app("MyCustomTerm", extra_apps=["MyCustomTerm"])
     assert resolve_inject_profile("MyCustomTerm", extra_terminal_apps=["MyCustomTerm"]).name == "terminal"
+
+
+def test_code_does_not_match_xcode():
+    # Short candidate "Code" must not match inside "Xcode".
+    assert not is_terminal_app("Xcode")
+    assert not is_terminal_app("Xcode", "com.apple.dt.Xcode")
+    assert is_terminal_app("Code")
+    assert is_terminal_app("Visual Studio Code")
+    assert is_terminal_app("Cursor")

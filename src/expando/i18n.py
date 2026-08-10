@@ -53,11 +53,6 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Apri permessi",
         "en": "Open permissions",
     },
-    "runtime.app": {"it": "app bundle", "en": "app bundle"},
-    "runtime.packaged": {"it": "installazione legacy", "en": "legacy install"},
-    "runtime.dev": {"it": "sviluppo", "en": "development"},
-    "runtime.venv": {"it": "venv locale", "en": "local venv"},
-    "runtime.unknown": {"it": "sconosciuta", "en": "unknown"},
     "notify.block.title": {"it": "Expando", "en": "Expando"},
     "notify.block.secure_input": {
         "it": "Espansione bloccata: campo password attivo (secure input).",
@@ -152,9 +147,6 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "PROBLEMI NOTARIZZAZIONE",
         "en": "NOTARIZATION ISSUES",
     },
-    "menubar.title_enabled": {"it": "Expando ●", "en": "Expando ●"},
-    "menubar.title_disabled": {"it": "Expando ○", "en": "Expando ○"},
-    "menubar.title_listener_dead": {"it": "Expando ⚠", "en": "Expando ⚠"},
     "menubar.listener_dead": {
         "it": "Listener tastiera non attivo — riavvio automatico in corso",
         "en": "Keyboard listener is down — auto-restart in progress",
@@ -162,7 +154,6 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.disable": {"it": "Disattiva", "en": "Disable"},
     "menubar.enable": {"it": "Attiva", "en": "Enable"},
     "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
-    "menubar.new_snippet": {"it": "Nuovo snippet", "en": "New snippet"},
     "menubar.studio": {
         "it": "Snippet e raccolte…",
         "en": "Snippets & collections…",
@@ -214,20 +205,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Fill in the snippet fields",
     },
     "ui.insert": {"it": "Inserisci", "en": "Insert"},
-    "menubar.restore_picker": {
-        "it": "Scegli backup da ripristinare",
-        "en": "Choose a backup to restore",
-    },
-    "menubar.hub": {"it": "Aggiungi raccolte snippet", "en": "Add snippet collections"},
-    "menubar.editor": {"it": "I miei snippet", "en": "My snippets"},
     "menubar.restart": {"it": "Riavvia app", "en": "Restart app"},
     "menubar.backup": {"it": "Crea backup", "en": "Create backup"},
     "menubar.restore": {"it": "Ripristina backup", "en": "Restore backup"},
     "menubar.advanced": {"it": "Supporto", "en": "Support"},
-    "menubar.backup_created": {
-        "it": "Backup creato: {path}",
-        "en": "Backup created: {path}",
-    },
     "menubar.backup_saved": {
         "it": "Backup salvato ({label}).",
         "en": "Backup saved ({label}).",
@@ -239,10 +220,6 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.no_backups": {
         "it": "Nessun backup trovato.",
         "en": "No backups found.",
-    },
-    "menubar.restored": {
-        "it": "Configurazione ripristinata da {path}",
-        "en": "Configuration restored from {path}",
     },
     "menubar.restore_confirm_title": {
         "it": "Ripristinare il backup?",
@@ -261,11 +238,6 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "The backup contains errors. Your previous working configuration was restored.",
     },
     "editor.duplicate.button": {"it": "Duplica", "en": "Duplicate"},
-    "editor.duplicate.title": {"it": "Duplica snippet", "en": "Duplicate snippet"},
-    "editor.duplicate.body": {
-        "it": "Scegli la raccolta di destinazione.",
-        "en": "Choose the destination collection.",
-    },
     "editor.duplicate.select": {
         "it": "Seleziona uno snippet da duplicare.",
         "en": "Select a snippet to duplicate.",
@@ -273,24 +245,6 @@ _STRINGS: dict[str, dict[str, str]] = {
     "editor.duplicate.readonly": {
         "it": "Le raccolte installate non possono essere duplicate da qui.",
         "en": "Installed collections cannot be duplicated here.",
-    },
-    "editor.move.button": {"it": "Sposta", "en": "Move"},
-    "editor.move.title": {"it": "Sposta snippet", "en": "Move snippet"},
-    "editor.move.body": {
-        "it": "Scegli la raccolta di destinazione.",
-        "en": "Choose the destination collection.",
-    },
-    "editor.move.select": {
-        "it": "Seleziona uno snippet da spostare.",
-        "en": "Select a snippet to move.",
-    },
-    "editor.move.readonly": {
-        "it": "Le raccolte installate non possono essere spostate da qui.",
-        "en": "Installed collections cannot be moved here.",
-    },
-    "editor.move.no_targets": {
-        "it": "Non ci sono altre raccolte disponibili.",
-        "en": "There are no other collections available.",
     },
     "editor.collection.personal": {"it": "Personale", "en": "Personal"},
     "editor.collection.installed": {
@@ -317,25 +271,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Riavvio fallito: {error}",
         "en": "Restart failed: {error}",
     },
-    "menubar.title_hub_updates": {
-        "it": "Expando ↑{count}",
-        "en": "Expando ↑{count}",
-    },
     "menubar.update_manual_required": {
         "it": "Scarica l'ultima versione da GitHub Releases.",
         "en": "Download the latest version from GitHub Releases.",
     },
     "menubar.updates": {"it": "Aggiorna Expando", "en": "Update Expando"},
     "menubar.quit": {"it": "Esci", "en": "Quit"},
-    "menubar.installed": {
-        "it": "Raccolta {collection} installata",
-        "en": "Installed collection {collection}",
-    },
-    "menubar.install_failed": {
-        "it": "Installazione raccolta non riuscita: {error}",
-        "en": "Collection install failed: {error}",
-    },
-    "menubar.restarted": {"it": "Servizio riavviato", "en": "Service restarted"},
     "menubar.up_to_date": {
         "it": "Expando è aggiornato.",
         "en": "Expando is up to date.",
@@ -343,10 +284,6 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.update_failed": {
         "it": "Controllo aggiornamenti fallito: {error}",
         "en": "Update check failed: {error}",
-    },
-    "menubar.ui_failed": {
-        "it": "Impossibile aprire la finestra. Riprova o riavvia Expando.",
-        "en": "Could not open the window. Try again or restart Expando.",
     },
     "menubar.action_failed": {
         "it": "Operazione non riuscita: {error}",
@@ -365,10 +302,6 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.snooze.1h": {"it": "Pausa 1 ora", "en": "Snooze 1 hour"},
     "menubar.snooze.4h": {"it": "Pausa 4 ore", "en": "Snooze 4 hours"},
     "menubar.snooze.clear": {"it": "Riprendi espansione", "en": "Resume expansion"},
-    "menubar.snooze.active": {
-        "it": "In pausa ({remaining})",
-        "en": "Snoozed ({remaining})",
-    },
     "menubar.snooze.enabled": {
         "it": "Espansione in pausa per {remaining}.",
         "en": "Expansion snoozed for {remaining}.",
@@ -410,20 +343,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "it": "Cerca snippet",
         "en": "Search snippets",
     },
-    "editor.window_title": {"it": "Expando — I miei snippet", "en": "Expando — My snippets"},
     "editor.trigger_label": {"it": "Abbreviazione", "en": "Abbreviation"},
     "editor.app_label": {"it": "Solo in app", "en": "Only in app"},
-    "editor.collection_label": {"it": "Raccolta", "en": "Collection"},
     "editor.text_label": {"it": "Testo espanso", "en": "Expanded text"},
     "editor.preview_label": {"it": "Anteprima", "en": "Preview"},
     "editor.new_button": {"it": "Nuovo", "en": "New"},
     "editor.save_button": {"it": "Salva", "en": "Save"},
     "editor.delete_button": {"it": "Elimina", "en": "Delete"},
     "editor.close_button": {"it": "Chiudi", "en": "Close"},
-    "doctor.repair.launch_agent": {
-        "it": "LaunchAgent reinstallato",
-        "en": "LaunchAgent reinstalled",
-    },
     "doctor.notarize_history.title": {
         "it": "Audit notarizzazione (storico locale)",
         "en": "Notarization audit (local history)",

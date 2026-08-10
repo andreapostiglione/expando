@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 # Apps where selection-based delete fails and paste timing is stricter.
@@ -65,6 +66,27 @@ TERMINAL_PROFILE = InjectProfile(
 )
 
 
+def app_name_matches_terminal_candidate(app_name: str, candidate: str) -> bool:
+    """Match terminal app names without treating Xcode as Code.
+
+    Uses equality and whole-token match so short candidates like ``Code`` do
+    not match inside ``Xcode``. Multi-word candidates may still match as a
+    substring of the full localized name.
+    """
+    a = app_name.casefold().strip()
+    c = candidate.casefold().strip()
+    if not a or not c:
+        return False
+    if a == c:
+        return True
+    tokens = re.findall(r"[a-z0-9]+", a)
+    if c in tokens:
+        return True
+    if " " in c and c in a:
+        return True
+    return False
+
+
 def is_terminal_app(
     app_name: str | None,
     bundle_id: str | None = None,
@@ -75,9 +97,8 @@ def is_terminal_app(
     if extra_apps:
         names.extend(extra_apps)
     if app_name:
-        lowered = app_name.casefold()
         for candidate in names:
-            if candidate.casefold() in lowered or lowered in candidate.casefold():
+            if app_name_matches_terminal_candidate(app_name, candidate):
                 return True
     if bundle_id:
         bid = bundle_id.casefold()

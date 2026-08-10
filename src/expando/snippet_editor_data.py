@@ -134,9 +134,11 @@ def _load_match_file(path: Path) -> dict:
 
 
 def _write_match_file(path: Path, data: dict) -> None:
+    from .atomic_io import atomic_write_text
+
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
-        yaml.safe_dump(data, handle, allow_unicode=True, sort_keys=False)
+    text = yaml.safe_dump(data, allow_unicode=True, sort_keys=False)
+    atomic_write_text(path, text)
 
 
 def _parse_entry_id(entry_id: str) -> tuple[str, int]:
@@ -178,6 +180,184 @@ def _format_when_field(when: dict) -> str:
     return yaml.safe_dump(when, allow_unicode=True, sort_keys=False).strip()
 
 
+# Fields the Studio/editor UI owns. Everything else on an existing YAML match
+# (word_break, label, search_terms, extra trigger aliases, …) is preserved.
+_EDITOR_OWNED_KEYS = frozenset(
+    {
+        "trigger",
+        "triggers",
+        "replace",
+        "regex",
+        "image",
+        "priority",
+        "force_clipboard",
+        "when",
+        "if_app",
+        "unless_app",
+        "if_bundle",
+        "unless_bundle",
+        "if_title",
+        "unless_title",
+        "form",
+        "vars",
+    }
+)
+
+
+def _form_to_yaml(form: list[FormField] | None) -> list[dict] | None:
+    if not form:
+        return None
+    return [
+        {
+            "name": field.name,
+            "label": field.label,
+            **({"default": field.default} if field.default else {}),
+        }
+        for field in form
+    ]
+
+
+def _vars_to_yaml(variables: list[Variable] | None) -> list[dict] | None:
+    if not variables:
+        return None
+    return [
+        {
+            "name": variable.name,
+            "type": variable.type,
+            **({"params": dict(variable.params)} if variable.params else {}),
+        }
+        for variable in variables
+    ]
+
+
+def _apply_editor_fields(
+    entry: dict,
+    *,
+    trigger: str,
+    replace: str,
+    if_app: list[str] | None = None,
+    unless_app: list[str] | None = None,
+    if_bundle: list[str] | None = None,
+    unless_bundle: list[str] | None = None,
+    if_title: list[str] | None = None,
+    unless_title: list[str] | None = None,
+    form: list[FormField] | None = None,
+    variables: list[Variable] | None = None,
+    regex: bool = False,
+    when: dict | None = None,
+    image: str = "",
+    priority: int = 0,
+    force_clipboard: bool = False,
+) -> None:
+    """Write editor-owned keys onto *entry* (mutates in place)."""
+    entry["replace"] = replace
+    if regex:
+        entry["regex"] = True
+    else:
+        entry.pop("regex", None)
+    if image:
+        entry["image"] = image
+    else:
+        entry.pop("image", None)
+    if priority:
+        entry["priority"] = priority
+    else:
+        entry.pop("priority", None)
+    if force_clipboard:
+        entry["force_clipboard"] = True
+    else:
+        entry.pop("force_clipboard", None)
+    if when:
+        entry["when"] = when
+    else:
+        entry.pop("when", None)
+
+    for key, value in (
+        ("if_app", if_app),
+        ("unless_app", unless_app),
+        ("if_bundle", if_bundle),
+        ("unless_bundle", unless_bundle),
+        ("if_title", if_title),
+        ("unless_title", unless_title),
+    ):
+        if value:
+            entry[key] = value
+        else:
+            entry.pop(key, None)
+
+    form_yaml = _form_to_yaml(form)
+    if form_yaml:
+        entry["form"] = form_yaml
+    else:
+        entry.pop("form", None)
+    vars_yaml = _vars_to_yaml(variables)
+    if vars_yaml:
+        entry["vars"] = vars_yaml
+    else:
+        entry.pop("vars", None)
+
+    # Trigger / multi-alias shape: keep secondary aliases when present.
+    old_triggers = extract_triggers(entry)
+    used_list = "triggers" in entry or len(old_triggers) > 1
+    if used_list:
+        entry["triggers"] = [trigger] + [t for t in old_triggers if t != trigger]
+        entry.pop("trigger", None)
+    else:
+        entry["trigger"] = trigger
+        entry.pop("triggers", None)
+
+
+def merge_match_update(
+    existing: dict | None,
+    *,
+    trigger: str,
+    replace: str,
+    if_app: list[str] | None = None,
+    unless_app: list[str] | None = None,
+    if_bundle: list[str] | None = None,
+    unless_bundle: list[str] | None = None,
+    if_title: list[str] | None = None,
+    unless_title: list[str] | None = None,
+    form: list[FormField] | None = None,
+    variables: list[Variable] | None = None,
+    regex: bool = False,
+    when: dict | None = None,
+    image: str = "",
+    priority: int = 0,
+    force_clipboard: bool = False,
+) -> dict:
+    """Merge editor fields into an existing YAML match without dropping aliases/flags."""
+    entry: dict = {}
+    if isinstance(existing, dict):
+        for key, value in existing.items():
+            if key not in _EDITOR_OWNED_KEYS:
+                entry[key] = value
+        # Seed trigger shape from existing so multi-alias is detected.
+        if "triggers" in existing:
+            entry["triggers"] = list(existing.get("triggers") or [])
+        elif "trigger" in existing:
+            entry["trigger"] = existing.get("trigger")
+    _apply_editor_fields(
+        entry,
+        trigger=trigger,
+        replace=replace,
+        if_app=if_app,
+        unless_app=unless_app,
+        if_bundle=if_bundle,
+        unless_bundle=unless_bundle,
+        if_title=if_title,
+        unless_title=unless_title,
+        form=form,
+        variables=variables,
+        regex=regex,
+        when=when,
+        image=image,
+        priority=priority,
+        force_clipboard=force_clipboard,
+    )
+    return entry
+
+
 def _build_entry_dict(
     trigger: str,
     replace: str,
@@ -196,48 +376,52 @@ def _build_entry_dict(
     priority: int = 0,
     force_clipboard: bool = False,
 ) -> dict:
-    entry: dict = {"trigger": trigger, "replace": replace}
-    if regex:
-        entry["regex"] = True
-    if image:
-        entry["image"] = image
-    if priority:
-        entry["priority"] = priority
-    if force_clipboard:
-        entry["force_clipboard"] = True
-    if when:
-        entry["when"] = when
-    if if_app:
-        entry["if_app"] = if_app
-    if unless_app:
-        entry["unless_app"] = unless_app
-    if if_bundle:
-        entry["if_bundle"] = if_bundle
-    if unless_bundle:
-        entry["unless_bundle"] = unless_bundle
-    if if_title:
-        entry["if_title"] = if_title
-    if unless_title:
-        entry["unless_title"] = unless_title
-    if form:
-        entry["form"] = [
-            {
-                "name": field.name,
-                "label": field.label,
-                **({"default": field.default} if field.default else {}),
-            }
-            for field in form
-        ]
-    if variables:
-        entry["vars"] = [
-            {
-                "name": variable.name,
-                "type": variable.type,
-                **({"params": dict(variable.params)} if variable.params else {}),
-            }
-            for variable in variables
-        ]
-    return entry
+    """Build a new match dict (create path). Prefer merge_match_update for edits."""
+    return merge_match_update(
+        None,
+        trigger=trigger,
+        replace=replace,
+        if_app=if_app,
+        unless_app=unless_app,
+        if_bundle=if_bundle,
+        unless_bundle=unless_bundle,
+        if_title=if_title,
+        unless_title=unless_title,
+        form=form,
+        variables=variables,
+        regex=regex,
+        when=when,
+        image=image,
+        priority=priority,
+        force_clipboard=force_clipboard,
+    )
+
+
+def empty_snippet_form_state(
+    *,
+    target_file: str = DEFAULT_SNIPPET_FILE,
+    trigger: str = "",
+) -> dict[str, str]:
+    """Neutral Studio form state — no inheritance from a previous selection."""
+    return {
+        "id": "",
+        "trigger": trigger,
+        "replace": "",
+        "if_app": "",
+        "unless_app": "",
+        "if_bundle": "",
+        "unless_bundle": "",
+        "if_title": "",
+        "unless_title": "",
+        "regex": "",
+        "when": "",
+        "image": "",
+        "priority": "",
+        "force_clipboard": "",
+        "target_file": target_file,
+        "form": "",
+        "vars": "",
+    }
 
 
 def preview_snippet_text(
@@ -443,9 +627,11 @@ def update_snippet_entry(
         if trigger in extract_triggers(item):
             raise ValueError(t("editor.duplicate_trigger").format(trigger=trigger))
 
-    matches[index] = _build_entry_dict(
-        trigger,
-        replace,
+    existing = matches[index] if isinstance(matches[index], dict) else {}
+    matches[index] = merge_match_update(
+        existing,
+        trigger=trigger,
+        replace=replace,
         if_app=if_app,
         unless_app=unless_app,
         if_bundle=if_bundle,

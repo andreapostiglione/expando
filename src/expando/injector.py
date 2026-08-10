@@ -103,8 +103,10 @@ class TextInjector:
 
     def _mac_clipboard_paste_image(self, image_path: Path) -> bool:
         type_code = macos_clipboard_type_for(image_path)
+        # Quote for AppleScript string: backslash then double-quote.
+        escaped = str(image_path).replace("\\", "\\\\").replace('"', '\\"')
         script = (
-            f'set imageFile to POSIX file "{image_path}"\n'
+            f'set imageFile to POSIX file "{escaped}"\n'
             f"set the clipboard to (read imageFile as «class {type_code}»)"
         )
         result = subprocess.run(

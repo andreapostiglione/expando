@@ -476,17 +476,11 @@ class KeyboardService:
                 self._last_toggle_press = now
             return
 
-        # During inject mute, ignore synthetic backspaces/paste but allow real
-        # user typing so the next trigger on the same line is not dropped.
+        # During inject mute drop ALL keys (including printable). Synthetic
+        # Controller.type() events would otherwise re-enter the buffer after expand.
+        # Same-line retype works after the short mute ends (buffer cleared on finish).
         if self._is_injecting():
-            if key == Key.backspace:
-                return
-            if hasattr(key, "char") and key.char is not None:
-                char = key.char
-                if char.lower() == "v" and Key.cmd in self._pressed_modifiers:
-                    return
-            else:
-                return
+            return
 
         if key == Key.backspace:
             self._dispatch(self.engine.handle_backspace)
@@ -532,12 +526,13 @@ class KeyboardService:
     def _run_expansion(self, action: Callable[[], bool]) -> None:
         """Match+inject while ignoring synthetic key events.
 
-        Mute must be short: a long mute after expand made delete+retype of another
-        trigger on the same line fail (keys never entered the buffer).
+        Mute starts only *after* a successful expand so multi-char triggers still
+        queue while the worker is busy. Queued jobs that land during mute are
+        dropped here so Controller.type() chars never re-enter the buffer.
+        Mute must be short (same-line retype after drain).
         """
-        was_injecting = self._is_injecting()
-        if not was_injecting:
-            self._set_injecting(True)
+        if self._is_injecting():
+            return
         expanded = False
         try:
             expanded = bool(action())
@@ -547,21 +542,9 @@ class KeyboardService:
                     self.engine.clear_buffer()
                 except Exception:
                     logger.debug("Failed to clear buffer after expand", exc_info=True)
-                # Hold a single mute window for synthetic key drain.
-                with self._state_lock:
-                    self._injecting_depth = 1
+                # Refcount only — never force-assign depth to a constant.
+                self._set_injecting(True)
                 self._schedule_injecting_end(delay=0.08)
-            elif not was_injecting:
-                self._set_injecting(False)
-
-    def _maybe_expand(self, expanded: bool) -> None:
-        if expanded:
-            try:
-                self.engine.clear_buffer()
-            except Exception:
-                logger.debug("Failed to clear buffer after expand", exc_info=True)
-            self._set_injecting(True)
-            self._schedule_injecting_end(delay=0.08)
 
 
 def build_service(config_dir: Path) -> KeyboardService:

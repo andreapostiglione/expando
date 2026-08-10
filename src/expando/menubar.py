@@ -343,25 +343,6 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             finally:
                 set_ui_active(False)
 
-        def edit_snippets(self, _sender) -> None:
-            self.open_studio(_sender)
-
-        def new_snippet(self, _sender) -> None:
-            try:
-                self._open_snippet_editor(initial_new=True)
-            except Exception as exc:
-                self._notify_action_failed(exc)
-            finally:
-                set_ui_active(False)
-
-        def browse_packages(self, _sender) -> None:
-            try:
-                self._open_snippet_editor(initial_section="collections")
-            except Exception as exc:
-                self._notify_action_failed(exc)
-            finally:
-                set_ui_active(False)
-
         def _open_snippet_editor(
             self,
             *,

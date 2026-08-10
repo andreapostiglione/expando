@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import Callable
 
 from .i18n import t, tf
-from .snippet_editor_data import DEFAULT_SNIPPET_FILE
+from .snippet_editor_data import DEFAULT_SNIPPET_FILE, empty_snippet_form_state
 from .ui_appkit_runtime import (
     close_appkit_session,
     configure_single_column_table,
@@ -164,6 +164,20 @@ class _StudioController(NSObject):
 
         if section == SECTION_COLLECTIONS and self.reload_collections:
             self.collection_items = list(self.reload_collections())
+        elif section == SECTION_SNIPPETS:
+            # Pick up packages installed while on Collections.
+            self.snippet_items = list(self.reload_snippets())
+            query = ""
+            try:
+                query = str(self.search_field.stringValue()).strip()
+            except Exception:
+                pass
+            if query:
+                from .fuzzy import fuzzy_filter_search_items
+
+                self.snippet_visible = fuzzy_filter_search_items(query, self.snippet_items)
+            else:
+                self.snippet_visible = list(self.snippet_items)
         self.list_table.reloadData()
         self._update_count()
         if self.list_table.numberOfRows() > 0:
@@ -225,13 +239,34 @@ class _StudioController(NSObject):
     def _clear_snippet_form(self) -> None:
         self.current_id = None
         self.empty_hint.setHidden_(False)
-        _set_field(self.trigger_field, "")
-        _set_field(self.if_app_field, "")
-        _set_view(self.replace_view, "")
+        self._apply_form_state(empty_snippet_form_state(target_file=self._default_target_file()))
         _set_view(self.preview_view, "")
-        _set_view(self.form_view, "")
-        _set_view(self.vars_view, "")
-        _set_view(self.when_view, "")
+
+    def _default_target_file(self) -> str:
+        files = self.context.get("match_files") or [DEFAULT_SNIPPET_FILE]
+        return files[0] if files else DEFAULT_SNIPPET_FILE
+
+    def _apply_form_state(self, state: dict[str, str]) -> None:
+        """Apply a full form dict to all visible + hidden editor fields."""
+        _set_field(self.trigger_field, state.get("trigger", ""))
+        _set_field(self.if_app_field, state.get("if_app", ""))
+        _set_field(self.unless_app_field, state.get("unless_app", ""))
+        _set_field(self.if_bundle_field, state.get("if_bundle", ""))
+        _set_field(self.unless_bundle_field, state.get("unless_bundle", ""))
+        _set_field(self.if_title_field, state.get("if_title", ""))
+        _set_field(self.unless_title_field, state.get("unless_title", ""))
+        _set_field(self.regex_field, state.get("regex", ""))
+        _set_field(self.image_field, state.get("image", ""))
+        _set_field(self.priority_field, state.get("priority", ""))
+        _set_field(self.force_clipboard_field, state.get("force_clipboard", ""))
+        _set_field(
+            self.target_file_field,
+            state.get("target_file", self._default_target_file()),
+        )
+        _set_view(self.replace_view, state.get("replace", ""))
+        _set_view(self.form_view, state.get("form", ""))
+        _set_view(self.vars_view, state.get("vars", ""))
+        _set_view(self.when_view, state.get("when", ""))
 
     def _load_collection(self, item: dict) -> None:
         self.selected_package_id = item.get("package_id") or item.get("trigger")
@@ -283,13 +318,15 @@ class _StudioController(NSObject):
         self._ensure_snippets_section()
         self.current_id = None
         self.empty_hint.setHidden_(True)
-        _set_field(self.trigger_field, ":nuovo")
-        _set_field(self.if_app_field, "")
-        _set_view(self.replace_view, "")
-        _set_view(self.form_view, "")
-        _set_view(self.vars_view, "")
-        _set_view(self.when_view, "")
+        state = empty_snippet_form_state(
+            target_file=self._default_target_file(),
+            trigger=":nuovo",
+        )
+        self._apply_form_state(state)
         self.replace_view.setEditable_(True)
+        self.form_view.setEditable_(True)
+        self.vars_view.setEditable_(True)
+        self.when_view.setEditable_(True)
         self._update_preview()
         try:
             self.window.makeFirstResponder_(self.trigger_field)
@@ -366,6 +403,12 @@ class _StudioController(NSObject):
             self._update_count()
             self.btn_install.setTitle_(t("studio.collections.installed"))
             self.btn_install.setEnabled_(False)
+        # Installed packages contribute snippets — refresh so they appear without reopen.
+        try:
+            self.snippet_items = list(self.reload_snippets())
+            self.snippet_visible = list(self.snippet_items)
+        except Exception:
+            pass
 
     def close_(self, _sender):
         close_appkit_session(self)
@@ -406,10 +449,11 @@ class _StudioController(NSObject):
             self._clear_snippet_form()
 
     def _payload(self) -> dict[str, str]:
+        # Do not strip replace body — trailing newlines/spaces are intentional.
         return {
             "id": self.current_id or "",
             "trigger": str(self.trigger_field.stringValue()).strip(),
-            "replace": str(self.replace_view.string()).strip(),
+            "replace": str(self.replace_view.string()),
             "if_app": str(self.if_app_field.stringValue()).strip(),
             "unless_app": str(self.unless_app_field.stringValue()).strip(),
             "if_bundle": str(self.if_bundle_field.stringValue()).strip(),
@@ -441,7 +485,7 @@ def run_expando_studio(
     on_create: Callable[[dict[str, str]], str | None],
     on_delete: Callable[[str], str | None],
     on_duplicate: Callable[[str, str], str | None] | None = None,
-    on_move: Callable[[str, str], str | None] | None = None,
+    on_move: Callable[[str, str], str | None] | None = None,  # kept for API compat; unused
     reload_snippets: Callable[[], list[dict[str, str]]],
     collection_items: list[dict[str, str]] | None = None,
     reload_collections: Callable[[], list[dict[str, str]]] | None = None,
@@ -451,12 +495,12 @@ def run_expando_studio(
     initial_new: bool = False,
     initial_section: str = SECTION_SNIPPETS,
 ) -> dict[str, str] | None:
+    del on_move  # move UI removed; data API still available via CLI/snippet_editor_data
     handlers = {
         "save": on_save,
         "create": on_create,
         "delete": on_delete,
         "duplicate": on_duplicate,
-        "move": on_move,
         "install_package": on_install_package,
     }
     context = {

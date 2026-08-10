@@ -85,6 +85,7 @@ class ExpansionEngine:
         self._max_trigger_len = self._compute_max_trigger_len()
         self._postponed: tuple[str, Match] | None = None
         self._last_expansion: _LastExpansion | None = None
+        self._last_context_key: tuple[str | None, str | None] | None = None
         self._needs_window_title = self._compute_needs_window_title(config.matches)
         self._plugin_manager = (
             PluginManager(
@@ -176,10 +177,15 @@ class ExpansionEngine:
     def handle_char(self, char: str) -> bool:
         context = self._runtime_context()
         with self._lock:
+            self._sync_context_buffer(context)
             if not self._expansion_active():
+                self._buffer = ""
+                self._postponed = None
                 return False
             config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
+                self._buffer = ""
+                self._postponed = None
                 return False
             self._buffer += char
             if len(self._buffer) > self._max_trigger_len:
@@ -202,10 +208,15 @@ class ExpansionEngine:
     def handle_key(self, key: Key) -> bool:
         context = self._runtime_context()
         with self._lock:
+            self._sync_context_buffer(context)
             if not self._expansion_active():
+                self._buffer = ""
+                self._postponed = None
                 return False
             config = self._resolve_config(context)
             if not self._expansion_allowed(context, config):
+                self._buffer = ""
+                self._postponed = None
                 return False
 
             if key in WORD_BREAK_KEYS:
@@ -253,6 +264,14 @@ class ExpansionEngine:
         with self._lock:
             self._buffer = ""
             self._postponed = None
+
+    def _sync_context_buffer(self, context: AppContext) -> None:
+        """Drop partial triggers when the frontmost app changes."""
+        key = (context.name, context.bundle_id)
+        if self._last_context_key is not None and key != self._last_context_key:
+            self._buffer = ""
+            self._postponed = None
+        self._last_context_key = key
 
     def toggle_enabled(self) -> bool:
         with self._lock:
@@ -518,6 +537,10 @@ class ExpansionEngine:
                     post_delete_settle=profile.post_delete_settle,
                 )
         except Exception:
+            # Delete already removed the trigger from screen — drop buffer to avoid desync.
+            with self._lock:
+                self._buffer = ""
+                self._postponed = None
             if self._config_dir is not None:
                 from .injection_degradation import record_injection_failure
 
@@ -587,9 +610,12 @@ class ExpansionEngine:
                     continue
                 if match.right_word and not require_word_break and not match.force_break:
                     continue
+                matched_text = found.group(0)
+                if match.left_word and not self._has_left_word_boundary(matched_text):
+                    continue
                 if not self._match_allowed(match, context, config):
                     continue
-                candidates.append((found.group(0), match))
+                candidates.append((matched_text, match))
 
         if not candidates:
             return None

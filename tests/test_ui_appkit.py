@@ -77,16 +77,13 @@ def test_editor_ui_copy_is_not_yaml_or_dev_oriented() -> None:
     from expando.i18n import t
 
     keys = [
-        "editor.duplicate.body",
         "editor.duplicate.readonly",
-        "editor.move.body",
-        "editor.move.readonly",
-        "editor.move.no_targets",
-        "menubar.installed",
-        "menubar.install_failed",
+        "editor.duplicate.select",
         "menubar.hub_up_to_date",
         "menubar.hub_upgrade_title",
         "menubar.hub_upgraded",
+        "studio.collections.install",
+        "studio.nav.snippets",
     ]
     text = "\n".join(t(key) for key in keys)
     assert "YAML" not in text

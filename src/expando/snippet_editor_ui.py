@@ -231,7 +231,8 @@ class SnippetEditor:
         return {
             "id": self._current_id or "",
             "trigger": self.trigger_var.get().strip(),
-            "replace": self.replace_text.get("1.0", tk.END).strip(),
+            # Keep trailing newlines/spaces in the expansion body.
+            "replace": self.replace_text.get("1.0", tk.END).rstrip("\n"),
             "if_app": self.if_app_var.get().strip(),
             "form": self.form_text.get("1.0", tk.END).strip(),
             "vars": self.vars_text.get("1.0", tk.END).strip(),

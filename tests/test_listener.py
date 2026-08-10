@@ -80,12 +80,12 @@ def test_listener_ignores_synthetic_paste_while_injecting(keyboard_service: Keyb
     keyboard_service.engine.injector.inject.assert_not_called()
 
 
-def test_listener_allows_user_typing_while_inject_mute(keyboard_service: KeyboardService):
-    # After an expansion, a short mute ignores synthetic keys but real typing
-    # of the next trigger must still work on the same line.
+def test_listener_drops_all_keys_while_inject_mute(keyboard_service: KeyboardService):
+    # Mute must drop printable keys so Controller.type() synthetic chars do not
+    # re-enter the buffer. Same-line retype works after mute ends.
     keyboard_service._set_injecting(True)
     _type_chars(keyboard_service, ":hi")
-    keyboard_service.engine.injector.inject.assert_called()
+    keyboard_service.engine.injector.inject.assert_not_called()
 
 
 def test_listener_skips_when_ui_active(keyboard_service: KeyboardService, monkeypatch: pytest.MonkeyPatch):

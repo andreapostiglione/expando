@@ -4,6 +4,21 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+### Fixed
+- Studio save no longer destroys multi-trigger aliases (`//hello`) or unknown YAML flags (`word_break`, `label`, …); updates merge into the existing match.
+- Studio **Nuovo**/clear resets all advanced/hidden fields (no inheritance from the previous selection).
+- Expansion body is not stripped on save (trailing newlines/spaces kept).
+- Match YAML writes are atomic (temp + replace) to avoid torn reads under reload.
+- Inject mute no longer re-admits synthetic `type()` keystrokes into the buffer; mute depth is refcounted (no force-reset).
+- Typing buffer clears on frontmost-app change and when expansion is blocked for the current app.
+- Regex matches honor `left_word` like literal matches.
+- Terminal inject profile no longer treats **Xcode** as VS Code via bare `"code"` substring.
+- After installing a collection in Studio, snippet list reloads without reopening the window.
+- Image paste AppleScript path is escaped; inject failure after delete clears the buffer to avoid desync.
+
+### Removed
+- Dead `ui_file_picker` module, unused menubar callbacks (`new_snippet` / `edit_snippets` / `browse_packages`), dead `listener._maybe_expand`, orphan move/UI i18n keys.
+
 ## [3.29.27] — 2026-08-10
 
 ### Added

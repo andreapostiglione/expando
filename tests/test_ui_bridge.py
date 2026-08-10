@@ -80,5 +80,9 @@ def test_show_snippet_editor_passes_initial_new(monkeypatch) -> None:
     assert result == {"saved": "1"}
     assert captured == {
         "command": "editor",
-        "payload": {"config_dir": "/tmp/expando", "initial_new": True},
+        "payload": {
+            "config_dir": "/tmp/expando",
+            "initial_new": True,
+            "initial_section": "snippets",
+        },
     }

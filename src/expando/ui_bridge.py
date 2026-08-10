@@ -75,6 +75,7 @@ def _run_ui_inprocess_body(command: str, payload: dict[str, Any]) -> dict[str, s
         return open_snippet_editor(
             Path(config_dir),
             initial_new=bool(payload.get("initial_new")),
+            initial_section=str(payload.get("initial_section") or "snippets"),
         )
     raise UiBridgeError(f"Unknown UI command: {command}")
 
@@ -153,11 +154,20 @@ def show_form_dialog(fields: list[dict[str, str]]) -> dict[str, str] | None:
         return None
 
 
-def show_snippet_editor(config_dir: str, *, initial_new: bool = False) -> dict[str, str] | None:
+def show_snippet_editor(
+    config_dir: str,
+    *,
+    initial_new: bool = False,
+    initial_section: str = "snippets",
+) -> dict[str, str] | None:
     try:
         return run_ui_command(
             "editor",
-            {"config_dir": config_dir, "initial_new": initial_new},
+            {
+                "config_dir": config_dir,
+                "initial_new": initial_new,
+                "initial_section": initial_section,
+            },
         )
     except UiBridgeError as exc:
         logger.warning("%s", exc)

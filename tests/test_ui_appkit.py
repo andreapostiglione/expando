@@ -61,9 +61,11 @@ def test_menubar_keeps_advanced_actions_out_of_main_menu() -> None:
     from expando.menubar import menu_layout_keys
 
     main, advanced = menu_layout_keys()
-    assert "new_snippet" in main
-    assert "editor" in main
-    assert "hub" in main
+    # Unified studio replaces separate new/editor/hub entries.
+    assert "studio" in main
+    assert "new_snippet" not in main
+    assert "editor" not in main
+    assert "hub" not in main
     assert "advanced" in main
 
     advanced_only = {"health", "hub_updates", "backup", "restore", "restart"}
@@ -101,6 +103,7 @@ def test_editor_source_copy_avoids_storage_terms() -> None:
         (root / path).read_text(encoding="utf-8")
         for path in [
             "src/expando/snippet_editor_appkit.py",
+            "src/expando/studio_appkit.py",
             "src/expando/snippet_editor_ui.py",
         ]
     )
@@ -220,7 +223,7 @@ def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -
     if sys.platform != "darwin":
         return
 
-    from expando import snippet_editor_appkit
+    from expando import snippet_editor_appkit, studio_appkit
 
     captured = {}
 
@@ -230,7 +233,7 @@ def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -
         captured["controller"] = controller
         return {"opened": "1"}
 
-    monkeypatch.setattr(snippet_editor_appkit, "run_appkit_session", fake_run_appkit_session)
+    monkeypatch.setattr(studio_appkit, "run_appkit_session", fake_run_appkit_session)
     snippet_editor_appkit.run_snippet_editor(
         [
             {
@@ -246,6 +249,7 @@ def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -
         on_delete=lambda _entry_id: None,
         reload_items=lambda: [],
         match_files=["dev.yml"],
+        collection_items=[],
     )
 
     controller = captured["controller"]
@@ -268,6 +272,8 @@ def test_snippet_editor_appkit_layout_has_no_overlapping_controls(monkeypatch) -
         _, bx, by, bw, bh = second
         return ax < bx + bw and ax + aw > bx and ay < by + bh and ay + ah > by
 
+    # Studio root has toolbar + nav + list + main (non-overlapping).
+    assert len(frames) >= 3
     for index, first in enumerate(frames):
         for second in frames[index + 1 :]:
             assert not overlaps(first, second), (first, second)

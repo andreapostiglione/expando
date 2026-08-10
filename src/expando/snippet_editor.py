@@ -46,7 +46,12 @@ def _parse_editor_payload(payload: dict[str, str]) -> dict:
     }
 
 
-def open_snippet_editor(config_dir: Path, *, initial_new: bool = False) -> dict[str, str] | None:
+def open_snippet_editor(
+    config_dir: Path,
+    *,
+    initial_new: bool = False,
+    initial_section: str = "snippets",
+) -> dict[str, str] | None:
     match_files = list_match_files(config_dir)
 
     def reload() -> list[dict[str, str]]:
@@ -54,6 +59,14 @@ def open_snippet_editor(config_dir: Path, *, initial_new: bool = False) -> dict[
         for row in rows:
             row["target_file"] = row.get("source_file", DEFAULT_SNIPPET_FILE)
         return rows
+
+    def reload_collections() -> list[dict[str, str]]:
+        try:
+            from .hub import hub_packages_for_picker
+
+            return hub_packages_for_picker(config_dir)
+        except Exception:
+            return []
 
     def on_save(payload: dict[str, str]) -> str | None:
         try:
@@ -106,10 +119,20 @@ def open_snippet_editor(config_dir: Path, *, initial_new: bool = False) -> dict[
             return str(exc)
         return None
 
+    def on_install_package(package_id: str) -> str | None:
+        try:
+            from .hub import install_hub_package
+
+            install_hub_package(config_dir, package_id)
+        except Exception as exc:
+            return str(exc)
+        return None
+
     initial = reload()
     for row in initial:
-        row.setdefault("target_file", row.get("source_file", match_files[0]))
+        row.setdefault("target_file", row.get("source_file", match_files[0] if match_files else DEFAULT_SNIPPET_FILE))
         row["match_files"] = ",".join(match_files)
+    collections = reload_collections()
     return run_snippet_editor(
         initial,
         on_save=on_save,
@@ -121,4 +144,8 @@ def open_snippet_editor(config_dir: Path, *, initial_new: bool = False) -> dict[
         match_files=match_files,
         config_dir=config_dir,
         initial_new=initial_new,
+        initial_section=initial_section,
+        collection_items=collections,
+        reload_collections=reload_collections,
+        on_install_package=on_install_package,
     )

@@ -30,6 +30,7 @@ def main() -> None:
         result = open_snippet_editor(
             Path(config_dir),
             initial_new=bool(payload.get("initial_new")),
+            initial_section=str(payload.get("initial_section") or "snippets"),
         )
     else:
         raise SystemExit(2)

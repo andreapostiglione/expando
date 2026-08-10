@@ -163,6 +163,49 @@ _STRINGS: dict[str, dict[str, str]] = {
     "menubar.enable": {"it": "Attiva", "en": "Enable"},
     "menubar.search": {"it": "Cerca snippet", "en": "Search snippets"},
     "menubar.new_snippet": {"it": "Nuovo snippet", "en": "New snippet"},
+    "menubar.studio": {
+        "it": "Snippet e raccolte…",
+        "en": "Snippets & collections…",
+    },
+    "studio.window_title": {"it": "Expando", "en": "Expando"},
+    "studio.nav.snippets": {"it": "I miei snippet", "en": "My snippets"},
+    "studio.nav.collections": {"it": "Raccolte", "en": "Collections"},
+    "studio.detail.snippet": {"it": "Dettaglio", "en": "Detail"},
+    "studio.detail.collection": {"it": "Raccolta", "en": "Collection"},
+    "studio.snippets.empty": {
+        "it": "Seleziona uno snippet a sinistra, oppure premi Nuovo.",
+        "en": "Select a snippet on the left, or click New.",
+    },
+    "studio.collections.empty": {
+        "it": "Scegli una raccolta per vedere i dettagli e installarla.",
+        "en": "Choose a collection to see details and install it.",
+    },
+    "studio.collections.install": {"it": "Installa raccolta", "en": "Install collection"},
+    "studio.collections.installed": {"it": "Già installata", "en": "Already installed"},
+    "studio.count.snippets": {
+        "it": "{count} snippet",
+        "en": "{count} snippets",
+    },
+    "studio.count.collections": {
+        "it": "{count} raccolte",
+        "en": "{count} collections",
+    },
+    "studio.alert.trigger_empty": {
+        "it": "Il trigger non può essere vuoto.",
+        "en": "Trigger cannot be empty.",
+    },
+    "studio.alert.readonly": {
+        "it": "Questo snippet non è modificabile dall'editor.",
+        "en": "This snippet cannot be edited here.",
+    },
+    "studio.alert.select_delete": {
+        "it": "Seleziona uno snippet da eliminare.",
+        "en": "Select a snippet to delete.",
+    },
+    "studio.alert.collection_locked": {
+        "it": "Le raccolte installate non possono essere eliminate da qui.",
+        "en": "Installed collections cannot be deleted from here.",
+    },
     "ui.cancel": {"it": "Annulla", "en": "Cancel"},
     "ui.confirm": {"it": "Conferma", "en": "Confirm"},
     "ui.ok": {"it": "OK", "en": "OK"},

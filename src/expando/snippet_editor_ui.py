@@ -326,6 +326,10 @@ def run_snippet_editor(
     match_files: list[str] | None = None,
     config_dir: Path | None = None,
     initial_new: bool = False,
+    initial_section: str = "snippets",
+    collection_items: list[dict[str, str]] | None = None,
+    reload_collections: Callable[[], list[dict[str, str]]] | None = None,
+    on_install_package: Callable[[str], str | None] | None = None,
 ) -> dict[str, str] | None:
     if _use_appkit():
         from .snippet_editor_appkit import run_snippet_editor as appkit_editor
@@ -341,7 +345,12 @@ def run_snippet_editor(
             match_files=match_files,
             config_dir=config_dir,
             initial_new=initial_new,
+            initial_section=initial_section,
+            collection_items=collection_items,
+            reload_collections=reload_collections,
+            on_install_package=on_install_package,
         )
+    # Tk fallback: snippets only (collections require AppKit Studio)
     editor = SnippetEditor(
         items,
         on_save=on_save,

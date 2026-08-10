@@ -28,9 +28,7 @@ def menubar_available() -> bool:
 _MAIN_MENU_KEYS: tuple[str | None, ...] = (
     "enabled",
     None,
-    "new_snippet",
-    "editor",
-    "hub",
+    "studio",
     None,
     "snooze",
     "permissions",
@@ -88,8 +86,7 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             advanced_item = rumps.MenuItem(t("menubar.advanced"), callback=None)
             menu_items = {
                 "enabled": self.enabled_item,
-                "new_snippet": rumps.MenuItem(t("menubar.new_snippet"), callback=self.new_snippet),
-                "editor": rumps.MenuItem(t("menubar.editor"), callback=self.edit_snippets),
+                "studio": rumps.MenuItem(t("menubar.studio"), callback=self.open_studio),
                 "snooze": self.snooze_item,
                 "permissions": self.permissions_item,
                 "updates": rumps.MenuItem(t("menubar.updates"), callback=self.check_updates),
@@ -97,7 +94,6 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                 "quit": rumps.MenuItem(t("menubar.quit"), callback=self.quit_app),
                 "backup": rumps.MenuItem(t("menubar.backup"), callback=self.backup_config),
                 "restore": rumps.MenuItem(t("menubar.restore"), callback=self.restore_config),
-                "hub": rumps.MenuItem(t("menubar.hub"), callback=self.browse_packages),
                 "hub_updates": self.hub_updates_item,
                 "health": self.health_item,
                 "stats": rumps.MenuItem(t("menubar.stats"), callback=self.show_stats),
@@ -280,14 +276,6 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             finally:
                 set_ui_active(False)
 
-        def browse_packages(self, _sender) -> None:
-            try:
-                self._browse_packages()
-            except Exception as exc:
-                self._notify_action_failed(exc)
-            finally:
-                set_ui_active(False)
-
         def _upgrade_hub_packages(self) -> None:
             from .auto_backup import backup_before_mutation
             from .config_reload_gate import ConfigReloadError
@@ -344,35 +332,19 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
                     user_error(t("menubar.restore_invalid_rolled_back"))
                     return
                 raise
-                user_success(tf("menubar.hub_upgraded", collection=package_id))
+            user_success(tf("menubar.hub_upgraded", collection=package_id))
             self._sync_enabled_label()
 
-        def _browse_packages(self) -> None:
-            from .hub import hub_packages_for_picker, install_hub_package
-            from .ui_bridge import show_search_picker
-
-            picked = show_search_picker(hub_packages_for_picker(self.config_dir))
-            if not picked:
-                return
-            if picked.get("installed") == "1":
-                return
-            package_id = picked.get("package_id") or picked.get("trigger")
-            if not package_id:
-                return
-            try:
-                install_hub_package(self.config_dir, str(package_id))
-                user_success(tf("menubar.installed", collection=package_id))
-                self._sync_enabled_label()
-            except Exception as exc:
-                user_error(tf("menubar.install_failed", error=exc))
-
-        def edit_snippets(self, _sender) -> None:
+        def open_studio(self, _sender) -> None:
             try:
                 self._open_snippet_editor()
             except Exception as exc:
                 self._notify_action_failed(exc)
             finally:
                 set_ui_active(False)
+
+        def edit_snippets(self, _sender) -> None:
+            self.open_studio(_sender)
 
         def new_snippet(self, _sender) -> None:
             try:
@@ -382,11 +354,28 @@ def run_with_menubar(config_dir: Path, service: KeyboardService) -> None:
             finally:
                 set_ui_active(False)
 
-        def _open_snippet_editor(self, *, initial_new: bool = False) -> None:
+        def browse_packages(self, _sender) -> None:
+            try:
+                self._open_snippet_editor(initial_section="collections")
+            except Exception as exc:
+                self._notify_action_failed(exc)
+            finally:
+                set_ui_active(False)
+
+        def _open_snippet_editor(
+            self,
+            *,
+            initial_new: bool = False,
+            initial_section: str = "snippets",
+        ) -> None:
             from .config_reload_gate import ConfigReloadError
             from .ui_bridge import show_snippet_editor
 
-            result = show_snippet_editor(str(self.config_dir), initial_new=initial_new)
+            result = show_snippet_editor(
+                str(self.config_dir),
+                initial_new=initial_new,
+                initial_section=initial_section,
+            )
             if result is None:
                 return
             try:

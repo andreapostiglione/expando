@@ -3,13 +3,13 @@ from __future__ import annotations
 import logging
 import os
 import time
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import URLError
-from urllib.request import urlopen
+from defusedxml import ElementTree as ET
 
 from . import __version__
+from .http_fetch import https_get_text, require_https_url
 from .i18n import t
 from .notifications import notify
 from .version_utils import is_newer, normalize_version, version_tuple
@@ -72,11 +72,11 @@ def _record_check(config_dir: Path) -> None:
 
 def fetch_appcast(feed_url: str | None = None) -> str:
     url = feed_url or default_feed_url()
-    with urlopen(url, timeout=20) as response:
-        return response.read().decode("utf-8")
+    return https_get_text(url, timeout=20)
 
 
 def parse_appcast(xml_text: str) -> list[UpdateInfo]:
+    # defusedxml: XXE-safe parse of remote Sparkle appcast.
     root = ET.fromstring(xml_text)
     channel = root.find("channel")
     if channel is None:
@@ -99,6 +99,11 @@ def parse_appcast(xml_text: str) -> list[UpdateInfo]:
             continue
         download_url = enclosure.attrib.get("url", "").strip()
         if not download_url:
+            continue
+        try:
+            download_url = require_https_url(download_url)
+        except ValueError:
+            logger.warning("Ignoring non-https update URL: %s", download_url)
             continue
 
         notes = item.findtext("description", default="").strip()

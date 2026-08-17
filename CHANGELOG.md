@@ -4,6 +4,9 @@ All notable changes to Expando are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+### Fixed
+- Security: HTTPS-only remote fetches for hub/updates; Sparkle appcast XML parsed with `defusedxml`; tar restore rejects path traversal and links; Windows clipboard inject no longer uses `shell=True`.
+
 ## [3.29.28] — 2026-08-10
 
 ### Fixed

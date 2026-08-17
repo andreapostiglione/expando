@@ -11,9 +11,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 from urllib.error import URLError
-from urllib.request import urlopen
 
 import yaml
+
+from .http_fetch import https_get_text
 
 from .hub import (
     HubPackage,
@@ -144,8 +145,7 @@ def fetch_marketplace_packages() -> list[HubPackage]:
     url = marketplace_index_url()
     if url:
         try:
-            with urlopen(url, timeout=15) as response:
-                data = json.loads(response.read().decode("utf-8"))
+            data = json.loads(https_get_text(url, timeout=15))
             for package in _approved_packages_from_document(data):
                 merged[package.id] = package
         except (URLError, json.JSONDecodeError, TimeoutError) as exc:
@@ -1495,9 +1495,8 @@ def fetch_remote_marketplace_document() -> dict[str, Any]:
             "or set EXPANDO_HUB_MARKETPLACE_URL"
         )
     try:
-        with urlopen(url, timeout=15) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (URLError, json.JSONDecodeError, TimeoutError) as exc:
+        data = json.loads(https_get_text(url, timeout=15))
+    except (URLError, ValueError, json.JSONDecodeError, TimeoutError) as exc:
         raise RuntimeError(f"Could not fetch marketplace index: {exc}") from exc
     if not isinstance(data, dict):
         raise RuntimeError("Remote marketplace index must be a JSON object")

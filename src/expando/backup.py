@@ -21,17 +21,31 @@ def backup_label(path: Path) -> str:
 
 
 def _safe_extract(archive: tarfile.TarFile, destination: Path) -> None:
+    """Extract tar members without path traversal (tar slip).
+
+    Prefer Python 3.12+ ``filter='data'``; fall back to per-member extract
+    after validating each path stays under *destination*.
+    """
+    dest_root = destination.resolve()
+    safe_members: list[tarfile.TarInfo] = []
     for member in archive.getmembers():
-        target = (destination / member.name).resolve()
-        if not str(target).startswith(str(destination.resolve())):
+        # Reject absolute paths and parent escapes before resolve.
+        name = member.name.replace("\\", "/")
+        if name.startswith("/") or name.startswith("../") or "/../" in f"/{name}/":
             raise ValueError(f"Unsafe path in archive: {member.name}")
-    if hasattr(archive, "extractall"):
-        try:
-            archive.extractall(destination, filter="data")
-            return
-        except TypeError:
-            pass
-    archive.extractall(destination)
+        if member.issym() or member.islnk():
+            raise ValueError(f"Links are not allowed in archive: {member.name}")
+        target = (destination / member.name).resolve()
+        if not str(target).startswith(str(dest_root) + "/") and target != dest_root:
+            raise ValueError(f"Unsafe path in archive: {member.name}")
+        safe_members.append(member)
+    try:
+        archive.extractall(destination, members=safe_members, filter="data")
+        return
+    except TypeError:
+        # Python < 3.12: extract only validated members one by one.
+        for member in safe_members:
+            archive.extract(member, path=destination)
 
 
 def list_backup_archives(config_dir: Path) -> list[Path]:

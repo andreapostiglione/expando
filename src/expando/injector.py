@@ -142,7 +142,14 @@ class TextInjector:
             self.keyboard.release("v")
 
     def _windows_clipboard_paste(self, text: str) -> None:
-        subprocess.run(["clip"], input=text, text=True, shell=True, check=False)
+        # Never use shell=True — clip.exe accepts stdin without a shell.
+        subprocess.run(
+            ["clip"],
+            input=text,
+            text=True,
+            shell=False,
+            check=False,
+        )
         with self.keyboard.pressed(Key.ctrl):
             self.keyboard.press("v")
             self.keyboard.release("v")

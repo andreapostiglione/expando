@@ -9,11 +9,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
-from urllib.request import urlopen
 
 import yaml
 
 from .config import normalize_match
+from .http_fetch import https_get_bytes, https_get_text
 from .paths import match_dir, package_root
 
 
@@ -96,9 +96,8 @@ def _load_index_data(path: Path | None = None) -> list[HubPackage]:
             data = json.loads(local_index.read_text(encoding="utf-8"))
             return [HubPackage.from_dict(item) for item in data.get("packages", []) or []]
         try:
-            with urlopen(_index_url(), timeout=15) as response:
-                data = json.loads(response.read().decode("utf-8"))
-        except URLError as exc:
+            data = json.loads(https_get_text(_index_url(), timeout=15))
+        except (URLError, ValueError) as exc:
             raise RuntimeError(f"Could not fetch package hub index: {exc}") from exc
         return [HubPackage.from_dict(item) for item in data.get("packages", []) or []]
 
@@ -151,10 +150,9 @@ def _remote_package_files(package_id: str) -> list[str]:
         found: list[str] = []
         for name in names:
             try:
-                with urlopen(package_base + name, timeout=15) as response:
-                    if response.status == 200:
-                        found.append(name)
-            except URLError:
+                https_get_bytes(package_base + name, timeout=15)
+                found.append(name)
+            except (URLError, ValueError):
                 continue
         if found:
             return found
@@ -167,9 +165,8 @@ def _download_package_file(package_id: str, filename: str) -> str:
     for base in _remote_files_bases():
         url = f"{base}/{package_id}/{filename}"
         try:
-            with urlopen(url, timeout=15) as response:
-                return response.read().decode("utf-8")
-        except URLError as exc:
+            return https_get_text(url, timeout=15)
+        except (URLError, ValueError) as exc:
             errors.append(f"{url}: {exc}")
             continue
     raise FileNotFoundError("; ".join(errors))
@@ -200,9 +197,8 @@ def _remote_package_version(package_id: str) -> str:
     for base in _remote_files_bases():
         url = f"{base}/{package_id}/hub.json"
         try:
-            with urlopen(url, timeout=15) as response:
-                data = json.loads(response.read().decode("utf-8"))
-        except URLError:
+            data = json.loads(https_get_text(url, timeout=15))
+        except (URLError, ValueError, json.JSONDecodeError):
             continue
         version = data.get("version")
         if isinstance(version, str) and version.strip():
